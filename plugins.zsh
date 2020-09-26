@@ -1,0 +1,12 @@
+plugins=(
+  sudo
+  git
+  adb
+  brew
+  gradle
+  osx
+  fzf-tab
+  fzf
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
