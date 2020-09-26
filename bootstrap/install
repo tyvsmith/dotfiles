@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+OS=$(uname -s)
+REPO="$(dirname $0)/.."
+pushd $REPO
+git submodule update --init --recursive
+if [ $OS = "Darwin" ]; then
+    echo "Install OSX defaults"
+    source ./bootstrap/brew
+    source ./bootstrap/macos-defaults
+
+else 
+    #assuming Debian based for now.
+    echo "Install Linux defaults"
+    
+    sudo apt update
+    sudo apt install rcm fzf fonts-hack-ttf catimg
+fi
+
+#Backs up old files
+[ -f ~/.zshrc ] && [ ! -f ~/.zshrc.local ] && mv ~/.zshrc ~/.zshrc.local
+[ -f ~/.gitconfig ] && [ ! -f ~/.gitconfig.local ] && mv ~/.gitconfig ~/.gitconfig.local
+[ -f ~/.tmux.conf ] && [ ! -f ~/.tmux.conf.local ] && mv ~/.tmux ~/.tmux.conf.local
+
+
+echo "Running rcup, make take a few minutes..."
+rcup
+popd
+
+echo "finished! restart shell."
+

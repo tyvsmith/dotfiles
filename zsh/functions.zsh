@@ -1,4 +1,6 @@
 
+#wrappers for fast use of node and nvm to avoid slow session start
+#still seems faster than the nvm zsh plugin
 function _install_nvm() {
   unset -f nvm npm node
   # Set up "nvm" could use "--no-use" to defer setup, but we are here to use it
@@ -19,28 +21,6 @@ function node() {
     _install_nvm node "$@"
 }
 
-(which rbenv >/dev/null && eval "$(rbenv init -)" &)
-
-_sync_dir () {
-    cmd=$1
-    shift
-    new_directory=$(boxer sync_dir $@)
-    if [ "$?" -eq "0" ]; then
-        $cmd $new_directory
-    else
-        echo "$new_directory"
-    fi
-}
-cdsync () {
-    _sync_dir cd $@
-}
-editsync () {
-    _sync_dir $EDITOR $@
-}
-opensync () {
-    _sync_dir open @
-}
-# END added by newengsetup
 
 #Buck/Gradle
 function upfind() {
@@ -64,6 +44,15 @@ function gw() {
   fi
 }
 
+function dw() {
+  DW="$(upfind depw)"
+  if [ -z "$DW" ]; then
+    echo "dep wrapper not found."
+  else
+    $DW $@
+  fi
+}
+
 function bw() {
   BW="$(upfind buckw)"
   if [ -z "$BW" ]; then
@@ -72,3 +61,13 @@ function bw() {
     $BW $@
   fi
 }
+
+function upcase() {
+  echo $1 | tr [:lower:] [:upper:]
+}
+
+function downcase() {
+  echo $1 | tr [:upper:] [:lower:]
+}
+
+chpwd() exa --git --icons --classify --group-directories-first --time-style=long-iso --group --color-scale

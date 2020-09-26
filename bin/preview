@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+if [ -f "$1" ] || [ -d "$1" ]; then
+    case "$(file --mime-type "$1")" in
+    *text*)
+        bat --color always --plain --theme base16 "$1"
+        ;;
+    *image* | *pdf)
+        catimg -w 100 -r 2 "$1"
+        ;;
+    *directory*)
+        exa --tree --git-ignore --level=2 --color=always "$1" | head -200
+        ;;
+    *)
+        cat "$1"
+        ;;
+    esac
+elif [ ! -z ${!1} ]; then
+    echo "${!1}"
+elif [ $(command -v "$1") ]; then
+    which "$1"
+else
+    echo "No preview available"
+fi
