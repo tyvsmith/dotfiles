@@ -65,16 +65,15 @@ zinit light-mode wait lucid  for \
     @jreese/zsh-titles \
     @xPMo/zsh-toggle-command-prefix \
     @wfxr/forgit \
-    @Aloxaf/gencomp \
     OMZ::lib/clipboard.zsh \
     OMZ::lib/directories.zsh \
     @zpm-zsh/ls \
     is-snippet ~/.zsh/ctrl-z-fzf.plugin.zsh \
     multisrc:'shell/*.zsh' @junegunn/fzf \
     atload='_set_fzf_history' @Aloxaf/fzf-tab \
-    atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay" atload"FAST_HIGHLIGHT[chroma-git]=0" zdharma/fast-syntax-highlighting \
     atload"!_zsh_autosuggest_start" zsh-users/zsh-autosuggestions \
-    blockf zsh-users/zsh-completions atload"_history_substring_bind_keys" @zsh-users/zsh-history-substring-search
+    blockf zsh-users/zsh-completions atload"_history_substring_bind_keys" @zsh-users/zsh-history-substring-search \
+    atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay" atload"FAST_HIGHLIGHT[chroma-git]=0" zdharma/fast-syntax-highlighting \
 
 
 #####################
@@ -84,11 +83,12 @@ zinit light-mode wait lucid  for \
 #Some of these are not available on servers, this creates availability
 
 zinit wait silent light-mode as:program for \
-      from:gh-r  mv:'bat-**/bat -> bat' @sharkdp/bat \
-      from:gh-r mv:'exa-* -> exa' @ogham/exa \
-      from:gh-r mv"fd* -> fd" sbin"fd/fd"  @sharkdp/fd \
-      from:gh-r  @junegunn/fzf-bin \
-      pick"bin/git-dsf" zdharma/zsh-diff-so-fancy
+    from:gh-r  mv:'bat-**/bat -> bat' @sharkdp/bat \
+    from:gh-r mv:'exa-* -> exa' @ogham/exa \
+    from:gh-r mv"fd* -> fd" sbin"fd/fd"  @sharkdp/fd \
+    from:gh-r  @junegunn/fzf-bin \
+    pick"bin/git-dsf" zdharma/zsh-diff-so-fancy \
+    make @mbrubeck/compleat
 
 
 #####################
@@ -126,10 +126,16 @@ zstyle ':fzf-tab:complete:*:*' extra-opts --preview=$extract'$HOME/.bin/preview 
 #####################
 
 zinit light-mode wait lucid is-snippet for \
-    ~/.zsh/functions.zsh \
-    ~/.zsh/aliases.zsh \
-    if'[[ -f ~/.aliases.local ]]' ~/.aliases.local \
-    if'[[ -f ~/.zshrc.local ]]' ~/.zshrc.local
+    atinit='_source_local' /dev/null
+
+#Workaround to source ones that include completions
+_source_local() {
+    autoload -Uz compinit && compinit
+    source ~/.zsh/functions.zsh
+    source ~/.zsh/aliases.zsh
+    [ -f ~/.aliases.local ] && source ~/.aliases.local
+    [ -f ~/.zshrc.local ] && source ~/.zshrc.local
+}
 
 
 #####################
