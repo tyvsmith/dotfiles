@@ -73,7 +73,7 @@ zinit light-mode wait lucid  for \
     atload='_set_fzf_history' @Aloxaf/fzf-tab \
     atload"!_zsh_autosuggest_start" zsh-users/zsh-autosuggestions \
     blockf zsh-users/zsh-completions atload"_history_substring_bind_keys" @zsh-users/zsh-history-substring-search \
-    atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay" atload"FAST_HIGHLIGHT[chroma-git]=0" zdharma/fast-syntax-highlighting \
+    atinit" zpcompinit; zpcdreplay" atload"FAST_HIGHLIGHT[chroma-git]=0" zdharma/fast-syntax-highlighting
 
 
 #####################
@@ -96,7 +96,7 @@ zinit wait silent light-mode as:program for \
 #####################
 
 zinit wait lucid as'completion' light-mode blockf for \
-    has'exa' mv'completions.zsh -> _exa' https://github.com/ogham/exa/blob/master/contrib/completions.zsh \
+    has'exa' mv'completions.zsh -> _exa' https://github.com/ogham/exa/blob/master/completions/completions.zsh \
     has'fd' https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/fd/_fd
 
 local extract="
