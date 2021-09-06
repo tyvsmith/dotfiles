@@ -70,4 +70,28 @@ function downcase() {
   echo $1 | tr [:upper:] [:lower:]
 }
 
+function mklink() {
+  if [ -d $2 ] ; then
+    cmd.exe /c "mklink /J "${1//\//\\}" "${2//\//\\}
+  else
+    cmd.exe /c "mklink "${1//\//\\}" "${2//\//\\}
+  fi
+}
+
+function hideHomeDotFilesForWindows() {
+  IFS=$'\n'
+  for item in $(/usr/bin/ls -A ~ | grep '^[.].*'); do
+
+    echo "Hiding $(ls -dF "$item")"
+    setHiddenInWindows "$item"
+
+  done
+}
+
+setHiddenInWindows() {
+	attrib.exe +h /l $1
+}
+
 chpwd() exa --git --icons --classify --group-directories-first --time-style=long-iso --group --color-scale
+
+_ls_params+=(-I NTUSER.DAT\* -I ntuser.dat\*)

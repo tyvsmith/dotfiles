@@ -1,7 +1,7 @@
 #####################
 # PATH              #
 #####################
-path=("$HOME/.bin" /usr/local/sbin /usr/local/bin "$path[@]")
+path=("$HOME/.dotfiles/bin" /usr/local/sbin /usr/local/bin "$path[@]")
 
 #####################
 # ENV VARIABLE      #
@@ -25,7 +25,7 @@ GREP_OPTIONS="--color=auto"
 #####################
 
 #Load ziint base
-source "$HOME/.zsh/zinit/zinit.zsh"
+source "$HOME/.dotfiles/zsh/zinit/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 
@@ -38,7 +38,7 @@ DEFAULT_USER=`whoami`
 
 zinit light-mode for \
     depth=1 @romkatv/powerlevel10k \
-    is-snippet ~/.zsh/p10k.zsh
+    is-snippet ~/.dotfiles/zsh/p10k.zsh
 
 
 #####################
@@ -68,7 +68,7 @@ zinit light-mode wait lucid  for \
     OMZ::lib/clipboard.zsh \
     OMZ::lib/directories.zsh \
     @zpm-zsh/ls \
-    is-snippet ~/.zsh/ctrl-z-fzf.plugin.zsh \
+    is-snippet ~/.dotfiles/zsh/ctrl-z-fzf.plugin.zsh \
     multisrc:'shell/*.zsh' @junegunn/fzf \
     atload='_set_fzf_history' @Aloxaf/fzf-tab \
     atload"!_zsh_autosuggest_start" zsh-users/zsh-autosuggestions \
@@ -84,11 +84,13 @@ zinit light-mode wait lucid  for \
 
 zinit wait silent light-mode as:program for \
     from:gh-r  mv:'bat-**/bat -> bat' @sharkdp/bat \
-    from:gh-r mv:'exa-* -> exa' @ogham/exa \
+    from:gh-r pick"bin/exa" @ogham/exa \
     from:gh-r mv"fd* -> fd" sbin"fd/fd"  @sharkdp/fd \
     from:gh-r  @junegunn/fzf-bin \
     pick"bin/git-dsf" zdharma/zsh-diff-so-fancy \
-    make @mbrubeck/compleat
+    make @mbrubeck/compleat \
+    from:gh-r mv:"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' pick"direnv" src="zhook.zsh" @direnv/direnv
+
 
 
 #####################
@@ -96,7 +98,7 @@ zinit wait silent light-mode as:program for \
 #####################
 
 zinit wait lucid as'completion' light-mode blockf for \
-    has'exa' mv'completions.zsh -> _exa' https://github.com/ogham/exa/blob/master/completions/completions.zsh \
+    has'exa' https://github.com/ogham/exa/blob/master/completions/zsh/_exa \
     has'fd' https://github.com/ohmyzsh/ohmyzsh/blob/master/plugins/fd/_fd
 
 local extract="
@@ -119,7 +121,7 @@ zstyle ':completion:complete:*:options' sort false
 zstyle ':fzf-tab:complete:_zlua:*' query-string input
 zstyle ':completion:*:*:*:*:processes' command "ps -u $USER -o pid,user,comm,cmd -w -w"
 zstyle ':fzf-tab:complete:kill:argument-rest' extra-opts --preview=$extract'ps --pid=$in[(w)1] -o cmd --no-headers -w -w' --preview-window=down:3:wrap
-zstyle ':fzf-tab:complete:*:*' extra-opts --preview=$extract'$HOME/.bin/preview $realpath'
+zstyle ':fzf-tab:complete:*:*' extra-opts --preview=$extract'$HOME/.dotfiles/bin/preview $realpath'
 
 #####################
 # SOURCES          #
@@ -131,8 +133,8 @@ zinit light-mode wait lucid is-snippet for \
 #Workaround to source ones that include completions
 _source_local() {
     autoload -Uz compinit && compinit
-    source ~/.zsh/functions.zsh
-    source ~/.zsh/aliases.zsh
+    source ~/.dotfiles/zsh/functions.zsh
+    source ~/.dotfiles/zsh/aliases.zsh
     [ -f ~/.aliases.local ] && source ~/.aliases.local
     [ -f ~/.zshrc.local ] && source ~/.zshrc.local
 }
@@ -211,8 +213,8 @@ export CLICOLOR=1
 
 export FZF_DEFAULT_COMMAND='rg --files --no-ignore --hidden --follow -g "!{.git,node_modules}/*" 2> /dev/null'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
-export FZF_CTRL_T_OPTS='--preview="$HOME/.bin/preview {}" --preview-window=right:60%:wrap'
-export FZF_ALT_C_OPTS='--preview="HOME/.bin/preview {}" --preview-window=right:60%:wrap'
+export FZF_CTRL_T_OPTS='--preview="$HOME/.dotfiles/bin/preview {}" --preview-window=right:60%:wrap'
+export FZF_ALT_C_OPTS='--preview="HOME/.dotfiles/bin/preview {}" --preview-window=right:60%:wrap'
 export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
 --reverse
 --height=50%
