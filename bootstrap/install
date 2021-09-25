@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-HOME_FILES=("gitconfig", "gitignore", "tmux.conf", "vimrc", "vimrc.bundles", "zshrc")
-
 OS=$(uname -s)
 REPO="$(dirname $0)/.."
 pushd $REPO
@@ -23,9 +21,6 @@ fi
 [ -f ~/.zshrc ] && [ ! -f ~/.zshrc.local ] && mv ~/.zshrc ~/.zshrc.local
 [ -f ~/.gitconfig ] && [ ! -f ~/.gitconfig.local ] && mv ~/.gitconfig ~/.gitconfig.local
 [ -f ~/.tmux.conf ] && [ ! -f ~/.tmux.conf.local ] && mv ~/.tmux ~/.tmux.conf.local
-
-
-
 
 
 echo "Linking home files"
