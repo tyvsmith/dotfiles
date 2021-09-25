@@ -2,26 +2,12 @@
 
 FILES=("gitconfig" "gitignore" "tmux.conf" "vim" "vimrc" "vimrc.bundles" "zshrc")
 
-
-function mklink() {
-  if [ -d $2 ] ; then
-    cmd.exe /c "mklink /J "${1//\//\\}" "${2//\//\\}
-  else
-    cmd.exe /c "mklink "${1//\//\\}" "${2//\//\\}
-  fi
-}
-
 pushd $HOME
 
 for file in "${FILES[@]}"
 do
   echo "Symlinking $HOME/.dotfiles/$file to $HOME/.$file"
-
-  if [[ $(grep microsoft /proc/version) ]]; then
-    mklink ".$file" ".dotfiles/$file"
-  else
-    ln -s ".dotfiles/$file" ".$file"
-  fi
+  ln -s ".dotfiles/$file" ".$file"
 done
 
 popd

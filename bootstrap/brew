@@ -35,12 +35,11 @@ brew install gnu-sed --with-default-names
 
 brew install bash
 brew install bash-completion2
-brew instal zsh
+brew install zsh
 brew install wget --with-iri
 brew install gnupg
 brew install vim --with-override-system-vi
 brew install grep
-brew install openssh
 brew install tmux
 brew install screen
 brew install gmp
