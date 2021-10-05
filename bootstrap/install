@@ -11,10 +11,10 @@ if [ $OS = "Darwin" ]; then
 
 else 
     #assuming Debian based for now.
-    echo "Install Linux defaults"
+    #echo "Install Linux defaults"
     
-    sudo apt update
-    sudo apt install fzf fonts-hack-ttf catimg
+    #sudo apt update
+    #sudo apt install fzf fonts-hack-ttf catimg
 fi
 
 #Backs up old files
