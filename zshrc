@@ -223,3 +223,15 @@ export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
 --pointer=➜ --prompt=➜ --marker=●
 --color=fg:-1,bg:-1,hl:33,fg+:235,bg+:235,hl+:33
 --color=info:136,prompt:136,pointer:230,marker:230,spinner:136'
+
+
+#####################
+# KEY BINDINGS      #
+#####################
+bindkey "^[[1;5D" emacs-backward-word
+bindkey "^[[1;3D" emacs-backward-word
+bindkey "^[[1;5C" emacs-forward-word
+bindkey "^[[1;3C" emacs-forward-word
+
+bindkey "^[[3;5~" kill-word
+bindkey "^[[3;3~" kill-word
