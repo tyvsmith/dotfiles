@@ -51,10 +51,7 @@ function _useKeychainWithUssh() {
         "authenticate failed" {
             send_user "Bad password, need to reauthenticate"
             exit 1
-        }
-        "Passcode or option" {
-            send "$AUTOUSSH_2FA_SELECTION\r"
-        }
+        }        
     }
     interact
 EOF

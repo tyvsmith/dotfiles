@@ -129,16 +129,29 @@ zstyle ':fzf-tab:complete:*:*' extra-opts --preview=$extract'$HOME/.dotfiles/bin
 # SOURCES          #
 #####################
 
+#Only runs command when source file has changed
+function _run_if_changed() {
+    hash=$(md5sum $1 | awk '{ print $1 }')
+    shift
+    mkdir -p ~/.zinit/file-cache/
+    disk_hash=~/.zinit/file-cache/$hash-md5sum
+
+    if [ ! -f $disk_hash ] ||  ! grep -q "$hash"  "$disk_hash"; then
+        $@ && echo $hash > "$disk_hash"
+    fi
+}
+
 zinit light-mode wait lucid is-snippet for \
     atinit='_source_local' /dev/null
 
-#Workaround to source ones that include completions
+# Workaround to source ones that include completions
 _source_local() {
     autoload -Uz compinit && compinit
     source ~/.dotfiles/zsh/functions.zsh
     source ~/.dotfiles/zsh/aliases.zsh
     [ -f ~/.aliases.local ] && source ~/.aliases.local
     [ -f ~/.zshrc.local ] && source ~/.zshrc.local
+    _run_if_changed ~/.vimrc.bundles vim -u "$HOME"/.vimrc.bundles +PlugUpdate +PlugClean! +qa
 }
 
 
@@ -235,3 +248,5 @@ bindkey "^[[1;3C" emacs-forward-word
 
 bindkey "^[[3;5~" kill-word
 bindkey "^[[3;3~" kill-word
+
+
