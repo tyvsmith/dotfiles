@@ -45,16 +45,16 @@ zinit light-mode for \
 # ZINIT ANNEXES     #
 #####################
 zinit light-mode for \
-    @zinit-zsh/z-a-bin-gem-node \
-    @zinit-zsh/z-a-rust \
-    @zinit-zsh/z-a-readurl \
-    @zinit-zsh/z-a-patch-dl
+    @zdharma-continuum/zinit-annex-bin-gem-node \
+    @zdharma-continuum/zinit-annex-rust \
+    @zdharma-continuum/zinit-annex-readurl \
+    @zdharma-continuum/zinit-annex-patch-dl
 
 #####################
 # ZINIT PLUGINS     #
 #####################
 
-#https://github.com/zdharma/fast-syntax-highlighting/issues/205 - Git disabled on zdharma/fast-syntax-highlighting
+#https://github.com/zdharma-continuum/fast-syntax-highlighting/issues/205 - Git disabled on zdharma-continuum/fast-syntax-highlighting
 
 
 zinit light-mode wait lucid  for \
@@ -73,7 +73,7 @@ zinit light-mode wait lucid  for \
     atload='_set_fzf_history' @Aloxaf/fzf-tab \
     atload"!_zsh_autosuggest_start" zsh-users/zsh-autosuggestions \
     blockf zsh-users/zsh-completions atload"_history_substring_bind_keys" @zsh-users/zsh-history-substring-search \
-    atinit" zpcompinit; zpcdreplay" atload"FAST_HIGHLIGHT[chroma-git]=0" zdharma/fast-syntax-highlighting
+    atinit" zpcompinit; zpcdreplay" atload"FAST_HIGHLIGHT[chroma-git]=0" zdharma-continuum/fast-syntax-highlighting
 
 
 #####################
@@ -86,7 +86,7 @@ zinit wait silent light-mode as:program for \
     from:gh-r pick"bin/exa" @ogham/exa \
     from:gh-r mv:'bat-**/bat -> bat' @sharkdp/bat \
     from:gh-r mv"fd* -> fd" sbin"fd/fd"  @sharkdp/fd \
-    pick"bin/git-dsf" zdharma/zsh-diff-so-fancy 
+    pick"bin/git-dsf" zdharma-continuum/zsh-diff-so-fancy 
     
 #    make @mbrubeck/compleat 
 #    from:gh-r mv:"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' pick"direnv" src="zhook.zsh" @direnv/direnv
