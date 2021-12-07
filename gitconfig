@@ -31,7 +31,6 @@
 [rebase]
   autosquash = true
 [url "git@github.com:"]
-	insteadOf = https://github.com/
   followRedirects = true
 [include]
   path = ~/.gitconfig.local
