@@ -11,9 +11,9 @@ if [ $OS = "Darwin" ]; then
 fi
 
 #Backs up old files
-[ -f ~/.zshrc ] && [ ! -f ~/.zshrc.local ] && mv ~/.zshrc ~/.zshrc.local
-[ -f ~/.gitconfig ] && [ ! -f ~/.gitconfig.local ] && mv ~/.gitconfig ~/.gitconfig.local
-[ -f ~/.tmux.conf ] && [ ! -f ~/.tmux.conf.local ] && mv ~/.tmux ~/.tmux.conf.local
+[ -f ~/.zshrc ] && [ ! -f ~/.zshrc.original ] && mv ~/.zshrc ~/.zshrc.original
+[ -f ~/.gitconfig ] && [ ! -f ~/.gitconfig.original ] && mv ~/.gitconfig ~/.gitconfig.original
+[ -f ~/.tmux.conf ] && [ ! -f ~/.tmux.conf.original ] && mv ~/.tmux ~/.tmux.conf.original
 
 
 echo "Linking home files"
