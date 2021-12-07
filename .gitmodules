@@ -1,4 +1,4 @@
 [submodule "zsh/zinit"]
 	path = zsh/zinit
-	url = git@github.com:zdharma-continuum/zinit.git
+	url = https://github.com/zdharma/zinit.git
 
