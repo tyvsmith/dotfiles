@@ -10,5 +10,11 @@ do
   ln -s ".dotfiles/$file" ".$file"
 done
 
+#Special requirements for Neovim
+mkdir -p .local/share/nvim/site
+mkdir -p .config/nvim
+ln -s .dotfiles/vim/autoload .local/share/nvim/site/autoload
+ln -s .dotfiles/vimrc .config/nvim/init.vim
+
 popd
 
