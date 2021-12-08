@@ -7,14 +7,14 @@ pushd $HOME
 for file in "${FILES[@]}"
 do
   echo "Symlinking $HOME/.dotfiles/$file to $HOME/.$file"
-  ln -s ".dotfiles/$file" ".$file"
+  ln -s "$HOME/.dotfiles/$file" "$HOME/.$file"
 done
 
 #Special requirements for Neovim
 mkdir -p .local/share/nvim/site
 mkdir -p .config/nvim
-ln -s .dotfiles/vim/autoload .local/share/nvim/site/autoload
-ln -s .dotfiles/vimrc .config/nvim/init.vim
+ln -s "$HOME/.dotfiles/vim/autoload" "$HOME/.local/share/nvim/site/autoload"
+ln -s "$HOME/.dotfiles/vimrc" "$HOME/.config/nvim/init.vim"
 
 popd
 
