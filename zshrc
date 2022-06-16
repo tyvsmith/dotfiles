@@ -2,6 +2,7 @@
 # PATH              #
 #####################
 path=("$HOME/.dotfiles/bin" /usr/local/sbin /usr/local/bin "$path[@]")
+[ -f ~/.exports.local ] && source ~/.exports.local
 
 #####################
 # ENV VARIABLE      #
@@ -248,5 +249,3 @@ bindkey "^[[1;3C" emacs-forward-word
 
 bindkey "^[[3;5~" kill-word
 bindkey "^[[3;3~" kill-word
-
-
