@@ -84,15 +84,14 @@ zinit light-mode wait lucid  for \
 #Some of these are not available on servers, this creates availability
 
 zinit wait silent light-mode as:program for \
-    from:gh-r pick"bin/exa" @ogham/exa \
+    pick"bin/exa" @ogham/exa \
     from:gh-r mv:'bat-**/bat -> bat' @sharkdp/bat \
     from:gh-r mv"fd* -> fd" sbin"fd/fd"  @sharkdp/fd \
-    pick"bin/git-dsf" zdharma-continuum/zsh-diff-so-fancy 
-    
+    pick"bin/git-dsf" zdharma-continuum/zsh-diff-so-fancy
+
 #    make @mbrubeck/compleat 
 #    from:gh-r mv:"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' pick"direnv" src="zhook.zsh" @direnv/direnv
 #    from:gh-r  @junegunn/fzf-bin \
-
 
 
 
