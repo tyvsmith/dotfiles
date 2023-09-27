@@ -141,7 +141,7 @@ function _run_if_changed() {
     fi
 }
 
-zinit light-mode wait lucid is-snippet for \
+zinit light-mode wait silent is-snippet for \
     atinit='_source_local' /dev/null
 
 # Workaround to source ones that include completions
