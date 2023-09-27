@@ -151,7 +151,7 @@ _source_local() {
     source ~/.dotfiles/zsh/aliases.zsh
     [ -f ~/.aliases.local ] && source ~/.aliases.local
     [ -f ~/.zshrc.local ] && source ~/.zshrc.local
-    _run_if_changed ~/.vimrc.bundles vim -u "$HOME"/.vimrc.bundles +PlugUpdate +PlugClean! +qa
+    _run_if_changed ~/.vimrc.bundles vim -u "$HOME"/.vimrc.bundles +PlugUpdate +PlugClean! +qall 2&> /dev/null
 }
 
 
