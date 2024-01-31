@@ -8,6 +8,7 @@ xcode-select --install
 
 #Install brew
 which -s brew || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Make sure we’re using the latest Homebrew.
 brew update
@@ -18,8 +19,11 @@ brew upgrade
 # Save Homebrew’s installed location.
 BREW_PREFIX=$(brew --prefix)
 
-brew tap homebrew/cask-fonts
 brew tap thoughtbot/formulae
+brew tap "homebrew/cask-fonts"
+brew tap "homebrew/cask-versions"
+brew tap "homebrew/services"
+
 
 # Install GNU core utilities (those that come with macOS are outdated).
 # Don’t forget to add `$(brew --prefix coreutils)/libexec/gnubin` to `$PATH`.
@@ -33,6 +37,7 @@ brew install findutils
 # Install GNU `sed`, overwriting the built-in `sed`.
 brew install gnu-sed
 
+brew install fzf
 brew install ant
 brew install bash
 brew install bash-completion2
@@ -66,25 +71,42 @@ brew install diff-so-fancy
 brew install catimg
 brew install exa
 brew install direnv
+brew install font-hack-nerd-font
 
 
 brew install --cask font-hack-nerd-font
 brew install --cask font-hack        
 brew install --cask barrier
-brew install --cask spotify
 brew install --cask moom
 brew install --cask alfred
 brew install --cask visual-studio-code
 brew install --cask signal
 brew install --cask workflowy
 brew install --cask alfred
+brew install --cask brave-browser-nightly
 brew install --cask iterm2
-brew install --cask microsoft-edge
 brew install --cask discord
 brew install --cask workflowy
 brew install --cask tidal
 brew install --cask vlc
 brew install --cask 1password
+
+brew install --cask bartender
+brew install --cask tidal
+brew install --cask beeper
+brew install --cask the-unarchiver
+brew install --cask jd-gui
+brew install --cask app-cleaner
+brew install --cask jetbrains-toolbox
+brew install --cask mmhmm
+brew install --cask soundsource
+brew install --cask rewind
+
+
+brew install mas
+mas install 937984704 //amphetamine
+mas install 1607635845 //velja
+
 
 
 # Remove outdated versions from the cellar.

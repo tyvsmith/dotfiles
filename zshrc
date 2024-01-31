@@ -4,6 +4,12 @@
 path=("$HOME/.dotfiles/bin" /usr/local/sbin /usr/local/bin "$path[@]")
 [ -f ~/.exports.local ] && source ~/.exports.local
 
+#Only load homebrew paths when installed in default location
+if [ -f "/opt/homebrew/bin/brew" ]; then 
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+    PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"
+fi
+
 #####################
 # ENV VARIABLE      #
 #####################
