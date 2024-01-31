@@ -34,19 +34,4 @@
   followRedirects = true
 [include]
   path = ~/.gitconfig.local
-[url "ssh://code.uber.internal/"]
-	insteadOf = https://code.uber.internal/
-[url "ssh://config.uber.internal/"]
-	insteadOf = https://config.uber.internal/
-[url "ssh://gitolite@code.uber.internal/"]
-	insteadOf = git://code.uber.internal/
-[url "ssh://git@github.com/uber/"]
-	insteadOf = https://github.com/uber/
-[credential "https://git.uberinternal.com"]
-	helper = usso
-[credential "https://vfs4g-cache.uberinternal.com"]
-	helper = usso
-[http "https://gopkg.uberinternal.com"]
-	followRedirects = true
-[http "https://gopkg.in"]
-	followRedirects = true
+  
