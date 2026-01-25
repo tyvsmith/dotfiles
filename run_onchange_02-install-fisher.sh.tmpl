@@ -13,11 +13,19 @@ require_cmd fish
 
 log "Installing Fisher and plugins..."
 
-# Install Fisher if not present
 fish -c '
+# Install Fisher if not present
 if not functions -q fisher
+    echo "Installing Fisher..."
     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
     fisher install jorgebucaran/fisher
 end
-fisher update
+
+# Install plugins from fish_plugins
+if test -f ~/.config/fish/fish_plugins
+    echo "Installing Fish plugins from fish_plugins..."
+    fisher update
+else
+    echo "Warning: fish_plugins not found"
+end
 '

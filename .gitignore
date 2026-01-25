@@ -5,3 +5,4 @@ vim/bundle/*
 .DS_Store
 *~
 *.swp
+.vscode/settings.json
