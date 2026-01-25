@@ -1,3 +1,6 @@
+# Taps
+tap "sdkman/tap"
+
 # Shell
 brew "fish"
 brew "atuin"
@@ -49,11 +52,16 @@ brew "gnupg"
 brew "tree"
 
 # Dev tools
+brew "sdkman-cli" # Java/Kotlin SDK manager
 brew "uv"         # Python package manager
 brew "node"       # Node.js (includes npx)
 
 # AI Tools
 brew "llm"        # Simon Willison's LLM CLI
+brew "gemini-cli" # Google Gemini CLI
+brew "opencode"   # AI coding agent
+cask "claude-code" # Anthropic Claude Code
+cask "codex"      # OpenAI Codex
 
 # macOS-only: GNU tools (Linux has these natively)
 if OS.mac?
