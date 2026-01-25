@@ -6,6 +6,17 @@ set -e
 
 echo "==> Bootstrapping dotfiles..."
 
+# Install Homebrew dependencies (git, curl, build tools)
+if ! command -v git &> /dev/null || ! command -v gcc &> /dev/null; then
+    echo "==> Installing Homebrew prerequisites..."
+    if [[ -f /etc/debian_version ]]; then
+        sudo apt-get update
+        sudo apt-get install -y build-essential procps curl file git
+    elif [[ -f /etc/fedora-release ]] || [[ -f /etc/redhat-release ]]; then
+        sudo dnf install -y gcc gcc-c++ make procps-ng curl file git
+    fi
+fi
+
 # Install Homebrew if not present
 if ! command -v brew &> /dev/null; then
     echo "==> Installing Homebrew..."
@@ -28,6 +39,6 @@ fi
 # Initialize and apply dotfiles
 # Clones to ~/.local/share/chezmoi and applies
 echo "==> Initializing chezmoi..."
-chezmoi init --apply https://github.com/tyvsmith/dotfiles.git
+chezmoi init --apply --branch chezmoi-fish https://github.com/tyvsmith/dotfiles.git
 
 echo "==> Done! Restart your shell or run: exec fish"
