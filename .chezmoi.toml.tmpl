@@ -29,7 +29,7 @@
 {{- else if hasKey .chezmoi.config.data "is_dev" -}}
 {{-   $isDev = .chezmoi.config.data.is_dev -}}
 {{- else if stdinIsATTY -}}
-{{-   $isDev = promptBoolOnce . "is_dev" "Development machine (SDKs, AI tools, dev utilities)" -}}
+{{-   $isDev = promptBool "Development machine (SDKs, AI tools, dev utilities)? [y/n]" -}}
 {{- end -}}
 
 {{- if ne $envInstallUIApps "" -}}
@@ -37,14 +37,14 @@
 {{- else if hasKey .chezmoi.config.data "install_ui_apps" -}}
 {{-   $installUIApps = .chezmoi.config.data.install_ui_apps -}}
 {{- else if stdinIsATTY -}}
-{{-   $installUIApps = promptBoolOnce . "install_ui_apps" "Install UI applications (IDEs, browsers, etc)" -}}
+{{-   $installUIApps = promptBool "Install UI applications (IDEs, browsers, etc)? [y/n]" -}}
 {{- end -}}
 
 {{- if ne $envSourceDir "" -}}
 {{-   $sourceDir = $envSourceDir -}}
 {{- else if stdinIsATTY -}}
-{{-   if promptBoolOnce . "custom_source_dir" "Customize chezmoi source directory?" -}}
-{{-     $sourceDir = promptStringOnce . "source_dir" "Enter source directory path" -}}
+{{-   if promptBool "Customize chezmoi source directory? [y/n]" -}}
+{{-     $sourceDir = promptString "Enter source directory path" -}}
 {{-   end -}}
 {{- end -}}
 
