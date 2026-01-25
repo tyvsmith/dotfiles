@@ -2,9 +2,10 @@
 
      Can be set via:
      1. Environment variables (highest priority):
-        CHEZMOI_DEV=1 CHEZMOI_GAMING=1 chezmoi init
+        CHEZMOI_IS_DEV=1 chezmoi init
+        CHEZMOI_INSTALL_UI_APPS=1 chezmoi init
      2. Command-line data flags:
-        chezmoi init --data is_development=true --data is_gaming=true
+        chezmoi init --data is_dev=true --data install_ui_apps=true
      3. Interactive prompts (if TTY available and not set above)
      4. Previously saved values in chezmoi state
 
@@ -13,50 +14,30 @@
 */ -}}
 
 {{- /* Check environment variables first */ -}}
-{{- $envDev := lower (env "CHEZMOI_DEV") -}}
-{{- $envWork := lower (env "CHEZMOI_WORK") -}}
-{{- $envGaming := lower (env "CHEZMOI_GAMING") -}}
-{{- $envServer := lower (env "CHEZMOI_SERVER") -}}
+{{- $envIsDev := lower (env "CHEZMOI_IS_DEV") -}}
+{{- $envInstallUIApps := lower (env "CHEZMOI_INSTALL_UI_APPS") -}}
 {{- $envSourceDir := env "CHEZMOI_SOURCE_DIR" -}}
 {{- $sourceDir := "" -}}
 
 {{- /* Initialize with env vars if set, otherwise use existing data or false */ -}}
-{{- $isDevelopment := false -}}
-{{- $isWork := false -}}
-{{- $isGaming := false -}}
-{{- $isServer := false -}}
+{{- $isDev := false -}}
+{{- $installUIApps := false -}}
 
 {{- /* Environment variables override everything */ -}}
-{{- if ne $envDev "" -}}
-{{-   $isDevelopment = or (eq $envDev "1") (eq $envDev "true") -}}
-{{- else if hasKey .chezmoi.config.data "is_development" -}}
-{{-   $isDevelopment = .chezmoi.config.data.is_development -}}
+{{- if ne $envIsDev "" -}}
+{{-   $isDev = or (eq $envIsDev "1") (eq $envIsDev "true") -}}
+{{- else if hasKey .chezmoi.config.data "is_dev" -}}
+{{-   $isDev = .chezmoi.config.data.is_dev -}}
 {{- else if stdinIsATTY -}}
-{{-   $isDevelopment = promptBoolOnce . "is_development" "Development machine (dev tools, IDEs)" -}}
+{{-   $isDev = promptBoolOnce . "is_dev" "Development machine (SDKs, AI tools, dev utilities)" -}}
 {{- end -}}
 
-{{- if ne $envWork "" -}}
-{{-   $isWork = or (eq $envWork "1") (eq $envWork "true") -}}
-{{- else if hasKey .chezmoi.config.data "is_work" -}}
-{{-   $isWork = .chezmoi.config.data.is_work -}}
+{{- if ne $envInstallUIApps "" -}}
+{{-   $installUIApps = or (eq $envInstallUIApps "1") (eq $envInstallUIApps "true") -}}
+{{- else if hasKey .chezmoi.config.data "install_ui_apps" -}}
+{{-   $installUIApps = .chezmoi.config.data.install_ui_apps -}}
 {{- else if stdinIsATTY -}}
-{{-   $isWork = promptBoolOnce . "is_work" "Work machine (work-specific tools)" -}}
-{{- end -}}
-
-{{- if ne $envGaming "" -}}
-{{-   $isGaming = or (eq $envGaming "1") (eq $envGaming "true") -}}
-{{- else if hasKey .chezmoi.config.data "is_gaming" -}}
-{{-   $isGaming = .chezmoi.config.data.is_gaming -}}
-{{- else if stdinIsATTY -}}
-{{-   $isGaming = promptBoolOnce . "is_gaming" "Gaming machine (gaming tools, configs)" -}}
-{{- end -}}
-
-{{- if ne $envServer "" -}}
-{{-   $isServer = or (eq $envServer "1") (eq $envServer "true") -}}
-{{- else if hasKey .chezmoi.config.data "is_server" -}}
-{{-   $isServer = .chezmoi.config.data.is_server -}}
-{{- else if stdinIsATTY -}}
-{{-   $isServer = promptBoolOnce . "is_server" "Server (minimal, headless)" -}}
+{{-   $installUIApps = promptBoolOnce . "install_ui_apps" "Install UI applications (IDEs, browsers, etc)" -}}
 {{- end -}}
 
 {{- if ne $envSourceDir "" -}}
@@ -72,7 +53,5 @@ sourceDir = {{ $sourceDir | quote }}
 {{- end }}
 
 [data]
-    is_development = {{ $isDevelopment }}
-    is_work = {{ $isWork }}
-    is_gaming = {{ $isGaming }}
-    is_server = {{ $isServer }}
+    is_dev = {{ $isDev }}
+    install_ui_apps = {{ $installUIApps }}

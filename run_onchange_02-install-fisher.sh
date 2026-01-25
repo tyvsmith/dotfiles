@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install Fisher and Fish plugins
-# fish_plugins hash: {{ include "dot_config/fish/fish_plugins" | sha256sum }}
+# fish_plugins hash: {{ include "dot_config/fish/fish_plugins.tmpl" | sha256sum }}
 set -euo pipefail
 
 # shellcheck source=/dev/null
@@ -13,19 +13,11 @@ require_cmd fish
 
 log "Installing Fisher and plugins..."
 
-fish -c '
 # Install Fisher if not present
+fish -c '
 if not functions -q fisher
-    echo "Installing Fisher..."
     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
     fisher install jorgebucaran/fisher
 end
-
-# Install plugins from fish_plugins
-if test -f ~/.config/fish/fish_plugins
-    echo "Installing Fish plugins from fish_plugins..."
-    fisher update
-else
-    echo "Warning: fish_plugins not found"
-end
+fisher update
 '

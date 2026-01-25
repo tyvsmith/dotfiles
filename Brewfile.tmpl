@@ -1,0 +1,132 @@
+# =============================================================================
+# Core & Modern CLI Tools - Installed on ALL machines
+# These are lightweight and provide the consistent UX across all environments
+# =============================================================================
+
+# Shell & Environment
+brew "fish"
+brew "atuin"
+brew "zoxide"
+brew "starship"
+brew "direnv"
+
+# Editor
+brew "neovim"
+
+# Modern CLI replacements (lightweight, essential for bling.fish abbreviations)
+brew "eza"           # ls
+brew "bat"           # cat
+brew "fd"            # find
+brew "ripgrep"       # grep
+brew "sd"            # sed
+brew "dust"          # du
+brew "duf"           # df
+brew "procs"         # ps
+brew "bottom"        # top/htop
+brew "difftastic"    # diff (structural)
+brew "git-delta"     # diff (git pager)
+brew "trash-cli"     # rm (safe delete)
+brew "choose"        # cut/awk
+brew "broot"         # tree explorer
+brew "xh"            # curl
+brew "doggo"         # dig
+brew "gping"         # ping
+brew "tealdeer"      # man (tldr)
+
+# Git
+brew "git"
+brew "git-lfs"
+brew "gh"
+brew "lazygit"
+
+# Essential Utils
+brew "chezmoi"
+brew "fzf"
+brew "jq"
+brew "yq"
+brew "tmux"
+brew "wget"
+brew "gnupg"
+brew "tree"
+
+# =============================================================================
+# Development Tools - Only for development machines (is_dev=true)
+# These are heavier: SDKs, build tools, AI tools
+# =============================================================================
+{{ if .is_dev -}}
+
+# Development SDKs & Package Managers
+brew "sdkman/tap/sdkman-cli" # Java/Kotlin SDK manager
+brew "uv"                    # Python package manager
+brew "node"                  # Node.js (includes npx)
+
+# Build & Image Tools
+brew "imagemagick"           # Image manipulation
+brew "p7zip"                 # 7z archive support
+
+# Development Utilities
+brew "shellcheck"            # Shell script linter
+brew "tokei"                 # Code statistics
+brew "hyperfine"             # Command benchmarking
+brew "grex"                  # Regex generator
+
+# AI Tools (CLI)
+brew "llm"                   # Simon Willison's LLM CLI
+brew "gemini-cli"            # Google Gemini CLI
+brew "opencode"              # AI coding agent
+cask "claude-code"           # Anthropic Claude Code
+cask "codex"                 # OpenAI Codex
+
+{{ end -}}
+
+# =============================================================================
+# macOS-only: GNU tools (Linux has these natively)
+# =============================================================================
+{{ if eq .chezmoi.os "darwin" -}}
+brew "coreutils"
+brew "findutils"
+brew "gnu-sed"
+brew "grep"
+brew "moreutils"
+{{ end -}}
+
+# =============================================================================
+# GUI Applications - macOS only, when install_ui_apps=true
+# =============================================================================
+{{ if and (eq .chezmoi.os "darwin") .install_ui_apps -}}
+
+# Fonts
+cask "font-hack-nerd-font"
+
+# Development Tools
+cask "visual-studio-code"
+cask "jetbrains-toolbox"
+cask "iterm2"
+
+# Productivity & Utilities
+cask "1password"
+cask "alfred"                # Launcher/automation
+cask "moom"                  # Window manager
+cask "the-unarchiver"        # Archive extraction
+cask "app-cleaner"           # Uninstaller
+
+# Communication
+cask "discord"
+cask "beeper"                # Unified messaging
+
+# Browsers
+cask "brave-browser"
+
+# Media
+cask "vlc"
+cask "soundsource"           # Audio control
+
+# Other Utilities
+cask "deskflow"              # Software KVM (control multiple computers)
+
+# Mac App Store
+brew "mas"
+mas "Amphetamine", id: 937984704   # Keep Mac awake utility
+mas "Velja", id: 1607635845        # Browser/app picker
+
+{{ end -}}

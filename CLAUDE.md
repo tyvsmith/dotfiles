@@ -39,20 +39,37 @@ brew bundle --file="$(chezmoi source-path)/Brewfile"
 ### Machine Type Configuration
 The `.chezmoi.toml.tmpl` prompts for machine type on first init, or accepts environment variables:
 ```bash
-CHEZMOI_DEV=1 CHEZMOI_GAMING=1 chezmoi init
+CHEZMOI_IS_DEV=1 CHEZMOI_INSTALL_UI_APPS=1 chezmoi init
 ```
 
-Machine types: `is_development`, `is_work`, `is_gaming`, `is_server`
+**Machine type flags:**
+- `is_dev` - Development machine (installs SDKs, AI tools, dev utilities)
+  - Set to `true` for: personal dev machines, work dev machines, devpods
+  - Set to `false` for: homelab servers, infrastructure machines
+- `install_ui_apps` - Install GUI applications (IDEs, browsers, etc.) - macOS only
+  - Set to `true` for: machines where you want GUI apps
+  - Set to `false` for: servers, headless machines, Linux (uses native package manager for GUI)
+
+**Package tiers:**
+- **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux, essential utils
+- **Tier 2 (is_dev=true):** Development SDKs (sdkman, uv, node), build tools (imagemagick, p7zip), AI tools (llm, gemini-cli, opencode), dev utilities (shellcheck, tokei, hyperfine)
+- **Tier 3 (macOS + install_ui_apps=true):** GUI applications (VS Code, JetBrains, browsers, productivity apps)
+
+**Example configurations:**
+- Personal Linux dev: `is_dev=true`, `install_ui_apps=false` (no macOS casks)
+- Work Mac dev: `is_dev=true`, `install_ui_apps=true` (everything)
+- Devpods (Debian): `is_dev=true`, `install_ui_apps=false` (CLI + dev tools)
+- Homelab server: `is_dev=false`, `install_ui_apps=false` (modern CLI only)
 
 ### OS Detection in Templates
 Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else }}` for Linux paths (e.g., Homebrew paths, SSH agent sockets).
 
 ### Key Files
-- `Brewfile` - Package manifest for Homebrew (cross-platform)
-- `run_once_01-install-packages.sh` - Runs `brew bundle` on init
-- `run_once_02-install-fisher.sh` - Installs Fisher and Fish plugins
-- `dot_config/fish/conf.d/bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
-- `dot_config/fish/fish_plugins` - Fisher plugin manifest
+- `Brewfile.tmpl` - Package manifest for Homebrew (cross-platform, machine-type aware)
+- `run_onchange_01-install-packages.sh` - Runs `brew bundle` on Brewfile changes
+- `run_onchange_02-install-fisher.sh` - Installs Fisher and Fish plugins on changes
+- `dot_config/fish/conf.d/0_bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
+- `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
 - `dot_gitconfig.tmpl` - Git config with delta pager, useful aliases
 
 ### Philosophy

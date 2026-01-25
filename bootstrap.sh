@@ -9,11 +9,32 @@ echo "==> Bootstrapping dotfiles..."
 # Install Homebrew dependencies (git, curl, build tools)
 if ! command -v git &> /dev/null || ! command -v gcc &> /dev/null; then
     echo "==> Installing Homebrew prerequisites..."
-    if [[ -f /etc/debian_version ]]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        if ! xcode-select -p &> /dev/null; then
+            echo "Installing Xcode Command Line Tools..."
+            xcode-select --install
+            echo "Please wait for Xcode Command Line Tools installation to complete, then re-run this script."
+            exit 0
+        fi
+    elif command -v rpm-ostree &> /dev/null; then
+        echo "⚠️  Missing build tools on rpm-ostree system (Fedora Silverblue/Bazzite/etc)"
+        echo ""
+        echo "Option 1 (Recommended): Use a distrobox container"
+        echo "  distrobox enter <container-name>"
+        echo "  # Then run this bootstrap script inside the container"
+        echo ""
+        echo "Option 2: Install to base system (requires reboot)"
+        echo "  sudo rpm-ostree install gcc gcc-c++ make procps-ng curl file git"
+        echo "  systemctl reboot"
+        echo "  # Then re-run this script after reboot"
+        exit 1
+    elif [[ -f /etc/debian_version ]]; then
         sudo apt-get update
         sudo apt-get install -y build-essential procps curl file git
     elif [[ -f /etc/fedora-release ]] || [[ -f /etc/redhat-release ]]; then
         sudo dnf install -y gcc gcc-c++ make procps-ng curl file git
+    elif [[ -f /etc/arch-release ]] || command -v pacman &> /dev/null; then
+        sudo pacman -Sy --needed --noconfirm base-devel procps-ng curl file git
     fi
 fi
 
@@ -39,6 +60,6 @@ fi
 # Initialize and apply dotfiles
 # Clones to ~/.local/share/chezmoi and applies
 echo "==> Initializing chezmoi..."
-chezmoi init --apply https://github.com/tyvsmith/dotfiles.git
+chezmoi init --apply tyvsmith/dotfiles.git
 
 echo "==> Done! Restart your shell or run: exec fish"
