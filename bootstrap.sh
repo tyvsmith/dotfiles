@@ -39,6 +39,6 @@ fi
 # Initialize and apply dotfiles
 # Clones to ~/.local/share/chezmoi and applies
 echo "==> Initializing chezmoi..."
-chezmoi init --apply --branch chezmoi-fish https://github.com/tyvsmith/dotfiles.git
+chezmoi init --apply https://github.com/tyvsmith/dotfiles.git
 
 echo "==> Done! Restart your shell or run: exec fish"
