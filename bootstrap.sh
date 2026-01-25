@@ -60,6 +60,6 @@ fi
 # Initialize and apply dotfiles
 # Clones to ~/.local/share/chezmoi and applies
 echo "==> Initializing chezmoi..."
-chezmoi init --apply tyvsmith/dotfiles.git --branch test-fisher-plugins  < /dev/tty
+chezmoi init --apply tyvsmith/dotfiles.git < /dev/tty
 
 echo "==> Done! Restart your shell or run: exec fish"
