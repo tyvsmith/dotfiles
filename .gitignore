@@ -1,2 +1,6 @@
 *.local
+!create_*.local
 vim/bundle/*
+.DS_Store
+*~
+*.swp

@@ -1,0 +1,11 @@
+# Editor
+set -gx EDITOR nvim
+set -gx VISUAL $EDITOR
+set -g __sdkman_custom_dir $(brew --prefix sdkman-cli)/libexec
+
+# 1Password SSH agent
+{{- if eq .chezmoi.os "darwin" }}
+set -x SSH_AUTH_SOCK ~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
+{{- else }}
+set -x SSH_AUTH_SOCK ~/.1password/agent.sock
+{{- end }}

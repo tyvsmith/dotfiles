@@ -1,0 +1,26 @@
+# Homebrew setup
+# On Bazzite, this is provided by /usr/share/fish/vendor_conf.d/ublue-brew.fish
+# This file handles macOS and other Linux distros
+
+if status is-interactive
+{{- if eq .chezmoi.os "darwin" }}
+    if test -d /opt/homebrew
+        eval "$(/opt/homebrew/bin/brew shellenv fish)"
+    end
+{{- else }}
+    # Only set up if not already configured (e.g., by Bazzite's ublue-brew.fish)
+    if test -d /home/linuxbrew/.linuxbrew; and not contains /home/linuxbrew/.linuxbrew/bin $PATH
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv fish)"
+    end
+{{- end }}
+
+    # Homebrew completions
+    if type -q brew
+        if test -d (brew --prefix)/share/fish/completions
+            set -p fish_complete_path (brew --prefix)/share/fish/completions
+        end
+        if test -d (brew --prefix)/share/fish/vendor_completions.d
+            set -p fish_complete_path (brew --prefix)/share/fish/vendor_completions.d
+        end
+    end
+end

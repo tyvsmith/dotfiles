@@ -1,0 +1,78 @@
+{{- /* Machine type configuration for chezmoi
+
+     Can be set via:
+     1. Environment variables (highest priority):
+        CHEZMOI_DEV=1 CHEZMOI_GAMING=1 chezmoi init
+     2. Command-line data flags:
+        chezmoi init --data is_development=true --data is_gaming=true
+     3. Interactive prompts (if TTY available and not set above)
+     4. Previously saved values in chezmoi state
+
+     Optional source directory override:
+        CHEZMOI_SOURCE_DIR=/path/to/chezmoi/source chezmoi init
+*/ -}}
+
+{{- /* Check environment variables first */ -}}
+{{- $envDev := lower (env "CHEZMOI_DEV") -}}
+{{- $envWork := lower (env "CHEZMOI_WORK") -}}
+{{- $envGaming := lower (env "CHEZMOI_GAMING") -}}
+{{- $envServer := lower (env "CHEZMOI_SERVER") -}}
+{{- $envSourceDir := env "CHEZMOI_SOURCE_DIR" -}}
+{{- $sourceDir := "" -}}
+
+{{- /* Initialize with env vars if set, otherwise use existing data or false */ -}}
+{{- $isDevelopment := false -}}
+{{- $isWork := false -}}
+{{- $isGaming := false -}}
+{{- $isServer := false -}}
+
+{{- /* Environment variables override everything */ -}}
+{{- if ne $envDev "" -}}
+{{-   $isDevelopment = or (eq $envDev "1") (eq $envDev "true") -}}
+{{- else if hasKey .chezmoi.config.data "is_development" -}}
+{{-   $isDevelopment = .chezmoi.config.data.is_development -}}
+{{- else if stdinIsATTY -}}
+{{-   $isDevelopment = promptBoolOnce . "is_development" "Development machine (dev tools, IDEs)" -}}
+{{- end -}}
+
+{{- if ne $envWork "" -}}
+{{-   $isWork = or (eq $envWork "1") (eq $envWork "true") -}}
+{{- else if hasKey .chezmoi.config.data "is_work" -}}
+{{-   $isWork = .chezmoi.config.data.is_work -}}
+{{- else if stdinIsATTY -}}
+{{-   $isWork = promptBoolOnce . "is_work" "Work machine (work-specific tools)" -}}
+{{- end -}}
+
+{{- if ne $envGaming "" -}}
+{{-   $isGaming = or (eq $envGaming "1") (eq $envGaming "true") -}}
+{{- else if hasKey .chezmoi.config.data "is_gaming" -}}
+{{-   $isGaming = .chezmoi.config.data.is_gaming -}}
+{{- else if stdinIsATTY -}}
+{{-   $isGaming = promptBoolOnce . "is_gaming" "Gaming machine (gaming tools, configs)" -}}
+{{- end -}}
+
+{{- if ne $envServer "" -}}
+{{-   $isServer = or (eq $envServer "1") (eq $envServer "true") -}}
+{{- else if hasKey .chezmoi.config.data "is_server" -}}
+{{-   $isServer = .chezmoi.config.data.is_server -}}
+{{- else if stdinIsATTY -}}
+{{-   $isServer = promptBoolOnce . "is_server" "Server (minimal, headless)" -}}
+{{- end -}}
+
+{{- if ne $envSourceDir "" -}}
+{{-   $sourceDir = $envSourceDir -}}
+{{- else if stdinIsATTY -}}
+{{-   if promptBoolOnce . "custom_source_dir" "Customize chezmoi source directory?" -}}
+{{-     $sourceDir = promptStringOnce . "source_dir" "Enter source directory path" -}}
+{{-   end -}}
+{{- end -}}
+
+{{- if ne $sourceDir "" }}
+sourceDir = {{ $sourceDir | quote }}
+{{- end }}
+
+[data]
+    is_development = {{ $isDevelopment }}
+    is_work = {{ $isWork }}
+    is_gaming = {{ $isGaming }}
+    is_server = {{ $isServer }}

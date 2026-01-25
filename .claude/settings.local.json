@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(fold:*)",
+      "Bash(git checkout:*)",
+      "Bash(chezmoi init:*)",
+      "Bash(chezmoi verify:*)",
+      "Bash(chmod:*)",
+      "Bash(git commit:*)",
+      "Bash(fish:*)",
+      "Bash(git -C /var/home/ty/Code/dotfiles ls-files:*)",
+      "Bash(git -C /var/home/ty/Code/dotfiles log --oneline)",
+      "Bash(git -C /var/home/ty/Code/dotfiles branch -a)"
+    ]
+  }
+}

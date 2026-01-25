@@ -1,0 +1,15 @@
+LICENSE
+README.MD
+README.md
+Brewfile
+bootstrap.sh
+legacy/
+.claude/
+
+# Ignore scripts by default, except run_* scripts which are executed
+scripts/
+!scripts/run_*
+
+# SSH local config (machine-specific, not synced)
+.ssh/config.local
+.ssh/config.d/
