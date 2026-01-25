@@ -43,9 +43,7 @@
 {{- if ne $envSourceDir "" -}}
 {{-   $sourceDir = $envSourceDir -}}
 {{- else if stdinIsATTY -}}
-{{-   if eq (promptChoice "Customize chezmoi source directory?" (list "no" "yes")) "yes" -}}
-{{-     $sourceDir = promptString "Enter source directory path" -}}
-{{-   end -}}
+{{-   $sourceDir = promptString "Enter source directory path. Empty is default" -}}
 {{- end -}}
 
 {{- if ne $sourceDir "" }}
