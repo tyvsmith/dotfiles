@@ -1,0 +1,19 @@
+LICENSE
+README.MD
+README.md
+Brewfile
+bootstrap.sh
+legacy/
+.claude/
+
+# Ignore scripts directory (run_* scripts are in repo root)
+scripts/
+
+# Decrypted plaintext files are for local editing only, never deployed
+**/decrypted_*
+
+{{ if not .should_decrypt }}
+# Skip encrypted files when decryption is disabled
+**/*.age
+**/encrypted_*
+{{ end }}

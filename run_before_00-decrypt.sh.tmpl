@@ -1,0 +1,38 @@
+{{- if .should_decrypt -}}
+#!/usr/bin/env bash
+# Install age and ensure decryption key exists for chezmoi encrypted files
+# Key sources (in order): local file, 1Password
+
+set -euo pipefail
+
+# Install age for decryption (needed before file operations)
+if ! command -v age &>/dev/null; then
+    echo "Installing age for decryption..."
+    brew install age
+fi
+
+AGE_KEY_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi/age-key.txt"
+
+# Skip if key already exists
+if [[ -s "$AGE_KEY_FILE" ]]; then
+    exit 0
+fi
+
+# Create directory if needed
+mkdir -p "$(dirname "$AGE_KEY_FILE")"
+
+# Try 1Password if available
+if command -v op &>/dev/null && op account list &>/dev/null; then
+    echo "Fetching age key from 1Password..."
+    op read "op://Private/dotfiles-age-key/key" > "$AGE_KEY_FILE"
+    chmod 600 "$AGE_KEY_FILE"
+else
+    echo "Error: Age key not found at $AGE_KEY_FILE"
+    echo "Options:"
+    echo "  1. Place key manually at $AGE_KEY_FILE"
+    echo "  2. Sign in to 1Password CLI: op signin"
+    echo ""
+    echo "Encrypted files won't be decrypted until key is available."
+    exit 1
+fi
+{{ end -}}

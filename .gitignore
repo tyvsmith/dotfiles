@@ -6,3 +6,6 @@ vim/bundle/*
 *~
 *.swp
 .vscode/settings.json
+
+# Decrypted secrets (plaintext versions of encrypted_*.age files)
+**/decrypted_*

@@ -13,10 +13,12 @@
 {{- /* Check environment variables first */ -}}
 {{- $envIsDev := lower (env "CHEZMOI_IS_DEV") -}}
 {{- $envInstallUIApps := lower (env "CHEZMOI_INSTALL_UI_APPS") -}}
+{{- $envShouldDecrypt := lower (env "CHEZMOI_SHOULD_DECRYPT") -}}
 
 {{- /* Initialize with env vars if set, otherwise use existing data or false */ -}}
 {{- $isDev := false -}}
 {{- $installUIApps := false -}}
+{{- $shouldDecrypt := false -}}
 
 {{- /* Environment variables override everything */ -}}
 {{- if ne $envIsDev "" -}}
@@ -35,6 +37,23 @@
 {{-   $installUIApps = eq (promptChoice "Install UI applications (IDEs, browsers, etc)" (list "yes" "no")) "yes" -}}
 {{- end -}}
 
+{{- if ne $envShouldDecrypt "" -}}
+{{-   $shouldDecrypt = or (eq $envShouldDecrypt "1") (eq $envShouldDecrypt "true") -}}
+{{- else if hasKey .chezmoi.config.data "should_decrypt" -}}
+{{-   $shouldDecrypt = .chezmoi.config.data.should_decrypt -}}
+{{- else if stdinIsATTY -}}
+{{-   $shouldDecrypt = promptBoolOnce . "should_decrypt" "Decrypt private configs (requires 1Password with age key)" -}}
+{{- end -}}
+
+{{ if $shouldDecrypt -}}
+encryption = "age"
+{{ end }}
 [data]
     is_dev = {{ $isDev }}
     install_ui_apps = {{ $installUIApps }}
+    should_decrypt = {{ $shouldDecrypt }}
+{{ if $shouldDecrypt }}
+[age]
+    identity = "~/.config/chezmoi/age-key.txt"
+    recipientFile = "{{ .chezmoi.sourceDir }}/.age-public-key"
+{{- end }}
