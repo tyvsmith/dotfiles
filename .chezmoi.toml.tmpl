@@ -8,16 +8,11 @@
         chezmoi init --data is_dev=true --data install_ui_apps=true
      3. Interactive prompts (if TTY available and not set above)
      4. Previously saved values in chezmoi state
-
-     Optional source directory override:
-        CHEZMOI_SOURCE_DIR=/path/to/chezmoi/source chezmoi init
 */ -}}
 
 {{- /* Check environment variables first */ -}}
 {{- $envIsDev := lower (env "CHEZMOI_IS_DEV") -}}
 {{- $envInstallUIApps := lower (env "CHEZMOI_INSTALL_UI_APPS") -}}
-{{- $envSourceDir := env "CHEZMOI_SOURCE_DIR" -}}
-{{- $sourceDir := "" -}}
 
 {{- /* Initialize with env vars if set, otherwise use existing data or false */ -}}
 {{- $isDev := false -}}
@@ -39,16 +34,6 @@
 {{- else if stdinIsATTY -}}
 {{-   $installUIApps = eq (promptChoice "Install UI applications (IDEs, browsers, etc)?" (list "yes" "no")) "yes" -}}
 {{- end -}}
-
-{{- if ne $envSourceDir "" -}}
-{{-   $sourceDir = $envSourceDir -}}
-{{- else if stdinIsATTY -}}
-{{-   $sourceDir = promptString "Enter source directory path. Empty is default" -}}
-{{- end -}}
-
-{{- if ne $sourceDir "" }}
-sourceDir = {{ $sourceDir | quote }}
-{{- end }}
 
 [data]
     is_dev = {{ $isDev }}
