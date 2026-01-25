@@ -49,16 +49,11 @@ brew "gnupg"
 brew "tree"
 
 # Dev tools
-brew "sdkman-cli"
-brew "npx"
-brew "uv"
+brew "uv"         # Python package manager
+brew "node"       # Node.js (includes npx)
 
-#AI Tools
-brew "claude-code"
-brew "gemini-cli"
-brew "codex"
-brew "opencode"
-brew "llm"
+# AI Tools
+brew "llm"        # Simon Willison's LLM CLI
 
 # macOS-only: GNU tools (Linux has these natively)
 if OS.mac?
