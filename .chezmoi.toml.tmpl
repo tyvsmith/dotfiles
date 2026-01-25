@@ -45,5 +45,5 @@ encryption = "age"
 {{ if $shouldDecrypt }}
 [age]
     identity = "~/.config/chezmoi/age-key.txt"
-    recipientFile = "{{ .chezmoi.sourceDir }}/.age-public-key"
+    recipient = "{{ include ".age-public-key" | trim }}"
 {{- end }}
