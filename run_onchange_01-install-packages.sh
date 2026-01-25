@@ -11,6 +11,9 @@ source "$DOTFILES_DIR/scripts/lib/common.sh"
 
 ensure_brew_in_path
 require_cmd brew
-require_file "$DOTFILES_DIR/Brewfile"
 
-brew bundle --file="$DOTFILES_DIR/Brewfile"
+# Brewfile is rendered by chezmoi in the home directory
+BREWFILE="$HOME/Brewfile"
+require_file "$BREWFILE"
+
+brew bundle --file="$BREWFILE"
