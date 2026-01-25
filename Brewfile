@@ -1,6 +1,3 @@
-# Taps
-tap "sdkman/tap"
-
 # Shell
 brew "fish"
 brew "atuin"
@@ -52,7 +49,7 @@ brew "gnupg"
 brew "tree"
 
 # Dev tools
-brew "sdkman-cli" # Java/Kotlin SDK manager
+brew "sdkman/tap/sdkman-cli" # Java/Kotlin SDK manager
 brew "uv"         # Python package manager
 brew "node"       # Node.js (includes npx)
 
