@@ -12,8 +12,16 @@ source "$DOTFILES_DIR/scripts/lib/common.sh"
 ensure_brew_in_path
 require_cmd brew
 
-# Brewfile is rendered by chezmoi in the home directory
-BREWFILE="$HOME/Brewfile"
-require_file "$BREWFILE"
+# Render Brewfile template to a temporary location
+BREWFILE_TMPL="$DOTFILES_DIR/Brewfile.tmpl"
+BREWFILE="/tmp/Brewfile.$$"
+require_file "$BREWFILE_TMPL"
 
+# Render the template using chezmoi
+chezmoi execute-template < "$BREWFILE_TMPL" > "$BREWFILE"
+
+# Run brew bundle
 brew bundle --file="$BREWFILE"
+
+# Clean up
+rm -f "$BREWFILE"
