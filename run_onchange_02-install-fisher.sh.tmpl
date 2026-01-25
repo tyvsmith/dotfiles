@@ -13,7 +13,9 @@ require_cmd fish
 
 log "Installing Fisher and plugins..."
 
-fish -c '
+# Use --no-config to avoid loading user config during Fisher bootstrap
+# This prevents issues where config files might output text or fail
+fish --no-config -c '
 # Install Fisher if not present
 if not functions -q fisher
     echo "Installing Fisher..."

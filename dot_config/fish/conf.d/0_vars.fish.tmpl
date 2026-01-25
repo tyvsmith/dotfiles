@@ -1,7 +1,11 @@
 # Editor
 set -gx EDITOR nvim
 set -gx VISUAL $EDITOR
-set -g __sdkman_custom_dir $(brew --prefix sdkman-cli)/libexec
+
+# SDKMAN config (only if installed via brew)
+if type -q brew; and brew --prefix sdkman-cli &>/dev/null
+    set -g __sdkman_custom_dir (brew --prefix sdkman-cli)/libexec
+end
 
 # 1Password SSH agent
 {{- if eq .chezmoi.os "darwin" }}
