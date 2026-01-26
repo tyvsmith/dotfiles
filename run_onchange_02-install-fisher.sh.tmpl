@@ -11,61 +11,44 @@ ensure_brew_in_path
 # Check if fish is available
 require_cmd fish
 
+# Verify fish_plugins exists
+if [[ ! -f ~/.config/fish/fish_plugins ]]; then
+    fail "fish_plugins not found at ~/.config/fish/fish_plugins"
+fi
+
 log "Installing Fisher and plugins..."
 
-# Create a temporary fish script to avoid any stdin/stdout contamination
-FISH_SCRIPT=$(mktemp)
-cat > "$FISH_SCRIPT" << 'FISH_EOF'
-set fish_plugins_file ~/.config/fish/fish_plugins
-
-# Check fish_plugins exists
-echo "Looking for fish_plugins at: $fish_plugins_file"
-if not test -f $fish_plugins_file
-    echo "fish_plugins NOT found"
-    exit 1
-end
-echo "fish_plugins exists"
-
-# Helper function to clean Fisher-managed files
-function __clean_fisher_files
-    echo "Cleaning up Fisher-managed files..."
-    # Remove Fisher-managed directories
-    for dir in ~/.config/fish/functions ~/.config/fish/completions ~/.config/fish/themes
-        if test -d $dir
-            rm -rf $dir
-        end
+# Step 1: Bootstrap Fisher (with --no-config to avoid any config issues)
+# This installs just the Fisher function itself
+BOOTSTRAP_SCRIPT=$(mktemp)
+cat > "$BOOTSTRAP_SCRIPT" << 'FISH_EOF'
+# Clean up any stale Fisher-managed files first
+echo "Cleaning up Fisher-managed files..."
+for dir in ~/.config/fish/functions ~/.config/fish/completions ~/.config/fish/themes
+    if test -d $dir
+        rm -rf $dir
     end
-    # Remove plugin conf.d files (but keep our 0_*.fish files from chezmoi)
-    for f in ~/.config/fish/conf.d/*.fish
-        if not string match -q '*/0_*' $f
-            rm -f $f
-        end
+end
+# Remove plugin conf.d files (but keep our 0_*.fish files from chezmoi)
+for f in ~/.config/fish/conf.d/*.fish
+    if not string match -q '*/0_*' $f
+        rm -f $f
     end
 end
 
-# If Fisher function is not available, we need a fresh install
-if not functions -q fisher
-    echo "Fisher not loaded, performing fresh install..."
-    __clean_fisher_files
-    curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-    fisher update
-else
-    echo "Fisher already loaded, updating plugins..."
-    fisher update
-end
+# Install Fisher only (not plugins yet)
+# Temporarily hide fish_plugins so Fisher only installs itself
+echo "Installing Fisher..."
+mv ~/.config/fish/fish_plugins ~/.config/fish/fish_plugins.bak
+curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+fisher install jorgebucaran/fisher
+mv ~/.config/fish/fish_plugins.bak ~/.config/fish/fish_plugins
 FISH_EOF
 
-# Run fish with no config, isolated stdin
-fish --no-config "$FISH_SCRIPT" </dev/null
+fish --no-config "$BOOTSTRAP_SCRIPT" </dev/null
+rm -f "$BOOTSTRAP_SCRIPT"
 
-# Cleanup
-rm -f "$FISH_SCRIPT"
-
-# Fisher's $_fisher_plugins variable needs to be set for 'fisher list' to work.
-# Running with --no-config doesn't persist universal variables, so we need to
-# manually initialize it from the fish_plugins file.
-log "Initializing Fisher state..."
-fish -c '
-    set -l plugins (string match --regex "^[^\s]+" < ~/.config/fish/fish_plugins)
-    set --universal _fisher_plugins $plugins
-' </dev/null || true
+# Step 2: Install plugins (with normal config so Fisher loads properly)
+# This runs after Fisher is installed, simulating "exec fish" restart
+log "Installing plugins..."
+fish -c 'fisher update' </dev/null
