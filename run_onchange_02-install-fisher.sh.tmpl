@@ -15,7 +15,12 @@ fi
 
 log "Installing Fisher and plugins..."
 
-# Step 2: Install plugins with normal config (Fisher state persists correctly)
-curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | fish
-fish -c 'fisher install jorgebucaran/fisher'
-fish -c 'fisher update' </dev/null
+# Run in subshell with isolated stdin to prevent stdout contamination
+# Fisher's parallel curl commands can capture stray output from parent process
+(
+    exec </dev/null
+    fish -c '
+        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+        fisher update
+    '
+)
