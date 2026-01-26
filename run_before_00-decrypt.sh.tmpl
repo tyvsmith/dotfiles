@@ -1,9 +1,15 @@
 {{- if .should_decrypt -}}
 #!/usr/bin/env bash
-# Install age and ensure decryption key exists for chezmoi encrypted files
+# Ensure age decryption key exists for chezmoi encrypted files
 # Key sources (in order): local file, 1Password
 
 set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+ensure_brew_in_path
+require_cmd brew
 
 # Install age for decryption (needed before file operations)
 if ! command -v age &>/dev/null; then
