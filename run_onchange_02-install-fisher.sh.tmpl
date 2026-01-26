@@ -17,43 +17,42 @@ log "Installing Fisher and plugins..."
 FISH_SCRIPT=$(mktemp)
 cat > "$FISH_SCRIPT" << 'FISH_EOF'
 set fish_plugins_file ~/.config/fish/fish_plugins
-set fish_lock_file ~/.config/fish/fish_lock.yml
 
-# Debug: show what we're working with
+# Check fish_plugins exists
 echo "Looking for fish_plugins at: $fish_plugins_file"
-if test -f $fish_plugins_file
-    echo "fish_plugins exists"
-else
+if not test -f $fish_plugins_file
     echo "fish_plugins NOT found"
     exit 1
 end
+echo "fish_plugins exists"
 
-# If no lock file exists but plugin dirs have content, clean them up
-# This handles the case where a previous install partially succeeded
-if not test -f $fish_lock_file
-    echo "No fish_lock.yml found, cleaning up any stale plugin files..."
-    # Remove Fisher-managed directories (but not our conf.d files from chezmoi)
+# Helper function to clean Fisher-managed files
+function __clean_fisher_files
+    echo "Cleaning up Fisher-managed files..."
+    # Remove Fisher-managed directories
     for dir in ~/.config/fish/functions ~/.config/fish/completions ~/.config/fish/themes
         if test -d $dir
             rm -rf $dir
         end
     end
-    # Remove plugin conf.d files (but keep our 0_*.fish files)
+    # Remove plugin conf.d files (but keep our 0_*.fish files from chezmoi)
     for f in ~/.config/fish/conf.d/*.fish
-        # Skip files starting with 0_ (our chezmoi-managed configs)
         if not string match -q '*/0_*' $f
             rm -f $f
         end
     end
+    # Remove lock file to start fresh
+    rm -f ~/.config/fish/fish_lock.yml
 end
 
-# Install or update Fisher
+# If Fisher function is not available, we need a fresh install
 if not functions -q fisher
-    echo "Installing Fisher..."
+    echo "Fisher not loaded, performing fresh install..."
+    __clean_fisher_files
     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
     fisher update
 else
-    echo "Fisher already installed, updating plugins..."
+    echo "Fisher already loaded, updating plugins..."
     fisher update
 end
 FISH_EOF
