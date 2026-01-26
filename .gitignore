@@ -5,4 +5,9 @@ vim/bundle/*
 .DS_Store
 *~
 *.swp
-.vscode/settings.json
+.vscode/
+.claude/
+.idea/
+
+# Decrypted secrets (plaintext versions of encrypted_*.age files)
+**/decrypted_*

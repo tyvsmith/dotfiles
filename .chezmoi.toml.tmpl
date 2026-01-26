@@ -1,40 +1,49 @@
 {{- /* Machine type configuration for chezmoi
 
-     Can be set via:
-     1. Environment variables (highest priority):
-        CHEZMOI_IS_DEV=1 chezmoi init
-        CHEZMOI_INSTALL_UI_APPS=1 chezmoi init
-     2. Command-line data flags:
-        chezmoi init --data is_dev=true --data install_ui_apps=true
-     3. Interactive prompts (if TTY available and not set above)
-     4. Previously saved values in chezmoi state
+     Set via environment variables or install.sh:
+       DOTFILES_IS_DEV=1 chezmoi init
+       DOTFILES_UI_APPS=1 chezmoi init
+       DOTFILES_DECRYPT=1 chezmoi init
+
+     Or use install.sh for interactive prompts.
 */ -}}
 
-{{- /* Check environment variables first */ -}}
-{{- $envIsDev := lower (env "CHEZMOI_IS_DEV") -}}
-{{- $envInstallUIApps := lower (env "CHEZMOI_INSTALL_UI_APPS") -}}
+{{- $envIsDev := lower (env "DOTFILES_IS_DEV") -}}
+{{- $envUIApps := lower (env "DOTFILES_UI_APPS") -}}
+{{- $envDecrypt := lower (env "DOTFILES_DECRYPT") -}}
 
-{{- /* Initialize with env vars if set, otherwise use existing data or false */ -}}
+{{- /* Use env vars, fall back to existing config, default to false */ -}}
 {{- $isDev := false -}}
 {{- $installUIApps := false -}}
+{{- $shouldDecrypt := false -}}
 
-{{- /* Environment variables override everything */ -}}
 {{- if ne $envIsDev "" -}}
 {{-   $isDev = or (eq $envIsDev "1") (eq $envIsDev "true") -}}
 {{- else if hasKey .chezmoi.config.data "is_dev" -}}
 {{-   $isDev = .chezmoi.config.data.is_dev -}}
-{{- else if stdinIsATTY -}}
-{{-   $isDev = eq (promptChoice "Development machine (SDKs, AI tools, dev utilities)" (list "yes" "no")) "yes" -}}
 {{- end -}}
 
-{{- if ne $envInstallUIApps "" -}}
-{{-   $installUIApps = or (eq $envInstallUIApps "1") (eq $envInstallUIApps "true") -}}
+{{- if ne $envUIApps "" -}}
+{{-   $installUIApps = or (eq $envUIApps "1") (eq $envUIApps "true") -}}
 {{- else if hasKey .chezmoi.config.data "install_ui_apps" -}}
 {{-   $installUIApps = .chezmoi.config.data.install_ui_apps -}}
-{{- else if stdinIsATTY -}}
-{{-   $installUIApps = eq (promptChoice "Install UI applications (IDEs, browsers, etc)" (list "yes" "no")) "yes" -}}
 {{- end -}}
 
+{{- if ne $envDecrypt "" -}}
+{{-   $shouldDecrypt = or (eq $envDecrypt "1") (eq $envDecrypt "true") -}}
+{{- else if hasKey .chezmoi.config.data "should_decrypt" -}}
+{{-   $shouldDecrypt = .chezmoi.config.data.should_decrypt -}}
+{{- end -}}
+
+{{ if $shouldDecrypt -}}
+encryption = "age"
+{{ end }}
 [data]
     is_dev = {{ $isDev }}
     install_ui_apps = {{ $installUIApps }}
+    should_decrypt = {{ $shouldDecrypt }}
+{{ if $shouldDecrypt }}
+[age]
+    identity = "~/.config/chezmoi/age-key.txt"
+    recipient = "{{ include ".age-public-key" | trim }}"
+{{- end }}

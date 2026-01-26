@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Configure Tide prompt
+# Run after Fisher installs Tide. Regenerate by running: tide configure, then press 'p'
+# tide_config hash: {{ include "dot_config/fish/tide_config.fish" | sha256sum }}
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+require_cmd fish
+
+log "Configuring Tide prompt..."
+
+# Source the tide config which contains 'tide configure --auto ...' command
+fish ~/.config/fish/tide_config.fish </dev/null

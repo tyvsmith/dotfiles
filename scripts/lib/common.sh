@@ -21,6 +21,12 @@ require_file() {
   [[ -f "$1" ]] || fail "File $1 not found"
 }
 
+# Render a chezmoi template from the source directory
+render_template() {
+  local src_dir="${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}"
+  chezmoi execute-template < "$src_dir/$1"
+}
+
 ensure_brew_in_path() {
   if [[ "${OSTYPE:-}" == "darwin"* ]]; then
     if [[ -x /opt/homebrew/bin/brew ]]; then
