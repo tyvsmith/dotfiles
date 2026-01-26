@@ -3,8 +3,11 @@ set -gx EDITOR nvim
 set -gx VISUAL $EDITOR
 
 # SDKMAN config (only if installed via brew)
-if type -q brew; and brew --prefix sdkman-cli &>/dev/null
-    set -g __sdkman_custom_dir (brew --prefix sdkman-cli)/libexec
+if type -q brew
+    set -l sdkman_prefix (brew --prefix sdkman-cli 2>/dev/null)
+    if test -n "$sdkman_prefix" -a -d "$sdkman_prefix/libexec"
+        set -g __sdkman_custom_dir "$sdkman_prefix/libexec"
+    end
 end
 
 # 1Password SSH agent

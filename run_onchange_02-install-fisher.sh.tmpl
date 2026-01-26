@@ -13,14 +13,14 @@ require_cmd fish
 
 log "Installing Fisher and plugins..."
 
-# Use --no-config to avoid loading user config during Fisher bootstrap
-# Redirect stdin from /dev/null to prevent reading from parent process
-fish --no-config -c '
+# Create a temporary fish script to avoid any stdin/stdout contamination
+FISH_SCRIPT=$(mktemp)
+cat > "$FISH_SCRIPT" << 'FISH_EOF'
 # Install Fisher if not present
 if not functions -q fisher
     echo "Installing Fisher..."
     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-    fisher install jorgebucaran/fisher 2>&1
+    fisher install jorgebucaran/fisher
 end
 
 # Install plugins from fish_plugins
@@ -29,8 +29,14 @@ if test -f ~/.config/fish/fish_plugins
     echo "--- fish_plugins contents ---"
     cat ~/.config/fish/fish_plugins
     echo "--- end fish_plugins ---"
-    fisher update 2>&1
+    fisher update
 else
     echo "Warning: fish_plugins not found"
 end
-' </dev/null
+FISH_EOF
+
+# Run fish with no config, isolated stdin, in a clean environment
+fish --no-config "$FISH_SCRIPT" </dev/null
+
+# Cleanup
+rm -f "$FISH_SCRIPT"
