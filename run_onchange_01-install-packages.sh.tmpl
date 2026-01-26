@@ -11,4 +11,4 @@ require_cmd brew
 
 log "Installing packages from Brewfile..."
 
-brew bundle --file=<(chezmoi execute-template < "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/Brewfile.tmpl")
+brew bundle --file=<(render_template Brewfile.tmpl)
