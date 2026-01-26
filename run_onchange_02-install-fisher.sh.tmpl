@@ -8,19 +8,13 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 ensure_brew_in_path
 require_cmd fish
+require_file ~/.config/fish/fish_plugins
 
-if [[ ! -f ~/.config/fish/fish_plugins ]]; then
-    fail "fish_plugins not found"
-fi
 
 log "Installing Fisher and plugins..."
 
-# Run in subshell with isolated stdin to prevent stdout contamination
-# Fisher's parallel curl commands can capture stray output from parent process
-(
-    exec </dev/null
-    fish -c '
-        curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-        fisher update
-    '
-)
+# Isolate stdin to prevent stdout contamination from parent process
+fish -c '
+    curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
+    fisher update
+' </dev/null
