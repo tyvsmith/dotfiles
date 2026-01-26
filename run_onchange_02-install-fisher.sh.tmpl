@@ -17,26 +17,40 @@ log "Installing Fisher and plugins..."
 FISH_SCRIPT=$(mktemp)
 cat > "$FISH_SCRIPT" << 'FISH_EOF'
 set fish_plugins_file ~/.config/fish/fish_plugins
+set fish_lock_file ~/.config/fish/fish_lock.yml
 
 # Debug: show what we're working with
-echo "Fish config dir: ~/.config/fish"
 echo "Looking for fish_plugins at: $fish_plugins_file"
 if test -f $fish_plugins_file
     echo "fish_plugins exists"
 else
     echo "fish_plugins NOT found"
-    # Check if chezmoi deployed it elsewhere
-    if test -f ~/.config/fish/fish_plugins.tmpl
-        echo "Found .tmpl file instead - chezmoi may not have rendered it"
-    end
     exit 1
+end
+
+# If no lock file exists but plugin dirs have content, clean them up
+# This handles the case where a previous install partially succeeded
+if not test -f $fish_lock_file
+    echo "No fish_lock.yml found, cleaning up any stale plugin files..."
+    # Remove Fisher-managed directories (but not our conf.d files from chezmoi)
+    for dir in ~/.config/fish/functions ~/.config/fish/completions ~/.config/fish/themes
+        if test -d $dir
+            rm -rf $dir
+        end
+    end
+    # Remove plugin conf.d files (but keep our 0_*.fish files)
+    for f in ~/.config/fish/conf.d/*.fish
+        # Skip files starting with 0_ (our chezmoi-managed configs)
+        if not string match -q '*/0_*' $f
+            rm -f $f
+        end
+    end
 end
 
 # Install or update Fisher
 if not functions -q fisher
     echo "Installing Fisher..."
     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-    # Use update instead of install - it handles fresh installs too
     fisher update
 else
     echo "Fisher already installed, updating plugins..."
