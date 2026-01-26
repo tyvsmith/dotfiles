@@ -16,26 +16,35 @@ log "Installing Fisher and plugins..."
 # Create a temporary fish script to avoid any stdin/stdout contamination
 FISH_SCRIPT=$(mktemp)
 cat > "$FISH_SCRIPT" << 'FISH_EOF'
-# Install Fisher if not present
+set fish_plugins_file ~/.config/fish/fish_plugins
+
+# Debug: show what we're working with
+echo "Fish config dir: ~/.config/fish"
+echo "Looking for fish_plugins at: $fish_plugins_file"
+if test -f $fish_plugins_file
+    echo "fish_plugins exists"
+else
+    echo "fish_plugins NOT found"
+    # Check if chezmoi deployed it elsewhere
+    if test -f ~/.config/fish/fish_plugins.tmpl
+        echo "Found .tmpl file instead - chezmoi may not have rendered it"
+    end
+    exit 1
+end
+
+# Install or update Fisher
 if not functions -q fisher
     echo "Installing Fisher..."
     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-    fisher install jorgebucaran/fisher
-end
-
-# Install plugins from fish_plugins
-if test -f ~/.config/fish/fish_plugins
-    echo "Installing Fish plugins from fish_plugins..."
-    echo "--- fish_plugins contents ---"
-    cat ~/.config/fish/fish_plugins
-    echo "--- end fish_plugins ---"
+    # Use update instead of install - it handles fresh installs too
     fisher update
 else
-    echo "Warning: fish_plugins not found"
+    echo "Fisher already installed, updating plugins..."
+    fisher update
 end
 FISH_EOF
 
-# Run fish with no config, isolated stdin, in a clean environment
+# Run fish with no config, isolated stdin
 fish --no-config "$FISH_SCRIPT" </dev/null
 
 # Cleanup
