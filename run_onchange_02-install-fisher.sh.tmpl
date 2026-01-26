@@ -14,20 +14,23 @@ require_cmd fish
 log "Installing Fisher and plugins..."
 
 # Use --no-config to avoid loading user config during Fisher bootstrap
-# This prevents issues where config files might output text or fail
+# Redirect stdin from /dev/null to prevent reading from parent process
 fish --no-config -c '
 # Install Fisher if not present
 if not functions -q fisher
     echo "Installing Fisher..."
     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-    fisher install jorgebucaran/fisher
+    fisher install jorgebucaran/fisher 2>&1
 end
 
 # Install plugins from fish_plugins
 if test -f ~/.config/fish/fish_plugins
     echo "Installing Fish plugins from fish_plugins..."
-    fisher update
+    echo "--- fish_plugins contents ---"
+    cat ~/.config/fish/fish_plugins
+    echo "--- end fish_plugins ---"
+    fisher update 2>&1
 else
     echo "Warning: fish_plugins not found"
 end
-'
+' </dev/null
