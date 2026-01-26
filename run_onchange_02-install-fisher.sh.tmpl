@@ -15,26 +15,7 @@ fi
 
 log "Installing Fisher and plugins..."
 
-# Step 1: Bootstrap Fisher with --no-config to avoid stdout contamination
-BOOTSTRAP_SCRIPT=$(mktemp)
-cat > "$BOOTSTRAP_SCRIPT" << 'FISH_EOF'
-# Clean up stale Fisher files (preserve chezmoi's 0_*.fish configs)
-for dir in ~/.config/fish/functions ~/.config/fish/completions ~/.config/fish/themes
-    test -d $dir && rm -rf $dir
-end
-for f in ~/.config/fish/conf.d/*.fish
-    string match -q '*/0_*' $f || rm -f $f
-end
-
-# Install Fisher only (hide fish_plugins so it doesn't install all plugins)
-mv ~/.config/fish/fish_plugins ~/.config/fish/fish_plugins.bak
-curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-fisher install jorgebucaran/fisher
-mv ~/.config/fish/fish_plugins.bak ~/.config/fish/fish_plugins
-FISH_EOF
-
-fish --no-config "$BOOTSTRAP_SCRIPT" </dev/null
-rm -f "$BOOTSTRAP_SCRIPT"
-
 # Step 2: Install plugins with normal config (Fisher state persists correctly)
+curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | fish
+fish -c 'fisher install jorgebucaran/fisher'
 fish -c 'fisher update' </dev/null
