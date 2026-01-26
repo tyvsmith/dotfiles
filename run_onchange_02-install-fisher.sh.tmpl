@@ -60,3 +60,12 @@ fish --no-config "$FISH_SCRIPT" </dev/null
 
 # Cleanup
 rm -f "$FISH_SCRIPT"
+
+# Fisher's $_fisher_plugins variable needs to be set for 'fisher list' to work.
+# Running with --no-config doesn't persist universal variables, so we need to
+# manually initialize it from the fish_plugins file.
+log "Initializing Fisher state..."
+fish -c '
+    set -l plugins (string match --regex "^[^\s]+" < ~/.config/fish/fish_plugins)
+    set --universal _fisher_plugins $plugins
+' </dev/null || true
