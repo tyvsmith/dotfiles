@@ -31,6 +31,14 @@ mkdir -p "$(dirname "$AGE_KEY_FILE")"
 if command -v op &>/dev/null && op account list &>/dev/null; then
     echo "Fetching age key from 1Password..."
     op read "op://Private/dotfiles-age-key/key" > "$AGE_KEY_FILE"
+
+    # Verify the key was retrieved successfully
+    if [[ ! -s "$AGE_KEY_FILE" ]] || ! grep -q "AGE-SECRET-KEY" "$AGE_KEY_FILE"; then
+        rm -f "$AGE_KEY_FILE"
+        echo "Error: Failed to retrieve valid age key from 1Password"
+        exit 1
+    fi
+
     chmod 600 "$AGE_KEY_FILE"
 else
     echo "Error: Age key not found at $AGE_KEY_FILE"
