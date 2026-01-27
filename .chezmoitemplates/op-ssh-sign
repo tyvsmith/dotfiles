@@ -1,0 +1,5 @@
+{{- if eq .chezmoi.os "darwin" -}}
+/Applications/1Password.app/Contents/MacOS/op-ssh-sign
+{{- else -}}
+/opt/1Password/op-ssh-sign
+{{- end -}}

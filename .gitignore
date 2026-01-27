@@ -9,5 +9,9 @@ vim/bundle/*
 .claude/
 .idea/
 
-# Decrypted secrets (plaintext versions of encrypted_*.age files)
+# Decrypted secrets (plaintext sources of encrypted_*.age files)
+# Edit the decrypted_* or encrypted_* versions, chezmoi encrypts them to .age
 **/decrypted_*
+**/encrypted_*
+# But keep the encrypted .age files to commit
+!**/*.age

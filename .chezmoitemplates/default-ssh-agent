@@ -1,0 +1,5 @@
+{{- if .is_work -}}
+$SSH_AUTH_SOCK
+{{- else -}}
+{{ template "op-ssh-agent" . }}
+{{- end -}}
