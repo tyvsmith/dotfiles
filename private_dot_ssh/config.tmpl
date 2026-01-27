@@ -6,3 +6,4 @@ Host *
     ControlMaster auto
     ControlPath ~/.ssh/sockets/%C
     ControlPersist 2h
+    IdentityAgent "{{ template "default-ssh-agent" . }}"

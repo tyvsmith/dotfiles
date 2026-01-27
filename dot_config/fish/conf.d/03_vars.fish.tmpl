@@ -13,10 +13,3 @@ if type -q brew
         set -gx __sdkman_custom_dir "$sdkman_prefix/libexec"
     end
 end
-
-# 1Password SSH agent
-{{- if eq .chezmoi.os "darwin" }}
-set -x SSH_AUTH_SOCK ~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
-{{- else }}
-set -x SSH_AUTH_SOCK ~/.1password/agent.sock
-{{- end }}

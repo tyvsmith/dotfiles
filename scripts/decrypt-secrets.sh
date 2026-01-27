@@ -31,8 +31,7 @@ find "$REPO_ROOT" -name "encrypted_*.age" -type f | while read -r encrypted_file
     filename=$(basename "$encrypted_file")
 
     # encrypted_foo.age -> decrypted_foo
-    plaintext_name="decrypted_${filename#encrypted_}"
-    plaintext_name="${plaintext_name%.age}"
+    plaintext_name="${filename%.age}"
 
     plaintext_file="$dir/$plaintext_name"
 

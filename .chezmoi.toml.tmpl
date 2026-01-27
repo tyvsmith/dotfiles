@@ -4,6 +4,7 @@
        DOTFILES_IS_DEV=1 chezmoi init
        DOTFILES_UI_APPS=1 chezmoi init
        DOTFILES_DECRYPT=1 chezmoi init
+       DOTFILES_IS_WORK=1 chezmoi init
 
      Or use install.sh for interactive prompts.
 */ -}}
@@ -11,11 +12,13 @@
 {{- $envIsDev := lower (env "DOTFILES_IS_DEV") -}}
 {{- $envUIApps := lower (env "DOTFILES_UI_APPS") -}}
 {{- $envDecrypt := lower (env "DOTFILES_DECRYPT") -}}
+{{- $envIsWork := lower (env "DOTFILES_IS_WORK") -}}
 
 {{- /* Use env vars, fall back to existing config, default to false */ -}}
 {{- $isDev := false -}}
 {{- $installUIApps := false -}}
 {{- $shouldDecrypt := false -}}
+{{- $isWork := false -}}
 
 {{- if ne $envIsDev "" -}}
 {{-   $isDev = or (eq $envIsDev "1") (eq $envIsDev "true") -}}
@@ -35,6 +38,12 @@
 {{-   $shouldDecrypt = .chezmoi.config.data.should_decrypt -}}
 {{- end -}}
 
+{{- if ne $envIsWork "" -}}
+{{-   $isWork = or (eq $envIsWork "1") (eq $envIsWork "true") -}}
+{{- else if hasKey .chezmoi.config.data "is_work" -}}
+{{-   $isWork = .chezmoi.config.data.is_work -}}
+{{- end -}}
+
 {{ if $shouldDecrypt -}}
 encryption = "age"
 {{ end }}
@@ -42,6 +51,7 @@ encryption = "age"
     is_dev = {{ $isDev }}
     install_ui_apps = {{ $installUIApps }}
     should_decrypt = {{ $shouldDecrypt }}
+    is_work = {{ $isWork }}
 {{ if $shouldDecrypt }}
 [age]
     identity = "~/.config/chezmoi/age-key.txt"

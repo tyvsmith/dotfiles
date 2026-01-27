@@ -39,13 +39,16 @@ brew bundle --file="$(chezmoi source-path)/Brewfile"
 ### Machine Type Configuration
 The `.chezmoi.toml.tmpl` prompts for machine type on first init, or accepts environment variables:
 ```bash
-CHEZMOI_IS_DEV=1 CHEZMOI_INSTALL_UI_APPS=1 chezmoi init
+DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 chezmoi init
 ```
 
 **Machine type flags:**
 - `is_dev` - Development machine (installs SDKs, AI tools, dev utilities)
   - Set to `true` for: personal dev machines, work dev machines, devpods
   - Set to `false` for: homelab servers, infrastructure machines
+- `is_work` - Work/corporate machine (affects SSH agent, work-specific configs)
+  - Set to `true` for: work machines (uses system SSH agent for ussh compatibility)
+  - Set to `false` for: personal machines (uses 1Password SSH agent)
 - `install_ui_apps` - Install GUI applications (IDEs, browsers, etc.) - macOS only
   - Set to `true` for: machines where you want GUI apps
   - Set to `false` for: servers, headless machines, Linux (uses native package manager for GUI)
@@ -56,10 +59,11 @@ CHEZMOI_IS_DEV=1 CHEZMOI_INSTALL_UI_APPS=1 chezmoi init
 - **Tier 3 (macOS + install_ui_apps=true):** GUI applications (VS Code, JetBrains, browsers, productivity apps)
 
 **Example configurations:**
-- Personal Linux dev: `is_dev=true`, `install_ui_apps=false` (no macOS casks)
-- Work Mac dev: `is_dev=true`, `install_ui_apps=true` (everything)
-- Devpods (Debian): `is_dev=true`, `install_ui_apps=false` (CLI + dev tools)
-- Homelab server: `is_dev=false`, `install_ui_apps=false` (modern CLI only)
+- Personal Mac dev: `is_dev=true`, `is_work=false`, `install_ui_apps=true` (1Password SSH, GUI apps)
+- Personal Linux dev: `is_dev=true`, `is_work=false`, `install_ui_apps=false` (1Password SSH, no casks)
+- Work Mac dev: `is_dev=true`, `is_work=true`, `install_ui_apps=true` (system SSH for ussh, GUI apps)
+- Devpods (Debian): `is_dev=true`, `is_work=true`, `install_ui_apps=false` (CLI + dev tools)
+- Homelab server: `is_dev=false`, `is_work=false`, `install_ui_apps=false` (modern CLI only, no 1Password)
 
 ### OS Detection in Templates
 Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else }}` for Linux paths (e.g., Homebrew paths, SSH agent sockets).

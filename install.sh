@@ -8,15 +8,16 @@
 #
 # Options:
 #   --dev, --no-dev           Set machine type (default: prompt)
+#   --work, --no-work         Work machine - uses system SSH agent (default: prompt)
 #   --ui-apps, --no-ui-apps   Install GUI apps - macOS only (default: prompt on macOS)
 #   --decrypt, --no-decrypt   Enable encrypted config decryption (default: no)
 #   --branch <branch>         Git branch for remote install (default: main)
-#   --defaults                Use default values, no prompts (dev=yes, ui-apps=yes, decrypt=no)
+#   --defaults                Use default values, no prompts (dev=yes, ui-apps=yes, decrypt=no, work=no)
 #   --quiet, -q               Minimal output
 #   --help, -h                Show this help
 #
 # Environment variables (overridden by flags):
-#   DOTFILES_BRANCH, DOTFILES_IS_DEV, DOTFILES_UI_APPS, DOTFILES_DECRYPT
+#   DOTFILES_BRANCH, DOTFILES_IS_DEV, DOTFILES_IS_WORK, DOTFILES_UI_APPS, DOTFILES_DECRYPT
 
 set -e
 
@@ -31,6 +32,7 @@ USE_DEFAULTS=false
 
 # Config values (unset = prompt, 0 = no, 1 = yes)
 OPT_IS_DEV="${DOTFILES_IS_DEV:-}"
+OPT_IS_WORK="${DOTFILES_IS_WORK:-}"
 OPT_UI_APPS="${DOTFILES_UI_APPS:-}"
 OPT_DECRYPT="${DOTFILES_DECRYPT:-}"
 
@@ -77,6 +79,8 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --dev)        OPT_IS_DEV=1; shift ;;
         --no-dev)     OPT_IS_DEV=0; shift ;;
+        --work)       OPT_IS_WORK=1; shift ;;
+        --no-work)    OPT_IS_WORK=0; shift ;;
         --ui-apps)    OPT_UI_APPS=1; shift ;;
         --no-ui-apps) OPT_UI_APPS=0; shift ;;
         --decrypt)    OPT_DECRYPT=1; shift ;;
@@ -93,6 +97,7 @@ done
 # Apply defaults if requested
 if [[ "$USE_DEFAULTS" == true ]]; then
     OPT_IS_DEV="${OPT_IS_DEV:-1}"
+    OPT_IS_WORK="${OPT_IS_WORK:-0}"
     OPT_UI_APPS="${OPT_UI_APPS:-1}"
     OPT_DECRYPT="${OPT_DECRYPT:-0}"
 fi
@@ -191,6 +196,20 @@ if [[ -z "$OPT_IS_DEV" ]]; then
     fi
 fi
 export DOTFILES_IS_DEV="$OPT_IS_DEV"
+
+# --- is_work ---
+if [[ -z "$OPT_IS_WORK" ]]; then
+    log ""
+    log "Work machines use the system SSH agent (for ussh compatibility)."
+    log "Personal machines use 1Password SSH agent."
+    log ""
+    if prompt_yn "Is this a work/corporate machine?" "n"; then
+        OPT_IS_WORK=1
+    else
+        OPT_IS_WORK=0
+    fi
+fi
+export DOTFILES_IS_WORK="$OPT_IS_WORK"
 
 # --- install_ui_apps (macOS only) ---
 if [[ "$OSTYPE" == "darwin"* ]]; then
