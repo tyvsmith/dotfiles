@@ -15,12 +15,12 @@ fi
 PUBLIC_KEY=$(cat "$PUBLIC_KEY_FILE")
 
 # Find and encrypt all decrypted_* files
-find "$REPO_ROOT" -name "encrypted_*" -not -name "*.age" -type f | while read -r plaintext_file; do
+find "$REPO_ROOT" -name "decrypted_*" -type f | while read -r plaintext_file; do
     dir=$(dirname "$plaintext_file")
     filename=$(basename "$plaintext_file")
 
     # decrypted_foo -> encrypted_foo.age
-    encrypted_name="${filename}.age"
+    encrypted_name="${filename/decrypted_/encrypted_}.age"
     encrypted_file="$dir/$encrypted_name"
 
     echo "Encrypting: $plaintext_file"
