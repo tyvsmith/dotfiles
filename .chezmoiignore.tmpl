@@ -9,8 +9,10 @@ legacy/
 # Ignore scripts directory (run_* scripts are in repo root)
 scripts/
 
-# Decrypted plaintext files are for local editing only, never deployed
+# Plaintext versions of encrypted files are for local editing only, never deployed
 **/decrypted_*
+**/encrypted_*
+!**/encrypted_*.age
 
 {{ if not .should_decrypt }}
 # Skip encrypted files when decryption is disabled
