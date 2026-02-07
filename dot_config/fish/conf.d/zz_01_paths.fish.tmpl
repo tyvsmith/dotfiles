@@ -1,0 +1,15 @@
+# =============================================================================
+# PATH Configuration
+# Homebrew bootstrap and custom binary paths
+# =============================================================================
+
+# Homebrew setup
+set -l brew_prefix {{ template "brew-prefix" . }}
+if test -x $brew_prefix/bin/brew
+    __cached_source $brew_prefix/bin/brew shellenv
+else
+    echo "Please install 'brew' first!"
+end
+
+# Custom bins
+fish_add_path ~/.local/bin

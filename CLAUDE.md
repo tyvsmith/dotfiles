@@ -77,6 +77,6 @@ Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else
 - `dot_gitconfig.tmpl` - Git config with delta pager, useful aliases
 
 ### Philosophy
-- Modern CLI tools are installed but **not aliased over old commands** for tools with different syntax (`rg`, `fd`, `dust`, `sd`, `xh`). Users learn the new syntax directly.
-- Tools with compatible syntax are abbreviated: `ls→eza`, `cat→bat`, `rm→trash`, `diff→difft`
+- All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→trash`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.
+- Shorthand abbreviations for longer tool names: `lg→lazygit`, `br→broot`
 - Shell greeting shows random CLI tips to teach modern tool usage
