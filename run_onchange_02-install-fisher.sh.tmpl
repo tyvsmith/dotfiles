@@ -16,5 +16,9 @@ log "Installing Fisher and plugins..."
 # Isolate stdin to prevent stdout contamination from parent process
 fish -c '
     curl -sL https://raw.githubusercontent.com/jorgebucaran/fisher/main/functions/fisher.fish | source
-    fisher update
+    for i in 1 2 3
+        fisher update && break
+        echo "Fisher update failed, retrying ($i/3)..."
+        sleep 5
+    end
 ' </dev/null

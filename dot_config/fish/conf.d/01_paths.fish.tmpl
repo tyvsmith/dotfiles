@@ -1,0 +1,10 @@
+# Homebrew setup
+set -l brew_prefix {{ template "brew-prefix" . }}
+if test -x $brew_prefix/bin/brew
+    eval ($brew_prefix/bin/brew shellenv)
+else
+    echo "Please install 'brew' first!"
+end
+
+#Custom bins
+fish_add_path ~/.local/bin

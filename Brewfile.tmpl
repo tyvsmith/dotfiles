@@ -57,7 +57,8 @@ brew "tree"
 {{ if .is_dev -}}
 
 # Development SDKs & Package Managers
-brew "sdkman/tap/sdkman-cli" # Java/Kotlin SDK manager
+tap "sdkman/tap"
+brew "sdkman-cli" # Java/Kotlin SDK manager
 brew "uv"                    # Python package manager
 brew "node"                  # Node.js (includes npx)
 

@@ -1,0 +1,99 @@
+source-file ~/.config/tmux/tmux.reset.conf
+set-option -g default-shell '{{- template "brew-prefix" . -}}/bin/fish'
+set-option -g default-terminal 'screen-256color'
+set-option -g terminal-overrides ',xterm-256color:RGB'
+
+set -g base-index 1              # start indexing windows at 1 instead of 0
+set -g detach-on-destroy off     # don't exit from tmux when closing a session
+set -g escape-time 0             # zero-out escape time delay
+set -g history-limit 1000000     # increase history size (from 2,000)
+set -g renumber-windows on       # renumber all windows when any window is closed
+set -g set-clipboard on          # use system clipboard
+set -g status-position top
+set -g default-terminal "${TERM}"
+setw -g mode-keys vi
+set -g pane-active-border-style 'fg=magenta,bg=default'
+set -g pane-border-style 'fg=brightblack,bg=default'
+setw -g mouse on
+
+set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
+
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-yank'
+set -g @plugin 'tmux-plugins/tmux-cpu'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'fcsonline/tmux-thumbs'
+set -g @plugin 'sainnhe/tmux-fzf'
+set -g @plugin 'catppuccin/tmux#v2.1.3'
+set -g @plugin 'omerxx/tmux-sessionx'
+set -g @plugin 'omerxx/tmux-floax'
+
+
+set -g @floax-width '80%'
+set -g @floax-height '80%'
+set -g @floax-border-color 'magenta'
+set -g @floax-text-color 'blue'
+set -g @floax-bind 'p'
+set -g @floax-change-path 'true'
+
+set -g @sessionx-bind-zo-new-window 'ctrl-y'
+set -g @sessionx-auto-accept 'off'
+set -g @sessionx-bind 'o'
+
+set -g @sessionx-window-height '85%'
+set -g @sessionx-window-width '75%'
+set -g @sessionx-zoxide-mode 'on'
+set -g @sessionx-custom-paths-subdirectories 'false'
+set -g @sessionx-filter-current 'false'
+
+set -g @continuum-restore 'off'
+set -g @resurrect-strategy-nvim 'session'
+{{ if stat "/var/home" -}}
+# Silverblue/Bazzite: /home is a symlink to /var/home, fix saved paths
+set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
+{{- end }}
+
+
+set -g @catppuccin_flavor "mocha"
+set -g @catppuccin_window_status_style "rounded"
+set -g status-right-length 100
+set -g status-left-length 100
+set -g status-left ""
+set -g status-right "#{E:@catppuccin_status_application}"
+set -agF status-right "#{E:@catppuccin_status_cpu}"
+set -ag status-right "#{E:@catppuccin_status_session}"
+set -ag status-right "#{E:@catppuccin_status_uptime}"
+
+
+
+
+#Key Bindings
+set -g prefix ^A
+
+# Navigation
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+bind H previous-window
+bind L next-window
+bind ^A last-window
+
+# Windows & Panes
+bind s split-window -v
+bind v split-window -h 
+bind x kill-pane #no confirmation
+
+# Session & Window Management
+bind ^D detach
+bind S choose-session
+bind r command-prompt "rename-window %%"
+bind R source-file ~/.config/tmux/tmux.conf
+# Copy mode
+bind-key -T copy-mode-vi v send-keys -X begin-selection
+
+
+# Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+run '{{ template "brew-prefix" . }}/opt/tpm/share/tpm/tpm'
