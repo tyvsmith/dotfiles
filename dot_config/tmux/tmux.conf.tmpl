@@ -15,13 +15,20 @@ set -g status-position top
 set -g pane-active-border-style 'fg=magenta,bg=default'
 set -g pane-border-style 'fg=brightblack,bg=default'
 setw -g mouse on
-set -g pane-scrollbars 
-set -g display-panes-time 4000  # 2 seconds (default 1000)
+set -g pane-scrollbars modal
+set -g display-panes-time 4000
+set -g display-time 2000
+set -g focus-events on
+set -sg repeat-time 600
+set -g monitor-activity on
+set -g visual-activity off
+set -g status-interval 5
+set -g status-keys emacs
+setw -g aggressive-resize on
 
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
 
 set -g @plugin 'tmux-plugins/tpm'
-set -g @plugin 'tmux-plugins/tmux-sensible'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'sainnhe/tmux-fzf'
@@ -103,5 +110,17 @@ bind -T copy-mode-vi Escape send -X cancel
 # Open lazygit in floating window
 bind g display-popup -E -w 90% -h 90% -d "{{ template "tm-pane-current-path" . }}" "lazygit"
 
-# Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+# Mouse: double-click status bar for new window
+bind -T root DoubleClick1Status new-window -c "{{ template "tm-pane-current-path" . }}"
+
+
+# Patch right-click menus: inject -O flag into all MouseDown3 display-menu
+# bindings so menus stay open after releasing the mouse button.
+# Reads current bindings (including any set by plugins), adds -O, re-sources.
+run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/display-menu /display-menu -O /;s/-O -O /-O /" > /tmp/tmux-menu-fix.conf && tmux source-file /tmp/tmux-menu-fix.conf && rm -f /tmp/tmux-menu-fix.conf'
+
+
+
+
+# Initialize TMUX plugin manager
 run '{{ template "brew-prefix" . }}/opt/tpm/share/tpm/tpm'
