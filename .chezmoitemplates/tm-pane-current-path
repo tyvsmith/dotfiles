@@ -1,0 +1,5 @@
+{{- if stat "/var/home" -}}
+#{s|/var/home/|/home/|:pane_current_path}
+{{- else -}}
+#{pane_current_path}
+{{- end -}}
