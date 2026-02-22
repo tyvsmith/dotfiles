@@ -1,14 +1,64 @@
 #!/usr/bin/env bash
-# Chezmoi run_onchange script: Install packages from Brewfile
+# Chezmoi run_onchange script: Install packages based on detected distro
+{{ if stat ".chezmoidata/packages.yaml" -}}
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+{{ else -}}
 # Brewfile hash: {{ include "Brewfile.tmpl" | sha256sum }}
+{{ end -}}
 set -euo pipefail
 
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
+DISTRO="{{ .distro }}"
+
+log "Detected distro: $DISTRO"
+
+{{ if eq .distro "macos" -}}
+# =============================================================================
+# macOS: Use Homebrew
+# =============================================================================
+log "Installing packages via Homebrew (macOS)..."
 ensure_brew_in_path
 require_cmd brew
 
-log "Installing packages from Brewfile..."
-
 brew bundle --file=<(render_template Brewfile.tmpl)
+
+{{ else if eq .distro "arch" -}}
+# =============================================================================
+# Arch Linux: Use pacman/yay
+# =============================================================================
+log "Installing packages via pacman/yay (Arch Linux)..."
+
+# Render and execute the Arch installer script
+SCRIPT_PATH="${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/install-packages-pacman.sh.tmpl"
+bash <(render_template scripts/install-packages-pacman.sh.tmpl)
+
+{{ else if eq .distro "debian" -}}
+# =============================================================================
+# Debian/Ubuntu: Use apt
+# =============================================================================
+log "Installing packages via apt (Debian/Ubuntu)..."
+
+# Render and execute the Debian installer script
+bash <(render_template scripts/install-packages-apt.sh.tmpl)
+
+{{ else -}}
+# =============================================================================
+# Unknown distro: Try to fail gracefully
+# =============================================================================
+warn "Unknown or unsupported distro: $DISTRO"
+warn "Supported distributions: macOS (darwin), Arch Linux, Debian/Ubuntu"
+
+# If Homebrew is available on unknown Linux, offer to use it
+if [[ "$DISTRO" != "macos" ]] && command -v brew &>/dev/null; then
+    log "Homebrew detected on Linux - using it as fallback..."
+    ensure_brew_in_path
+    brew bundle --file=<(render_template Brewfile.tmpl)
+else
+    fail "Cannot install packages on unsupported distro without Homebrew"
+fi
+{{ end -}}
+
+log "Package installation complete!"
+

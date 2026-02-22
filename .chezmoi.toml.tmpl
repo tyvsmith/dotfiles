@@ -44,10 +44,21 @@
 {{-   $isWork = .chezmoi.config.data.is_work -}}
 {{- end -}}
 
+{{- /* Detect distribution for package manager selection */ -}}
+{{- $distro := "unknown" -}}
+{{- if eq .chezmoi.os "darwin" -}}
+{{-   $distro = "macos" -}}
+{{- else if stat "/etc/arch-release" -}}
+{{-   $distro = "arch" -}}
+{{- else if stat "/etc/debian_version" -}}
+{{-   $distro = "debian" -}}
+{{- end -}}
+
 {{ if $shouldDecrypt -}}
 encryption = "age"
 {{ end }}
 [data]
+    distro = "{{ $distro }}"
     is_dev = {{ $isDev }}
     install_ui_apps = {{ $installUIApps }}
     should_decrypt = {{ $shouldDecrypt }}
