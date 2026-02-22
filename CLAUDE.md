@@ -24,7 +24,7 @@ chezmoi cd
 # Update from remote and apply
 chezmoi update
 
-# Install packages from Brewfile
+# Install packages (macOS only - auto-detects distro on Linux)
 brew bundle --file="$(chezmoi source-path)/Brewfile"
 ```
 
@@ -68,9 +68,39 @@ DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 chezmoi init
 ### OS Detection in Templates
 Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else }}` for Linux paths (e.g., Homebrew paths, SSH agent sockets).
 
+### Package Management
+
+Packages are defined once in `.chezmoidata/packages.yaml` and installed via platform-specific package managers:
+- **macOS**: Homebrew (via `Brewfile.tmpl`)
+- **Arch Linux**: pacman for official packages, yay/paru for AUR packages
+- **Debian/Ubuntu**: apt (native repos only)
+
+The `run_onchange_01-install-packages.sh` script detects the distro and routes to the appropriate installer:
+- macOS: `brew bundle` with `Brewfile.tmpl`
+- Arch: `scripts/install-packages-pacman.sh.tmpl`
+- Debian: `scripts/install-packages-apt.sh.tmpl`
+
+**Package availability on Debian/Ubuntu:**
+Due to Debian's conservative package policies, ~15 modern Rust tools are not available in apt repositories and will be skipped with warnings:
+- **Unavailable:** atuin, starship, sd, dust, procs, bottom, difftastic, git-delta, choose, broot, xh, doggo, gping, lazygit, yq, chezmoi (Tier 1)
+- **Unavailable:** uv, tokei, hyperfine, grex, llm, gemini-cli, opencode (Tier 2)
+- **Available:** fish, zoxide, direnv, neovim, eza, bat, fd, ripgrep, duf, trash-cli, tealdeer, git, git-lfs, gh, fzf, jq, tmux, wget, gnupg, tree
+
+**Binary renames on Debian:**
+- `bat` → `batcat` (symlink created automatically in `~/.local/bin`)
+- `fd` → `fdfind` (symlink created automatically in `~/.local/bin`)
+
+Missing packages can be installed manually via:
+- Rust toolchain: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- Cargo: `cargo install <package-name>`
+- Alternative package sources (PPAs, backports, flatpak)
+
 ### Key Files
-- `Brewfile.tmpl` - Package manifest for Homebrew (cross-platform, machine-type aware)
-- `run_onchange_01-install-packages.sh` - Runs `brew bundle` on Brewfile changes
+- `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
+- `Brewfile.tmpl` - Package manifest for Homebrew (macOS)
+- `scripts/install-packages-pacman.sh.tmpl` - Arch Linux package installer
+- `scripts/install-packages-apt.sh.tmpl` - Debian/Ubuntu package installer
+- `run_onchange_01-install-packages.sh.tmpl` - Routes to correct installer based on distro
 - `run_onchange_02-install-fisher.sh` - Installs Fisher and Fish plugins on changes
 - `dot_config/fish/conf.d/0_bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
 - `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)

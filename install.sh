@@ -156,17 +156,17 @@ if ! command -v git &>/dev/null || ! command -v gcc &>/dev/null; then
 fi
 
 # =============================================================================
-# Install Homebrew
+# Install Homebrew (macOS only)
 # =============================================================================
-if ! command -v brew &>/dev/null; then
-    info "Installing Homebrew..."
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    if ! command -v brew &>/dev/null; then
+        info "Installing Homebrew..."
+        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
         eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
-    else
-        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
     fi
+else
+    info "Skipping Homebrew on Linux - will use native package manager"
 fi
 
 # =============================================================================
@@ -174,7 +174,24 @@ fi
 # =============================================================================
 if ! command -v chezmoi &>/dev/null; then
     info "Installing chezmoi..."
-    brew install chezmoi
+
+    if command -v brew &>/dev/null; then
+        # macOS or Linux with Homebrew
+        brew install chezmoi
+    elif command -v pacman &>/dev/null; then
+        # Arch Linux
+        sudo pacman -S --needed --noconfirm chezmoi
+    elif command -v apt &>/dev/null; then
+        # Debian/Ubuntu - chezmoi not in repos, use install script
+        info "Using chezmoi install script (not in apt repos)..."
+        sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
+        export PATH="$HOME/.local/bin:$PATH"
+    else
+        # Fallback to chezmoi install script
+        info "Using chezmoi install script..."
+        sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
+        export PATH="$HOME/.local/bin:$PATH"
+    fi
 fi
 
 # =============================================================================

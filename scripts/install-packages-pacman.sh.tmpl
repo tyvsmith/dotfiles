@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# Arch Linux package installer
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Installing packages via pacman..."
+
+# =============================================================================
+# Tier 1: Core packages (ALL machines)
+# =============================================================================
+TIER1_PACKAGES=(
+    # Shell & Environment
+    fish
+    atuin
+    zoxide
+    starship
+    direnv
+    # Editor
+    neovim
+    # Modern CLI Replacements
+    eza
+    bat
+    fd
+    ripgrep
+    sd
+    dust
+    duf
+    procs
+    bottom
+    difftastic
+    git-delta
+    trash-cli
+    broot
+    xh
+    gping
+    tealdeer
+    # Git Tools
+    git
+    git-lfs
+    github-cli
+    lazygit
+    # Essential Utilities
+    chezmoi
+    fzf
+    jq
+    yq
+    tmux
+    wget
+    gnupg
+    tree
+)
+
+# AUR packages (require yay/paru)
+AUR_TIER1=(
+    choose
+    doggo
+)
+
+{{ if .is_dev -}}
+# =============================================================================
+# Tier 2: Development packages (is_dev=true)
+# =============================================================================
+TIER2_PACKAGES=(
+    # Development SDKs & Package Managers
+    nodejs
+    uv
+    # Build & Image Tools
+    imagemagick
+    p7zip
+    # Development Utilities
+    shellcheck
+    tokei
+    hyperfine
+    grex
+)
+
+AUR_TIER2=(
+)
+
+TIER1_PACKAGES+=("${TIER2_PACKAGES[@]}")
+AUR_TIER1+=("${AUR_TIER2[@]}")
+{{ end -}}
+
+# =============================================================================
+# Install official packages
+# =============================================================================
+log "Installing ${#TIER1_PACKAGES[@]} packages from official repositories..."
+sudo pacman -Syu --needed --noconfirm "${TIER1_PACKAGES[@]}"
+
+# =============================================================================
+# Install AUR packages
+# =============================================================================
+if [[ ${#AUR_TIER1[@]} -gt 0 ]]; then
+    if command -v yay &>/dev/null; then
+        log "Installing ${#AUR_TIER1[@]} packages from AUR via yay..."
+        yay -S --needed --noconfirm "${AUR_TIER1[@]}"
+    elif command -v paru &>/dev/null; then
+        log "Installing ${#AUR_TIER1[@]} packages from AUR via paru..."
+        paru -S --needed --noconfirm "${AUR_TIER1[@]}"
+    else
+        warn "No AUR helper found (yay/paru). Skipping AUR packages:"
+        for pkg in "${AUR_TIER1[@]}"; do
+            warn "  - $pkg"
+        done
+        warn ""
+        warn "To install yay:"
+        warn "  sudo pacman -S --needed git base-devel"
+        warn "  git clone https://aur.archlinux.org/yay.git && cd yay && makepkg -si"
+    fi
+fi
+
+# =============================================================================
+# Manual install scripts for packages not in repos
+# =============================================================================
+{{ if not (lookPath "tpm") -}}
+if [[ ! -d ~/.tmux/plugins/tpm ]]; then
+    log "Installing tpm (Tmux Plugin Manager) via git..."
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+fi
+{{ end -}}
+
+{{ if .is_dev -}}
+# SDKMAN (Java SDK manager)
+if [[ ! -d ~/.sdkman ]]; then
+    log "Installing SDKMAN..."
+    curl -s "https://get.sdkman.io" | bash
+fi
+
+# AI tools not in AUR - provide installation instructions
+if ! command -v llm &>/dev/null || ! command -v gemini-cli &>/dev/null; then
+    warn "Some AI tools need manual installation:"
+    if ! command -v llm &>/dev/null; then
+        warn "  llm: pipx install llm"
+    fi
+    if ! command -v gemini-cli &>/dev/null; then
+        warn "  gemini-cli: npm install -g @google/generative-ai-cli"
+    fi
+    warn "  opencode: Visit https://github.com/openai/opencode for installation"
+fi
+{{ end -}}
+
+log "Arch package installation complete!"

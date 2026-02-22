@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# Debian/Ubuntu package installer
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Installing packages via apt..."
+
+# =============================================================================
+# Tier 1: Core packages available in apt
+# =============================================================================
+APT_TIER1=(
+    # Shell & Environment
+    fish
+    zoxide
+    direnv
+    # Editor
+    neovim
+    # Modern CLI Replacements
+    eza
+    bat
+    fd-find
+    ripgrep
+    duf
+    trash-cli
+    tealdeer
+    # Git Tools
+    git
+    git-lfs
+    gh
+    # Essential Utilities
+    fzf
+    jq
+    tmux
+    wget
+    gnupg
+    tree
+)
+
+# Packages NOT available in Debian repos (will be skipped)
+SKIPPED_TIER1=(
+    atuin
+    starship
+    sd
+    dust
+    procs
+    bottom
+    difftastic
+    git-delta
+    choose
+    broot
+    xh
+    doggo
+    gping
+    lazygit
+    yq
+    chezmoi
+)
+
+{{ if .is_dev -}}
+# =============================================================================
+# Tier 2: Dev packages available in apt
+# =============================================================================
+APT_TIER2=(
+    # Development SDKs & Package Managers
+    nodejs
+    # Build & Image Tools
+    imagemagick
+    p7zip-full
+    # Development Utilities
+    shellcheck
+)
+
+# Tier 2: Dev packages NOT available
+SKIPPED_TIER2=(
+    uv
+    tokei
+    hyperfine
+    grex
+    llm
+    gemini-cli
+    opencode
+    sdkman-cli
+)
+
+APT_TIER1+=("${APT_TIER2[@]}")
+SKIPPED_TIER1+=("${SKIPPED_TIER2[@]}")
+{{ end -}}
+
+# =============================================================================
+# Update package cache
+# =============================================================================
+log "Updating apt cache..."
+sudo apt-get update
+
+# =============================================================================
+# Install available packages
+# =============================================================================
+log "Installing ${#APT_TIER1[@]} packages from apt repositories..."
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${APT_TIER1[@]}"
+
+# =============================================================================
+# Create symlinks for renamed binaries
+# =============================================================================
+log "Creating symlinks for renamed binaries..."
+mkdir -p ~/.local/bin
+
+if command -v batcat &>/dev/null && ! command -v bat &>/dev/null; then
+    ln -sf "$(command -v batcat)" ~/.local/bin/bat
+    log "Created bat -> batcat symlink"
+fi
+
+if command -v fdfind &>/dev/null && ! command -v fd &>/dev/null; then
+    ln -sf "$(command -v fdfind)" ~/.local/bin/fd
+    log "Created fd -> fdfind symlink"
+fi
+
+# =============================================================================
+# Manual install scripts
+# =============================================================================
+{{ if not (lookPath "tpm") -}}
+if [[ ! -d ~/.tmux/plugins/tpm ]]; then
+    log "Installing tpm (Tmux Plugin Manager) via git..."
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+fi
+{{ end -}}
+
+{{ if .is_dev -}}
+# SDKMAN (Java SDK manager)
+if [[ ! -d ~/.sdkman ]]; then
+    log "Installing SDKMAN..."
+    curl -s "https://get.sdkman.io" | bash
+fi
+{{ end -}}
+
+# =============================================================================
+# Warn about skipped packages
+# =============================================================================
+warn "The following packages are not available in Debian repositories:"
+for pkg in "${SKIPPED_TIER1[@]}"; do
+    warn "  - $pkg"
+done
+
+log ""
+log "Debian package installation complete!"
+log ""
+log "To install missing modern CLI tools, consider:"
+log "  1. Install Rust toolchain: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+log "  2. Use cargo: cargo install atuin starship eza sd dust procs bottom difftastic git-delta broot xh gping"
+log "  3. Or use alternative package sources (PPAs, third-party repos)"
+log ""
