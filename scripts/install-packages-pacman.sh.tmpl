@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Arch Linux package installer
+# Arch Linux package installer — generated from .chezmoidata/packages.yaml
 set -euo pipefail
 
 # shellcheck source=/dev/null
@@ -8,100 +8,98 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 log "Installing packages via pacman..."
 
 # =============================================================================
-# Tier 1: Core packages (ALL machines)
+# Official repo packages
 # =============================================================================
-TIER1_PACKAGES=(
-    # Shell & Environment
-    fish
-    atuin
-    zoxide
-    starship
-    direnv
-    # Editor
-    neovim
-    # Modern CLI Replacements
-    eza
-    bat
-    fd
-    ripgrep
-    sd
-    dust
-    duf
-    procs
-    bottom
-    difftastic
-    git-delta
-    trash-cli
-    broot
-    xh
-    gping
-    tealdeer
-    # Git Tools
-    git
-    git-lfs
-    github-cli
-    lazygit
-    # Essential Utilities
-    chezmoi
-    fzf
-    jq
-    yq
-    tmux
-    wget
-    gnupg
-    tree
-)
-
-# AUR packages (require yay/paru)
-AUR_TIER1=(
-    choose
-    doggo
+PACMAN_PACKAGES=(
+    # Tier 1: Core CLI tools
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 1) (hasKey $pkg "pacman") }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.pacman }}
+{{-     end }}
+{{-   end }}
+{{- end }}
 )
 
 {{ if .is_dev -}}
-# =============================================================================
-# Tier 2: Development packages (is_dev=true)
-# =============================================================================
-TIER2_PACKAGES=(
-    # Development SDKs & Package Managers
-    nodejs
-    uv
-    # Build & Image Tools
-    imagemagick
-    p7zip
-    # Development Utilities
-    shellcheck
-    tokei
-    hyperfine
-    grex
+# Tier 2: Development tools
+PACMAN_PACKAGES+=(
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 2) (hasKey $pkg "pacman") }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.pacman }}
+{{-     end }}
+{{-   end }}
+{{- end }}
 )
-
-AUR_TIER2=(
-)
-
-TIER1_PACKAGES+=("${TIER2_PACKAGES[@]}")
-AUR_TIER1+=("${AUR_TIER2[@]}")
 {{ end -}}
 
-# =============================================================================
-# Install official packages
-# =============================================================================
-log "Installing ${#TIER1_PACKAGES[@]} packages from official repositories..."
-sudo pacman -Syu --needed --noconfirm "${TIER1_PACKAGES[@]}"
+{{ if .install_ui_apps -}}
+# Tier 3: GUI packages in official repos
+PACMAN_PACKAGES+=(
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "pacman") }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.pacman }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+)
+{{ end -}}
+
+log "Installing ${#PACMAN_PACKAGES[@]} packages from official repositories..."
+sudo pacman -S --needed --noconfirm "${PACMAN_PACKAGES[@]}"
 
 # =============================================================================
-# Install AUR packages
+# AUR packages (require yay or paru)
 # =============================================================================
-if [[ ${#AUR_TIER1[@]} -gt 0 ]]; then
+AUR_PACKAGES=(
+    # Tier 1
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 1) (hasKey $pkg "aur") (not (hasKey $pkg "pacman")) }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.aur }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+)
+
+{{ if .is_dev -}}
+# Tier 2
+AUR_PACKAGES+=(
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 2) (hasKey $pkg "aur") (not (hasKey $pkg "pacman")) }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.aur }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+)
+{{ end -}}
+
+{{ if .install_ui_apps -}}
+# Tier 3
+AUR_PACKAGES+=(
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "aur") (not (hasKey $pkg "pacman")) }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.aur }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+)
+{{ end -}}
+
+if [[ ${#AUR_PACKAGES[@]} -gt 0 ]]; then
     if command -v yay &>/dev/null; then
-        log "Installing ${#AUR_TIER1[@]} packages from AUR via yay..."
-        yay -S --needed --noconfirm "${AUR_TIER1[@]}"
+        log "Installing ${#AUR_PACKAGES[@]} packages from AUR via yay..."
+        yay -S --needed --noconfirm "${AUR_PACKAGES[@]}"
     elif command -v paru &>/dev/null; then
-        log "Installing ${#AUR_TIER1[@]} packages from AUR via paru..."
-        paru -S --needed --noconfirm "${AUR_TIER1[@]}"
+        log "Installing ${#AUR_PACKAGES[@]} packages from AUR via paru..."
+        paru -S --needed --noconfirm "${AUR_PACKAGES[@]}"
     else
         warn "No AUR helper found (yay/paru). Skipping AUR packages:"
-        for pkg in "${AUR_TIER1[@]}"; do
+        for pkg in "${AUR_PACKAGES[@]}"; do
             warn "  - $pkg"
         done
         warn ""
@@ -111,15 +109,40 @@ if [[ ${#AUR_TIER1[@]} -gt 0 ]]; then
     fi
 fi
 
+{{ if .install_ui_apps -}}
+# =============================================================================
+# Flatpak packages (Tier 3 GUI apps)
+# =============================================================================
+FLATPAK_PACKAGES=(
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "flatpak") }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.flatpak }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+)
+
+if [[ ${#FLATPAK_PACKAGES[@]} -gt 0 ]]; then
+    if command -v flatpak &>/dev/null; then
+        log "Installing ${#FLATPAK_PACKAGES[@]} Flatpak apps..."
+        for app_id in "${FLATPAK_PACKAGES[@]}"; do
+            flatpak install -y --noninteractive flathub "$app_id" 2>/dev/null || \
+                warn "Failed to install flatpak: $app_id"
+        done
+    else
+        warn "flatpak not found. Skipping Flatpak apps."
+    fi
+fi
+{{ end -}}
+
 # =============================================================================
 # Manual install scripts for packages not in repos
 # =============================================================================
-{{ if not (lookPath "tpm") -}}
 if [[ ! -d ~/.tmux/plugins/tpm ]]; then
     log "Installing tpm (Tmux Plugin Manager) via git..."
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
-{{ end -}}
 
 {{ if .is_dev -}}
 # SDKMAN (Java SDK manager)
@@ -128,16 +151,17 @@ if [[ ! -d ~/.sdkman ]]; then
     curl -s "https://get.sdkman.io" | bash
 fi
 
-# AI tools not in AUR - provide installation instructions
-if ! command -v llm &>/dev/null || ! command -v gemini-cli &>/dev/null; then
+# AI tools not in repos — provide installation instructions
+MISSING_AI=()
+command -v llm &>/dev/null      || MISSING_AI+=("llm: pipx install llm")
+command -v gemini &>/dev/null    || MISSING_AI+=("gemini-cli: npm install -g @google/generative-ai-cli")
+command -v opencode &>/dev/null  || MISSING_AI+=("opencode: see https://github.com/openai/opencode")
+
+if [[ ${#MISSING_AI[@]} -gt 0 ]]; then
     warn "Some AI tools need manual installation:"
-    if ! command -v llm &>/dev/null; then
-        warn "  llm: pipx install llm"
-    fi
-    if ! command -v gemini-cli &>/dev/null; then
-        warn "  gemini-cli: npm install -g @google/generative-ai-cli"
-    fi
-    warn "  opencode: Visit https://github.com/openai/opencode for installation"
+    for msg in "${MISSING_AI[@]}"; do
+        warn "  $msg"
+    done
 fi
 {{ end -}}
 

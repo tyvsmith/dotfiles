@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install packages based on detected distro
-{{ if stat ".chezmoidata/packages.yaml" -}}
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
-{{ else -}}
 # Brewfile hash: {{ include "Brewfile.tmpl" | sha256sum }}
-{{ end -}}
 set -euo pipefail
 
 # shellcheck source=/dev/null
@@ -26,12 +23,10 @@ brew bundle --file=<(render_template Brewfile.tmpl)
 
 {{ else if eq .distro "arch" -}}
 # =============================================================================
-# Arch Linux: Use pacman/yay
+# Arch Linux: Use pacman/yay/flatpak
 # =============================================================================
 log "Installing packages via pacman/yay (Arch Linux)..."
 
-# Render and execute the Arch installer script
-SCRIPT_PATH="${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/install-packages-pacman.sh.tmpl"
 bash <(render_template scripts/install-packages-pacman.sh.tmpl)
 
 {{ else if eq .distro "debian" -}}
@@ -40,19 +35,25 @@ bash <(render_template scripts/install-packages-pacman.sh.tmpl)
 # =============================================================================
 log "Installing packages via apt (Debian/Ubuntu)..."
 
-# Render and execute the Debian installer script
 bash <(render_template scripts/install-packages-apt.sh.tmpl)
+
+{{ else if eq .distro "silverblue" -}}
+# =============================================================================
+# Fedora Silverblue/Bazzite: Homebrew for CLI, Flatpak for GUI
+# =============================================================================
+log "Installing packages on Silverblue/Bazzite..."
+
+bash <(render_template scripts/install-packages-silverblue.sh.tmpl)
 
 {{ else -}}
 # =============================================================================
-# Unknown distro: Try to fail gracefully
+# Unknown distro: Try Homebrew as fallback
 # =============================================================================
 warn "Unknown or unsupported distro: $DISTRO"
-warn "Supported distributions: macOS (darwin), Arch Linux, Debian/Ubuntu"
+warn "Supported: macOS, Arch Linux, Debian/Ubuntu, Fedora Silverblue/Bazzite"
 
-# If Homebrew is available on unknown Linux, offer to use it
-if [[ "$DISTRO" != "macos" ]] && command -v brew &>/dev/null; then
-    log "Homebrew detected on Linux - using it as fallback..."
+if command -v brew &>/dev/null; then
+    log "Homebrew detected on Linux — using it as fallback..."
     ensure_brew_in_path
     brew bundle --file=<(render_template Brewfile.tmpl)
 else
@@ -61,4 +62,3 @@ fi
 {{ end -}}
 
 log "Package installation complete!"
-
