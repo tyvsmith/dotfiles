@@ -44,10 +44,13 @@
 {{-   $isWork = .chezmoi.config.data.is_work -}}
 {{- end -}}
 
-{{- /* Detect distribution for package manager selection */ -}}
+{{- /* Detect distribution for package manager selection
+     Order matters: Silverblue check before Fedora, Arch before Debian */ -}}
 {{- $distro := "unknown" -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $distro = "macos" -}}
+{{- else if stat "/run/ostree-booted" -}}
+{{-   $distro = "silverblue" -}}
 {{- else if stat "/etc/arch-release" -}}
 {{-   $distro = "arch" -}}
 {{- else if stat "/etc/debian_version" -}}

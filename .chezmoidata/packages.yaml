@@ -1,462 +1,543 @@
+# =============================================================================
 # Package definitions for multi-platform package management
-# This is the single source of truth for all packages across macOS, Arch, and Debian
+# Single source of truth for all packages across macOS, Arch, Debian, Silverblue
+# =============================================================================
 #
-# Package tiers:
-#   1 = Core CLI tools (ALL machines)
-#   2 = Development tools (is_dev=true)
-#   3 = GUI applications (macOS + install_ui_apps=true)
+# Schema:
+#   tier: 1 = Core CLI (all machines), 2 = Dev tools (is_dev), 3 = GUI apps (install_ui_apps)
+#   desc: Short description (doubles as Brewfile inline comment)
 #
-# Package managers:
-#   brew      - Homebrew (macOS, Linux)
-#   pacman    - Arch Linux official repos
-#   apt       - Debian/Ubuntu repos
-#   aur       - Arch User Repository (requires yay/paru)
-#   brew_cask - Homebrew casks (macOS GUI apps)
-#   mas       - Mac App Store
+#   Install methods per platform (omit = not available on that platform):
+#     brew:       Homebrew formula name (macOS, Silverblue CLI)
+#     brew_tap:   Homebrew tap required before install
+#     brew_cask:  Homebrew cask name (macOS GUI apps)
+#     pacman:     Arch Linux official repo package name
+#     aur:        AUR package name (when not in official repos)
+#     apt:        Debian/Ubuntu package name
+#     flatpak:    Flatpak application ID (Linux GUI apps, Silverblue)
+#     appimage:   GitHub repo (owner/name) for AppImage releases
+#     mas:        Mac App Store ID (integer)
+#     script:     Manual install command (fallback when not in any repo)
 #
-# Special fields:
-#   brew_tap      - Homebrew tap to add before installing
-#   apt_binary    - Binary name differs from package name on Debian
-#   install_script - Manual installation command when not in repos
-#   os            - OS restriction (darwin = macOS only)
+#   Modifiers:
+#     apt_bin:    Binary name on Debian when different from package name
+#     os:         Restrict to OS: darwin | linux (omit = all platforms)
 
 packages:
-  # =============================================================================
-  # Tier 1: Shell & Environment (6 packages)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 1: Shell & Environment
+  # ===========================================================================
   fish:
     tier: 1
+    desc: "Modern shell"
     brew: fish
     pacman: fish
     apt: fish
 
   tpm:
     tier: 1
+    desc: "Tmux Plugin Manager"
     brew: tpm
-    pacman: null
-    apt: null
-    install_script: 'git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm'
+    script: "git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm"
 
   atuin:
     tier: 1
+    desc: "Magical shell history"
     brew: atuin
     pacman: atuin
-    apt: null
 
   zoxide:
     tier: 1
+    desc: "Smarter cd command"
     brew: zoxide
     pacman: zoxide
     apt: zoxide
 
   starship:
     tier: 1
+    desc: "Cross-shell prompt"
     brew: starship
     pacman: starship
-    apt: null
 
   direnv:
     tier: 1
+    desc: "Per-directory env vars"
     brew: direnv
     pacman: direnv
     apt: direnv
 
-  # =============================================================================
-  # Tier 1: Editor (1 package)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 1: Editor
+  # ===========================================================================
   neovim:
     tier: 1
+    desc: "Hyperextensible text editor"
     brew: neovim
     pacman: neovim
     apt: neovim
 
-  # =============================================================================
-  # Tier 1: Modern CLI Replacements (16 packages)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 1: Modern CLI Replacements
+  # ===========================================================================
   eza:
     tier: 1
+    desc: "ls replacement"
     brew: eza
     pacman: eza
     apt: eza
 
   bat:
     tier: 1
+    desc: "cat replacement"
     brew: bat
     pacman: bat
     apt: bat
-    apt_binary: batcat
+    apt_bin: batcat
 
   fd:
     tier: 1
+    desc: "find replacement"
     brew: fd
     pacman: fd
     apt: fd-find
-    apt_binary: fdfind
+    apt_bin: fdfind
 
   ripgrep:
     tier: 1
+    desc: "grep replacement"
     brew: ripgrep
     pacman: ripgrep
     apt: ripgrep
 
   sd:
     tier: 1
+    desc: "sed replacement"
     brew: sd
     pacman: sd
-    apt: null
 
   dust:
     tier: 1
+    desc: "du replacement"
     brew: dust
     pacman: dust
-    apt: null
 
   duf:
     tier: 1
+    desc: "df replacement"
     brew: duf
     pacman: duf
     apt: duf
 
   procs:
     tier: 1
+    desc: "ps replacement"
     brew: procs
     pacman: procs
-    apt: null
 
   bottom:
     tier: 1
+    desc: "top/htop replacement"
     brew: bottom
     pacman: bottom
-    apt: null
 
   difftastic:
     tier: 1
+    desc: "Structural diff tool"
     brew: difftastic
     pacman: difftastic
-    apt: null
 
   git-delta:
     tier: 1
+    desc: "Git pager with syntax highlighting"
     brew: git-delta
     pacman: git-delta
-    apt: null
 
   trash-cli:
     tier: 1
+    desc: "Safe rm replacement"
     brew: trash-cli
     pacman: trash-cli
     apt: trash-cli
 
   choose:
     tier: 1
+    desc: "cut/awk replacement"
     brew: choose
-    pacman: null
-    apt: null
-    aur: choose
+    pacman: choose
 
   broot:
     tier: 1
+    desc: "Interactive tree explorer"
     brew: broot
     pacman: broot
-    apt: null
 
   xh:
     tier: 1
+    desc: "curl replacement"
     brew: xh
     pacman: xh
-    apt: null
 
   doggo:
     tier: 1
+    desc: "dig replacement"
     brew: doggo
-    pacman: null
-    apt: null
-    aur: doggo
+    pacman: doggo
 
   gping:
     tier: 1
+    desc: "ping with graph"
     brew: gping
     pacman: gping
-    apt: null
 
   tealdeer:
     tier: 1
+    desc: "tldr pages client"
     brew: tealdeer
     pacman: tealdeer
     apt: tealdeer
 
-  # =============================================================================
-  # Tier 1: Git Tools (4 packages)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 1: Git Tools
+  # ===========================================================================
   git:
     tier: 1
+    desc: "Version control"
     brew: git
     pacman: git
     apt: git
 
   git-lfs:
     tier: 1
+    desc: "Git Large File Storage"
     brew: git-lfs
     pacman: git-lfs
     apt: git-lfs
 
   gh:
     tier: 1
+    desc: "GitHub CLI"
     brew: gh
     pacman: github-cli
     apt: gh
 
   lazygit:
     tier: 1
+    desc: "Terminal UI for git"
     brew: lazygit
     pacman: lazygit
-    apt: null
 
-  # =============================================================================
-  # Tier 1: Essential Utilities (9 packages)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 1: Essential Utilities
+  # ===========================================================================
   chezmoi:
     tier: 1
+    desc: "Dotfile manager"
     brew: chezmoi
     pacman: chezmoi
-    apt: null
 
   fzf:
     tier: 1
+    desc: "Fuzzy finder"
     brew: fzf
     pacman: fzf
     apt: fzf
 
   jq:
     tier: 1
+    desc: "JSON processor"
     brew: jq
     pacman: jq
     apt: jq
 
   yq:
     tier: 1
+    desc: "YAML processor"
     brew: yq
     pacman: yq
-    apt: null
 
   tmux:
     tier: 1
+    desc: "Terminal multiplexer"
     brew: tmux
     pacman: tmux
     apt: tmux
 
   wget:
     tier: 1
+    desc: "Network downloader"
     brew: wget
     pacman: wget
     apt: wget
 
   gnupg:
     tier: 1
+    desc: "GnuPG encryption"
     brew: gnupg
     pacman: gnupg
     apt: gnupg
 
   tree:
     tier: 1
+    desc: "Directory tree listing"
     brew: tree
     pacman: tree
     apt: tree
 
-  # =============================================================================
-  # Tier 2: Development SDKs & Package Managers (3 packages)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 2: Development SDKs & Package Managers
+  # ===========================================================================
   sdkman-cli:
     tier: 2
+    desc: "Java/Kotlin SDK manager"
     brew: sdkman-cli
     brew_tap: sdkman/tap
-    pacman: null
-    apt: null
-    install_script: 'curl -s https://get.sdkman.io | bash'
+    script: "curl -s https://get.sdkman.io | bash"
 
   uv:
     tier: 2
+    desc: "Python package manager"
     brew: uv
     pacman: uv
-    apt: null
 
   node:
     tier: 2
+    desc: "Node.js runtime"
     brew: node
     pacman: nodejs
     apt: nodejs
 
-  # =============================================================================
-  # Tier 2: Build & Image Tools (2 packages)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 2: Build & Image Tools
+  # ===========================================================================
   imagemagick:
     tier: 2
+    desc: "Image manipulation"
     brew: imagemagick
     pacman: imagemagick
     apt: imagemagick
 
-  p7zip:
+  7zip:
     tier: 2
+    desc: "Archive tool"
     brew: p7zip
-    pacman: p7zip
+    pacman: 7zip
     apt: p7zip-full
 
-  # =============================================================================
-  # Tier 2: Development Utilities (4 packages)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 2: Development Utilities
+  # ===========================================================================
   shellcheck:
     tier: 2
+    desc: "Shell script linter"
     brew: shellcheck
     pacman: shellcheck
     apt: shellcheck
 
   tokei:
     tier: 2
+    desc: "Code statistics"
     brew: tokei
     pacman: tokei
-    apt: null
 
   hyperfine:
     tier: 2
+    desc: "Command benchmarking"
     brew: hyperfine
     pacman: hyperfine
-    apt: null
 
   grex:
     tier: 2
+    desc: "Regex generator"
     brew: grex
     pacman: grex
-    apt: null
 
-  # =============================================================================
-  # Tier 2: AI Tools (5 packages)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 2: AI Tools
+  # ===========================================================================
   llm:
     tier: 2
+    desc: "LLM CLI tool"
     brew: llm
-    pacman: null
-    apt: null
 
   gemini-cli:
     tier: 2
+    desc: "Google Gemini CLI"
     brew: gemini-cli
-    pacman: null
-    apt: null
 
   opencode:
     tier: 2
+    desc: "AI coding agent"
     brew: opencode
-    pacman: null
-    apt: null
 
-  # =============================================================================
-  # Tier 2: macOS GNU Tools (5 packages - macOS only)
-  # =============================================================================
+  # ===========================================================================
+  # Tier 2: macOS GNU Tools (darwin only)
+  # ===========================================================================
   coreutils:
     tier: 2
     os: darwin
+    desc: "GNU coreutils"
     brew: coreutils
 
   findutils:
     tier: 2
     os: darwin
+    desc: "GNU findutils"
     brew: findutils
 
   gnu-sed:
     tier: 2
     os: darwin
+    desc: "GNU sed"
     brew: gnu-sed
 
   grep-gnu:
     tier: 2
     os: darwin
+    desc: "GNU grep"
     brew: grep
 
   moreutils:
     tier: 2
     os: darwin
+    desc: "Additional Unix utilities"
     brew: moreutils
 
-# =============================================================================
-# Tier 3: GUI Applications (macOS only, install_ui_apps=true)
-# =============================================================================
-casks:
+  # ===========================================================================
+  # Tier 3: Fonts
+  # ===========================================================================
   font-hack-nerd-font:
     tier: 3
+    desc: "Hack Nerd Font"
     brew_cask: font-hack-nerd-font
+    pacman: ttf-hack-nerd
 
+  # ===========================================================================
+  # Tier 3: Development Tools (GUI)
+  # ===========================================================================
   visual-studio-code:
     tier: 3
+    desc: "Code editor"
     brew_cask: visual-studio-code
+    flatpak: com.visualstudio.code
+    aur: visual-studio-code-bin
 
   jetbrains-toolbox:
     tier: 3
+    desc: "JetBrains IDE manager"
     brew_cask: jetbrains-toolbox
+    aur: jetbrains-toolbox
 
   iterm2:
     tier: 3
+    os: darwin
+    desc: "macOS terminal"
     brew_cask: iterm2
-
-  1password:
-    tier: 3
-    brew_cask: 1password
-
-  alfred:
-    tier: 3
-    brew_cask: alfred
-
-  moom:
-    tier: 3
-    brew_cask: moom
-
-  the-unarchiver:
-    tier: 3
-    brew_cask: the-unarchiver
-
-  app-cleaner:
-    tier: 3
-    brew_cask: app-cleaner
-
-  discord:
-    tier: 3
-    brew_cask: discord
-
-  beeper:
-    tier: 3
-    brew_cask: beeper
-
-  brave-browser:
-    tier: 3
-    brew_cask: brave-browser
-
-  vlc:
-    tier: 3
-    brew_cask: vlc
-
-  soundsource:
-    tier: 3
-    brew_cask: soundsource
-
-  deskflow:
-    tier: 3
-    brew_cask: deskflow
 
   claude-code:
     tier: 3
+    desc: "Anthropic Claude Code"
     brew_cask: claude-code
 
   codex:
     tier: 3
+    desc: "OpenAI Codex"
     brew_cask: codex
 
-# =============================================================================
-# Mac App Store apps
-# =============================================================================
-mas:
+  # ===========================================================================
+  # Tier 3: Productivity & Utilities
+  # ===========================================================================
+  1password:
+    tier: 3
+    desc: "Password manager"
+    brew_cask: 1password
+    flatpak: com.onepassword.OnePassword
+    aur: 1password
+
+  alfred:
+    tier: 3
+    os: darwin
+    desc: "Launcher/automation"
+    brew_cask: alfred
+
+  moom:
+    tier: 3
+    os: darwin
+    desc: "Window manager"
+    brew_cask: moom
+
+  the-unarchiver:
+    tier: 3
+    os: darwin
+    desc: "Archive extraction"
+    brew_cask: the-unarchiver
+
+  app-cleaner:
+    tier: 3
+    os: darwin
+    desc: "App uninstaller"
+    brew_cask: app-cleaner
+
+  # ===========================================================================
+  # Tier 3: Communication
+  # ===========================================================================
+  discord:
+    tier: 3
+    desc: "Voice & text chat"
+    brew_cask: discord
+    flatpak: com.discordapp.Discord
+
+  beeper:
+    tier: 3
+    desc: "Unified messaging"
+    brew_cask: beeper
+    appimage: nickvdp/beeper
+
+  # ===========================================================================
+  # Tier 3: Browsers
+  # ===========================================================================
+  brave-browser:
+    tier: 3
+    desc: "Privacy-focused browser"
+    brew_cask: brave-browser
+    flatpak: com.brave.Browser
+    aur: brave-bin
+
+  # ===========================================================================
+  # Tier 3: Media
+  # ===========================================================================
+  vlc:
+    tier: 3
+    desc: "Media player"
+    brew_cask: vlc
+    flatpak: org.videolan.VLC
+    pacman: vlc
+
+  soundsource:
+    tier: 3
+    os: darwin
+    desc: "Audio control"
+    brew_cask: soundsource
+
+  # ===========================================================================
+  # Tier 3: Other Utilities
+  # ===========================================================================
+  deskflow:
+    tier: 3
+    desc: "Software KVM"
+    brew_cask: deskflow
+    flatpak: org.deskflow.deskflow
+
+  # ===========================================================================
+  # Tier 3: Mac App Store (macOS only)
+  # ===========================================================================
   amphetamine:
     tier: 3
-    id: 937984704
+    os: darwin
+    desc: "Keep Mac awake"
+    mas: 937984704
 
   velja:
     tier: 3
-    id: 1607635845
+    os: darwin
+    desc: "Browser/app picker"
+    mas: 1607635845

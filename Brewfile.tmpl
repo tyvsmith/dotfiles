@@ -1,134 +1,70 @@
 # =============================================================================
-# Core & Modern CLI Tools - Installed on ALL machines
-# These are lightweight and provide the consistent UX across all environments
+# Auto-generated from .chezmoidata/packages.yaml — edit that file, not this one
 # =============================================================================
 
-# Shell & Environment
-brew "fish"
-brew "tpm"
-brew "atuin"
-brew "zoxide"
-brew "starship"
-brew "direnv"
-
-# Editor
-brew "neovim"
-
-# Modern CLI replacements (lightweight, essential for bling.fish abbreviations)
-brew "eza"           # ls
-brew "bat"           # cat
-brew "fd"            # find
-brew "ripgrep"       # grep
-brew "sd"            # sed
-brew "dust"          # du
-brew "duf"           # df
-brew "procs"         # ps
-brew "bottom"        # top/htop
-brew "difftastic"    # diff (structural)
-brew "git-delta"     # diff (git pager)
-brew "trash-cli"     # rm (safe delete)
-brew "choose"        # cut/awk
-brew "broot"         # tree explorer
-brew "xh"            # curl
-brew "doggo"         # dig
-brew "gping"         # ping
-brew "tealdeer"      # man (tldr)
-
-# Git
-brew "git"
-brew "git-lfs"
-brew "gh"
-brew "lazygit"
-
-# Essential Utils
-brew "chezmoi"
-brew "fzf"
-brew "jq"
-brew "yq"
-brew "tmux"
-brew "wget"
-brew "gnupg"
-brew "tree"
+# --- Taps ---
+{{- range $name, $pkg := .packages }}
+{{-   if hasKey $pkg "brew_tap" }}
+{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "darwin") }}
+tap "{{ $pkg.brew_tap }}"
+{{-     end }}
+{{-   end }}
+{{- end }}
 
 # =============================================================================
-# Development Tools - Only for development machines (is_dev=true)
-# These are heavier: SDKs, build tools, AI tools
+# Tier 1: Core CLI Tools — installed on ALL machines
 # =============================================================================
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 1) (hasKey $pkg "brew") }}
+{{-     if not (hasKey $pkg "os") }}
+brew "{{ $pkg.brew }}"  # {{ $pkg.desc }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+
 {{ if .is_dev -}}
-
-# Development SDKs & Package Managers
-tap "sdkman/tap"
-brew "sdkman-cli" # Java/Kotlin SDK manager
-brew "uv"                    # Python package manager
-brew "node"                  # Node.js (includes npx)
-
-# Build & Image Tools
-brew "imagemagick"           # Image manipulation
-brew "p7zip"                 # 7z archive support
-
-# Development Utilities
-brew "shellcheck"            # Shell script linter
-brew "tokei"                 # Code statistics
-brew "hyperfine"             # Command benchmarking
-brew "grex"                  # Regex generator
-
-# AI Tools (CLI)
-brew "llm"                   # Simon Willison's LLM CLI
-brew "gemini-cli"            # Google Gemini CLI
-brew "opencode"              # AI coding agent
-cask "claude-code"           # Anthropic Claude Code
-cask "codex"                 # OpenAI Codex
-
-{{ end -}}
-
 # =============================================================================
-# macOS-only: GNU tools (Linux has these natively)
+# Tier 2: Development Tools (is_dev=true)
 # =============================================================================
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 2) (hasKey $pkg "brew") }}
+{{-     if not (hasKey $pkg "os") }}
+brew "{{ $pkg.brew }}"  # {{ $pkg.desc }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+
 {{ if eq .chezmoi.os "darwin" -}}
-brew "coreutils"
-brew "findutils"
-brew "gnu-sed"
-brew "grep"
-brew "moreutils"
+# macOS-only: GNU tools (Linux has these natively)
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 2) (hasKey $pkg "os") }}
+{{-     if eq $pkg.os "darwin" }}
+brew "{{ $pkg.brew }}"
+{{-     end }}
+{{-   end }}
+{{- end }}
+{{ end -}}
 {{ end -}}
 
-# =============================================================================
-# GUI Applications - macOS only, when install_ui_apps=true
-# =============================================================================
 {{ if and (eq .chezmoi.os "darwin") .install_ui_apps -}}
-
-# Fonts
-cask "font-hack-nerd-font"
-
-# Development Tools
-cask "visual-studio-code"
-cask "jetbrains-toolbox"
-cask "iterm2"
-
-# Productivity & Utilities
-cask "1password"
-cask "alfred"                # Launcher/automation
-cask "moom"                  # Window manager
-cask "the-unarchiver"        # Archive extraction
-cask "app-cleaner"           # Uninstaller
-
-# Communication
-cask "discord"
-cask "beeper"                # Unified messaging
-
-# Browsers
-cask "brave-browser"
-
-# Media
-cask "vlc"
-cask "soundsource"           # Audio control
-
-# Other Utilities
-cask "deskflow"              # Software KVM (control multiple computers)
+# =============================================================================
+# Tier 3: GUI Applications (macOS casks)
+# =============================================================================
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "brew_cask") }}
+{{-     if not (hasKey $pkg "os") }}
+cask "{{ $pkg.brew_cask }}"  # {{ $pkg.desc }}
+{{-     else if eq $pkg.os "darwin" }}
+cask "{{ $pkg.brew_cask }}"  # {{ $pkg.desc }}
+{{-     end }}
+{{-   end }}
+{{- end }}
 
 # Mac App Store
 brew "mas"
-mas "Amphetamine", id: 937984704   # Keep Mac awake utility
-mas "Velja", id: 1607635845        # Browser/app picker
-
+{{- range $name, $pkg := .packages }}
+{{-   if hasKey $pkg "mas" }}
+mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
+{{-   end }}
+{{- end }}
 {{ end -}}

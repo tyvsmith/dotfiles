@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Fedora Silverblue/Bazzite package installer — generated from .chezmoidata/packages.yaml
+#
+# Strategy: Homebrew for CLI tools (avoids layering on immutable rootfs),
+#           Flatpak for GUI apps, AppImage for apps not on Flathub.
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Installing packages on Silverblue/Bazzite..."
+
+# =============================================================================
+# CLI tools via Homebrew
+# =============================================================================
+ensure_brew_in_path
+require_cmd brew
+
+log "Installing CLI tools via Homebrew..."
+brew bundle --file=<(render_template Brewfile.tmpl)
+
+{{ if .install_ui_apps -}}
+# =============================================================================
+# GUI apps via Flatpak
+# =============================================================================
+FLATPAK_APPS=(
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "flatpak") }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.flatpak }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+)
+
+if command -v flatpak &>/dev/null; then
+    # Ensure Flathub is configured
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+
+    log "Installing ${#FLATPAK_APPS[@]} Flatpak apps..."
+    for app_id in "${FLATPAK_APPS[@]}"; do
+        flatpak install -y --noninteractive flathub "$app_id" 2>/dev/null || \
+            warn "Failed to install flatpak: $app_id"
+    done
+else
+    warn "flatpak not found — cannot install GUI apps"
+fi
+
+# =============================================================================
+# AppImage downloads
+# =============================================================================
+APPIMAGE_DIR="${HOME}/Applications"
+mkdir -p "$APPIMAGE_DIR"
+
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "appimage") }}
+{{-     if not (hasKey $pkg "os") }}
+
+# {{ $name }}: {{ $pkg.desc }}
+if [[ ! -f "$APPIMAGE_DIR/{{ $name }}.AppImage" ]]; then
+    log "Fetching {{ $name }} AppImage from GitHub ({{ $pkg.appimage }})..."
+    APPIMAGE_URL=$(curl -sL "https://api.github.com/repos/{{ $pkg.appimage }}/releases/latest" \
+        | jq -r '.assets[] | select(.name | test("AppImage$")) | .browser_download_url' \
+        | head -1)
+    if [[ -n "$APPIMAGE_URL" && "$APPIMAGE_URL" != "null" ]]; then
+        curl -sL "$APPIMAGE_URL" -o "$APPIMAGE_DIR/{{ $name }}.AppImage"
+        chmod +x "$APPIMAGE_DIR/{{ $name }}.AppImage"
+        log "Installed {{ $name }} AppImage to $APPIMAGE_DIR/"
+    else
+        warn "Could not find AppImage release for {{ $name }} ({{ $pkg.appimage }})"
+    fi
+fi
+{{-     end }}
+{{-   end }}
+{{- end }}
+{{ end -}}
+
+# =============================================================================
+# Manual install scripts
+# =============================================================================
+if [[ ! -d ~/.tmux/plugins/tpm ]]; then
+    log "Installing tpm (Tmux Plugin Manager) via git..."
+    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+fi
+
+{{ if .is_dev -}}
+# SDKMAN (Java SDK manager)
+if [[ ! -d ~/.sdkman ]]; then
+    log "Installing SDKMAN..."
+    curl -s "https://get.sdkman.io" | bash
+fi
+{{ end -}}
+
+log "Silverblue/Bazzite package installation complete!"
