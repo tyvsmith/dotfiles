@@ -6,15 +6,24 @@
 	helper = !gh auth git-credential
 [init]
 	defaultBranch = main
+[pull]
+	rebase = true
 [push]
 	default = current
+	autoSetupRemote = true
 [color]
 	ui = true
+[column]
+	ui = auto
+[branch]
+	sort = -committerdate
+[tag]
+	sort = -version:refname
 [alias]
 	aa = add --all
 	ap = add --patch
 	br = branch
-	ci = commit -v
+	ci = commit
 	co = checkout
 	pf = push --force-with-lease
 	st = status
@@ -28,7 +37,7 @@
 {{- end }}
 	d = ! git status -s | fzf --no-sort --reverse --preview 'git diff --color=always {+2}' --bind=ctrl-j:preview-down --bind=ctrl-k:preview-up --preview-window=right:60%:wrap
 [core]
-	excludesfile = ~/.gitignore
+	excludesfile = ~/.config/git/ignore
 	autocrlf = input
 	untrackedCache = true
 	pager = delta
@@ -38,20 +47,24 @@
 	navigate = true
 	side-by-side = true
 	line-numbers = true
+[commit]
+	verbose = true
 [merge]
 	ff = only
 	conflictstyle = diff3
 [diff]
+	algorithm = histogram
 	colorMoved = default
+	mnemonicPrefix = true
 [fetch]
 	prune = true
 [rebase]
 	autosquash = true
+[rerere]
+	enabled = true
+	autoupdate = true
 [url "git@github.com:"]
 	followRedirects = true
 
 [include]
-	path = ~/.gitconfig.d/config
-[include]
-	path = ~/.gitconfig.local
-
+	path = ~/.config/git/local

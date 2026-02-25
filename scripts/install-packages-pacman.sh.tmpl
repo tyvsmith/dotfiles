@@ -145,12 +145,6 @@ if [[ ! -d ~/.tmux/plugins/tpm ]]; then
 fi
 
 {{ if .is_dev -}}
-# SDKMAN (Java SDK manager)
-if [[ ! -d ~/.sdkman ]]; then
-    log "Installing SDKMAN..."
-    curl -s "https://get.sdkman.io" | bash
-fi
-
 # AI tools not in repos — provide installation instructions
 MISSING_AI=()
 command -v llm &>/dev/null      || MISSING_AI+=("llm: pipx install llm")

@@ -471,10 +471,10 @@
       "Bash(starship explain*)",
       "Bash(starship timings*)",
 
-      "Bash(sdkman-cli list*)",
-      "Bash(sdk list*)",
-      "Bash(sdk current*)",
-      "Bash(sdk version*)",
+      "Bash(mise list*)",
+      "Bash(mise current*)",
+      "Bash(mise version*)",
+      "Bash(mise ls*)",
 
       "Bash(gsettings get*)",
       "Bash(gsettings list-schemas*)",
