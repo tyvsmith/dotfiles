@@ -43,19 +43,6 @@ PACKAGES+=(
 )
 {{ end -}}
 
-{{ if .install_ui_apps -}}
-# Tier 3: GUI apps
-PACKAGES+=(
-{{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   $an := default $n (index $pkg "arch_name") }}
-{{-   if and (eq (int $pkg.tier) 3) (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux")) (or (not (hasKey $pkg "arch")) $pkg.arch) }}
-    {{ $an }}
-{{-   end }}
-{{- end }}
-)
-{{ end -}}
-
 if [[ -n "$AUR_HELPER" ]]; then
     log "Installing ${#PACKAGES[@]} packages via $AUR_HELPER..."
     $AUR_HELPER -S --needed --noconfirm "${PACKAGES[@]}"
@@ -65,31 +52,6 @@ else
     sudo pacman -S --needed --noconfirm "${PACKAGES[@]}" 2>/dev/null || \
         warn "Some packages failed — likely AUR packages that need paru/yay."
 fi
-
-{{ if .install_ui_apps -}}
-# =============================================================================
-# Flatpak packages (Tier 3 GUI apps)
-# =============================================================================
-FLATPAK_PACKAGES=(
-{{- range $key, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "flatpak") (not (hasKey $pkg "os")) }}
-    {{ $pkg.flatpak }}
-{{-   end }}
-{{- end }}
-)
-
-if [[ ${#FLATPAK_PACKAGES[@]} -gt 0 ]]; then
-    if command -v flatpak &>/dev/null; then
-        log "Installing ${#FLATPAK_PACKAGES[@]} Flatpak apps..."
-        for app_id in "${FLATPAK_PACKAGES[@]}"; do
-            flatpak install -y --noninteractive flathub "$app_id" 2>/dev/null || \
-                warn "Failed to install flatpak: $app_id"
-        done
-    else
-        warn "flatpak not found. Skipping Flatpak apps."
-    fi
-fi
-{{ end -}}
 
 {{ if .is_dev -}}
 # AI tools not in repos — provide installation instructions

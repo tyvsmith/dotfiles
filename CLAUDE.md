@@ -49,9 +49,9 @@ DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 DOTFILES_HOMEBREW=1 chez
 - `is_work` - Work/corporate machine (affects SSH agent, work-specific configs)
   - Set to `true` for: work machines (uses system SSH agent for ussh compatibility)
   - Set to `false` for: personal machines (uses 1Password SSH agent)
-- `install_ui_apps` - Install GUI applications (IDEs, browsers, etc.) - macOS only
-  - Set to `true` for: machines where you want GUI apps
-  - Set to `false` for: servers, headless machines, Linux (uses native package manager for GUI)
+- `install_ui_apps` - Install GUI applications (IDEs, browsers, etc.) via separate `run_onchange_03` script
+  - Set to `true` for: machines where you want GUI apps (macOS casks, Arch paru+flatpak, Silverblue flatpak+appimage)
+  - Set to `false` for: servers, headless machines, devpods
 - `homebrew` - Use Homebrew as primary package manager on Linux (Debian/Ubuntu)
   - Set to `true` for: dev machines where you want current tool versions
   - Set to `false` for: servers, Arch (uses paru), machines where apt is sufficient
@@ -59,7 +59,7 @@ DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 DOTFILES_HOMEBREW=1 chez
 **Package tiers:**
 - **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux, essential utils
 - **Tier 2 (is_dev=true):** Development SDKs (mise, uv, node), build tools (imagemagick, p7zip), AI tools (llm, gemini-cli, opencode), dev utilities (shellcheck, tokei, hyperfine)
-- **Tier 3 (macOS + install_ui_apps=true):** GUI applications (VS Code, JetBrains, browsers, productivity apps)
+- **Tier 3 (install_ui_apps=true):** GUI applications (VS Code, JetBrains, browsers, productivity apps) — installed via separate `run_onchange_03` script, not bundled with CLI tools
 
 **Example configurations:**
 - Personal Mac dev: `is_dev=true`, `is_work=false`, `install_ui_apps=true` (1Password SSH, GUI apps)
@@ -105,10 +105,12 @@ Missing packages can be installed manually via:
 
 ### Key Files
 - `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
-- `Brewfile.tmpl` - Package manifest for Homebrew (macOS)
-- `scripts/install-packages-pacman.sh.tmpl` - Arch Linux package installer
-- `scripts/install-packages-apt.sh.tmpl` - Debian/Ubuntu package installer
-- `run_onchange_01-install-packages.sh.tmpl` - Routes to correct installer based on distro
+- `Brewfile.tmpl` - Package manifest for Homebrew (macOS, tiers 1-2 only)
+- `scripts/install-packages-pacman.sh.tmpl` - Arch Linux package installer (tiers 1-2)
+- `scripts/install-packages-apt.sh.tmpl` - Debian/Ubuntu package installer (tiers 1-2)
+- `scripts/install-ui-apps.sh.tmpl` - GUI app installer for all platforms (tier 3)
+- `run_onchange_01-install-packages.sh.tmpl` - Routes CLI tools to correct installer based on distro
+- `run_onchange_03-install-ui-apps.sh.tmpl` - Installs GUI apps when install_ui_apps=true
 - `run_onchange_02-install-fisher.sh` - Installs Fisher and Fish plugins on changes
 - `dot_config/fish/conf.d/0_bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
 - `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
