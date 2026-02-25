@@ -45,7 +45,7 @@ This will:
 
 **Package tiers:**
 - **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux
-- **Tier 2 (is_dev=true):** Development SDKs (sdkman, uv, node), AI tools (llm, claude), dev utilities (shellcheck, tokei)
+- **Tier 2 (is_dev=true):** Development SDKs (mise, uv, node), AI tools (llm, claude), dev utilities (shellcheck, tokei)
 - **Tier 3 (macOS + install_ui_apps=true):** GUI applications (VS Code, JetBrains, browsers)
 
 **Example configurations:**

@@ -55,7 +55,7 @@ DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 chezmoi init
 
 **Package tiers:**
 - **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux, essential utils
-- **Tier 2 (is_dev=true):** Development SDKs (sdkman, uv, node), build tools (imagemagick, p7zip), AI tools (llm, gemini-cli, opencode), dev utilities (shellcheck, tokei, hyperfine)
+- **Tier 2 (is_dev=true):** Development SDKs (mise, uv, node), build tools (imagemagick, p7zip), AI tools (llm, gemini-cli, opencode), dev utilities (shellcheck, tokei, hyperfine)
 - **Tier 3 (macOS + install_ui_apps=true):** GUI applications (VS Code, JetBrains, browsers, productivity apps)
 
 **Example configurations:**
@@ -104,7 +104,7 @@ Missing packages can be installed manually via:
 - `run_onchange_02-install-fisher.sh` - Installs Fisher and Fish plugins on changes
 - `dot_config/fish/conf.d/0_bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
 - `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
-- `dot_gitconfig.tmpl` - Git config with delta pager, useful aliases
+- `dot_config/git/config.tmpl` - Git config with delta pager, useful aliases
 
 ### Philosophy
 - All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→trash`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.

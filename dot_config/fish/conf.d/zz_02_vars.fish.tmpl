@@ -6,10 +6,12 @@
 # Editor
 set -gx EDITOR nvim
 set -gx VISUAL $EDITOR
+set -gx SUDO_EDITOR $EDITOR
 
-# SDKMAN config (only if installed via brew)
-# The sdkman-for-fish plugin needs to know where sdkman is installed
-set -l sdkman_dir {{ template "brew-prefix" . }}/opt/sdkman-cli/libexec
-if test -d "$sdkman_dir"
-    set -gx __sdkman_custom_dir "$sdkman_dir"
+# Bat — use ansi theme so terminal colors aren't overridden
+set -gx BAT_THEME ansi
+
+# Mise — polyglot runtime version manager (Java, Python, Node, etc.)
+if command -q mise
+    mise activate fish | source
 end

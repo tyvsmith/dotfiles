@@ -286,12 +286,12 @@ packages:
   # ===========================================================================
   # Tier 2: Development SDKs & Package Managers
   # ===========================================================================
-  sdkman-cli:
+  mise:
     tier: 2
-    desc: "Java/Kotlin SDK manager"
-    brew: sdkman-cli
-    brew_tap: sdkman/tap
-    script: "curl -s https://get.sdkman.io | bash"
+    desc: "Polyglot runtime version manager"
+    brew: mise
+    pacman: mise
+    apt: mise
 
   uv:
     tier: 2
