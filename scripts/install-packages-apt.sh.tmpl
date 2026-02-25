@@ -8,26 +8,23 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 log "Installing packages via apt..."
 
 # =============================================================================
-# Collect packages available in apt
+# Collect packages
 # =============================================================================
 APT_PACKAGES=(
     # Tier 1: Core CLI tools
-{{- range $name, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 1) (hasKey $pkg "apt") }}
-{{-     if not (hasKey $pkg "os") }}
-    {{ $pkg.apt }}
-{{-     end }}
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $an := default $n (index $pkg "apt_name") }}
+{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "apt")) $pkg.apt) }}
+    {{ $an }}
 {{-   end }}
 {{- end }}
 )
 
-# Packages not available in Debian repos (will be skipped with warning)
 SKIPPED_PACKAGES=(
-{{- range $name, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "apt")) (hasKey $pkg "brew") }}
-{{-     if not (hasKey $pkg "os") }}
-    {{ $name }}
-{{-     end }}
+{{- range $key, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) (hasKey $pkg "apt") (not $pkg.apt) }}
+    {{ default $key (index $pkg "name") }}
 {{-   end }}
 {{- end }}
 )
@@ -35,21 +32,19 @@ SKIPPED_PACKAGES=(
 {{ if .is_dev -}}
 # Tier 2: Development tools
 APT_PACKAGES+=(
-{{- range $name, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 2) (hasKey $pkg "apt") }}
-{{-     if not (hasKey $pkg "os") }}
-    {{ $pkg.apt }}
-{{-     end }}
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $an := default $n (index $pkg "apt_name") }}
+{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "apt")) $pkg.apt) }}
+    {{ $an }}
 {{-   end }}
 {{- end }}
 )
 
 SKIPPED_PACKAGES+=(
-{{- range $name, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "apt")) (hasKey $pkg "brew") }}
-{{-     if not (hasKey $pkg "os") }}
-    {{ $name }}
-{{-     end }}
+{{- range $key, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) (hasKey $pkg "apt") (not $pkg.apt) }}
+    {{ default $key (index $pkg "name") }}
 {{-   end }}
 {{- end }}
 )
@@ -72,23 +67,15 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${APT_PACKAGES[@]}"
 # =============================================================================
 log "Creating symlinks for renamed binaries..."
 mkdir -p ~/.local/bin
-{{- range $name, $pkg := .packages }}
+{{- range $key, $pkg := .packages }}
 {{-   if hasKey $pkg "apt_bin" }}
 
-if command -v {{ $pkg.apt_bin }} &>/dev/null && ! command -v {{ $name }} &>/dev/null; then
-    ln -sf "$(command -v {{ $pkg.apt_bin }})" ~/.local/bin/{{ $name }}
-    log "Created {{ $name }} -> {{ $pkg.apt_bin }} symlink"
+if command -v {{ $pkg.apt_bin }} &>/dev/null && ! command -v {{ $key }} &>/dev/null; then
+    ln -sf "$(command -v {{ $pkg.apt_bin }})" ~/.local/bin/{{ $key }}
+    log "Created {{ $key }} -> {{ $pkg.apt_bin }} symlink"
 fi
 {{-   end }}
 {{- end }}
-
-# =============================================================================
-# Manual install scripts for packages not in repos
-# =============================================================================
-if [[ ! -d ~/.tmux/plugins/tpm ]]; then
-    log "Installing tpm (Tmux Plugin Manager) via git..."
-    git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-fi
 
 {{ end -}}
 

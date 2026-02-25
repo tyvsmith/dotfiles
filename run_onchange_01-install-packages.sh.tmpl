@@ -31,11 +31,19 @@ bash <(render_template scripts/install-packages-pacman.sh.tmpl)
 
 {{ else if eq .distro "debian" -}}
 # =============================================================================
-# Debian/Ubuntu: Use apt
+# Debian/Ubuntu
 # =============================================================================
+{{ if .homebrew -}}
+log "Installing packages via Homebrew (Debian/Ubuntu, homebrew=true)..."
+
+bash <(render_template scripts/install-homebrew.sh.tmpl)
+ensure_brew_in_path
+brew bundle --file=<(render_template Brewfile.tmpl)
+{{ else -}}
 log "Installing packages via apt (Debian/Ubuntu)..."
 
 bash <(render_template scripts/install-packages-apt.sh.tmpl)
+{{ end -}}
 
 {{ else if eq .distro "silverblue" -}}
 # =============================================================================

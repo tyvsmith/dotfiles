@@ -39,7 +39,7 @@ brew bundle --file="$(chezmoi source-path)/Brewfile"
 ### Machine Type Configuration
 The `.chezmoi.toml.tmpl` prompts for machine type on first init, or accepts environment variables:
 ```bash
-DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 chezmoi init
+DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 DOTFILES_HOMEBREW=1 chezmoi init
 ```
 
 **Machine type flags:**
@@ -52,6 +52,9 @@ DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 chezmoi init
 - `install_ui_apps` - Install GUI applications (IDEs, browsers, etc.) - macOS only
   - Set to `true` for: machines where you want GUI apps
   - Set to `false` for: servers, headless machines, Linux (uses native package manager for GUI)
+- `homebrew` - Use Homebrew as primary package manager on Linux (Debian/Ubuntu)
+  - Set to `true` for: dev machines where you want current tool versions
+  - Set to `false` for: servers, Arch (uses paru), machines where apt is sufficient
 
 **Package tiers:**
 - **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux, essential utils
@@ -62,7 +65,7 @@ DOTFILES_IS_DEV=1 DOTFILES_UI_APPS=1 DOTFILES_IS_WORK=1 chezmoi init
 - Personal Mac dev: `is_dev=true`, `is_work=false`, `install_ui_apps=true` (1Password SSH, GUI apps)
 - Personal Linux dev: `is_dev=true`, `is_work=false`, `install_ui_apps=false` (1Password SSH, no casks)
 - Work Mac dev: `is_dev=true`, `is_work=true`, `install_ui_apps=true` (system SSH for ussh, GUI apps)
-- Devpods (Debian): `is_dev=true`, `is_work=true`, `install_ui_apps=false` (CLI + dev tools)
+- Devpods (Debian): `is_dev=true`, `is_work=true`, `install_ui_apps=false`, `homebrew=true` (CLI + dev tools)
 - Homelab server: `is_dev=false`, `is_work=false`, `install_ui_apps=false` (modern CLI only, no 1Password)
 
 ### OS Detection in Templates
@@ -72,8 +75,13 @@ Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else
 
 Packages are defined once in `.chezmoidata/packages.yaml` and installed via platform-specific package managers:
 - **macOS**: Homebrew (via `Brewfile.tmpl`)
-- **Arch Linux**: pacman for official packages, yay/paru for AUR packages
+- **Arch Linux**: paru (handles both official repos and AUR)
 - **Debian/Ubuntu**: apt (native repos only)
+
+The YAML key is the default package name for all package managers. Packages are available on all platforms by default. Only add fields when they differ from defaults:
+- `brew_name:`/`arch_name:`/`apt_name:` — override name for a specific manager
+- `brew: false`/`arch: false`/`apt: false` — exclude from a platform
+- `brew_cask: true` — install as Homebrew cask instead of formula
 
 The `run_onchange_01-install-packages.sh` script detects the distro and routes to the appropriate installer:
 - macOS: `brew bundle` with `Brewfile.tmpl`
