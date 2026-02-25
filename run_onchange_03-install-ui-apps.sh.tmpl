@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Install GUI applications (Tier 3)
+# Separate from CLI tools so GUI apps don't slow down every chezmoi apply.
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+{{ if .install_ui_apps -}}
+log "Installing GUI applications (install_ui_apps=true)..."
+
+bash <(render_template scripts/install-ui-apps.sh.tmpl)
+
+{{ else -}}
+log "Skipping GUI applications (install_ui_apps=false)."
+{{ end -}}

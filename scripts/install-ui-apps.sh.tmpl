@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+# Install GUI applications (Tier 3) — generated from .chezmoidata/packages.yaml
+#
+# Platform strategies:
+#   macOS:      Homebrew casks + Mac App Store (mas)
+#   Arch:       paru (AUR) + Flatpak fallback
+#   Silverblue: Flatpak + AppImage
+#   Debian:     Skipped (no GUI app management)
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+{{ if eq .distro "macos" -}}
+# =============================================================================
+# macOS: Homebrew casks + Mac App Store
+# =============================================================================
+ensure_brew_in_path
+require_cmd brew
+
+log "Installing GUI apps via Homebrew casks..."
+
+CASK_BREWFILE=$(cat <<'BREWFILE'
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $bn := default $n (index $pkg "brew_name") }}
+{{-   if and (eq (int $pkg.tier) 3) (and (hasKey $pkg "brew_cask") $pkg.brew_cask) }}
+{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "darwin") }}
+cask "{{ $bn }}"  # {{ $pkg.desc }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+
+# Mac App Store
+brew "mas"
+{{- range $key, $pkg := .packages }}
+{{-   if hasKey $pkg "mas" }}
+mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
+{{-   end }}
+{{- end }}
+BREWFILE
+)
+
+brew bundle --file=<(echo "$CASK_BREWFILE")
+
+{{ else if eq .distro "arch" -}}
+# =============================================================================
+# Arch Linux: paru (AUR) + Flatpak
+# =============================================================================
+
+# --- Native packages via paru ---
+if command -v paru &>/dev/null; then
+    AUR_HELPER="paru"
+elif command -v yay &>/dev/null; then
+    AUR_HELPER="yay"
+else
+    AUR_HELPER=""
+fi
+
+PACKAGES=(
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $an := default $n (index $pkg "arch_name") }}
+{{-   if and (eq (int $pkg.tier) 3) (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux")) (or (not (hasKey $pkg "arch")) $pkg.arch) }}
+    {{ $an }}  # {{ $pkg.desc }}
+{{-   end }}
+{{- end }}
+)
+
+if [[ ${#PACKAGES[@]} -gt 0 ]]; then
+    if [[ -n "$AUR_HELPER" ]]; then
+        log "Installing ${#PACKAGES[@]} GUI packages via $AUR_HELPER..."
+        $AUR_HELPER -S --needed --noconfirm "${PACKAGES[@]}" || \
+            warn "Some packages failed to install via $AUR_HELPER"
+    else
+        warn "No AUR helper found (paru/yay). Skipping native GUI packages."
+        warn "To install paru: https://github.com/Morganamilo/paru#installation"
+    fi
+fi
+
+# --- Flatpak apps ---
+FLATPAK_PACKAGES=(
+{{- range $key, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "flatpak") }}
+{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux") }}
+    {{ $pkg.flatpak }}  # {{ default $key (index $pkg "name") }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+)
+
+if [[ ${#FLATPAK_PACKAGES[@]} -gt 0 ]]; then
+    if command -v flatpak &>/dev/null; then
+        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+        log "Installing ${#FLATPAK_PACKAGES[@]} Flatpak apps..."
+        for app_id in "${FLATPAK_PACKAGES[@]}"; do
+            flatpak install -y --noninteractive flathub "$app_id" 2>/dev/null || \
+                warn "Failed to install flatpak: $app_id"
+        done
+    else
+        warn "flatpak not found. Skipping Flatpak apps."
+    fi
+fi
+
+{{ else if eq .distro "silverblue" -}}
+# =============================================================================
+# Fedora Silverblue/Bazzite: Flatpak + AppImage
+# =============================================================================
+
+# --- Flatpak apps ---
+FLATPAK_APPS=(
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "flatpak") }}
+{{-     if not (hasKey $pkg "os") }}
+    {{ $pkg.flatpak }}  # {{ $name }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+)
+
+if command -v flatpak &>/dev/null; then
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
+    log "Installing ${#FLATPAK_APPS[@]} Flatpak apps..."
+    for app_id in "${FLATPAK_APPS[@]}"; do
+        flatpak install -y --noninteractive flathub "$app_id" 2>/dev/null || \
+            warn "Failed to install flatpak: $app_id"
+    done
+else
+    warn "flatpak not found — cannot install GUI apps"
+fi
+
+# --- AppImage downloads ---
+APPIMAGE_DIR="${HOME}/Applications"
+mkdir -p "$APPIMAGE_DIR"
+
+{{- range $name, $pkg := .packages }}
+{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "appimage") }}
+{{-     if not (hasKey $pkg "os") }}
+
+# {{ $name }}: {{ $pkg.desc }}
+if [[ ! -f "$APPIMAGE_DIR/{{ $name }}.AppImage" ]]; then
+    log "Fetching {{ $name }} AppImage from GitHub ({{ $pkg.appimage }})..."
+    APPIMAGE_URL=$(curl -sL "https://api.github.com/repos/{{ $pkg.appimage }}/releases/latest" \
+        | jq -r '.assets[] | select(.name | test("AppImage$")) | .browser_download_url' \
+        | head -1)
+    if [[ -n "$APPIMAGE_URL" && "$APPIMAGE_URL" != "null" ]]; then
+        curl -sL "$APPIMAGE_URL" -o "$APPIMAGE_DIR/{{ $name }}.AppImage"
+        chmod +x "$APPIMAGE_DIR/{{ $name }}.AppImage"
+        log "Installed {{ $name }} AppImage to $APPIMAGE_DIR/"
+    else
+        warn "Could not find AppImage release for {{ $name }} ({{ $pkg.appimage }})"
+    fi
+fi
+{{-     end }}
+{{-   end }}
+{{- end }}
+
+{{ else if eq .distro "debian" -}}
+# =============================================================================
+# Debian/Ubuntu: No GUI app management
+# =============================================================================
+log "Skipping GUI apps on Debian/Ubuntu (not supported)."
+
+{{ else -}}
+warn "Unknown distro: {{ .distro }} — cannot install GUI apps."
+{{ end -}}
+
+log "GUI app installation complete!"

@@ -46,25 +46,4 @@ brew "{{ $bn }}"
 {{ end -}}
 {{ end -}}
 
-{{ if and (eq .chezmoi.os "darwin") .install_ui_apps -}}
-# =============================================================================
-# Tier 3: GUI Applications (macOS casks)
-# =============================================================================
-{{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   $bn := default $n (index $pkg "brew_name") }}
-{{-   if and (eq (int $pkg.tier) 3) (and (hasKey $pkg "brew_cask") $pkg.brew_cask) }}
-{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "darwin") }}
-cask "{{ $bn }}"  # {{ $pkg.desc }}
-{{-     end }}
-{{-   end }}
-{{- end }}
-
-# Mac App Store
-brew "mas"
-{{- range $key, $pkg := .packages }}
-{{-   if hasKey $pkg "mas" }}
-mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
-{{-   end }}
-{{- end }}
-{{ end -}}
+{{- /* Tier 3 (GUI apps) is handled separately by run_onchange_03-install-ui-apps.sh.tmpl */ -}}
