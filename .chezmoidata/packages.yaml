@@ -61,6 +61,7 @@ packages:
   eza:
     tier: 1
     desc: "ls replacement"
+    apt: false
 
   bat:
     tier: 1
