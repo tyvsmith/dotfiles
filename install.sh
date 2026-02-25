@@ -9,15 +9,16 @@
 # Options:
 #   --dev, --no-dev           Set machine type (default: prompt)
 #   --work, --no-work         Work machine - uses system SSH agent (default: prompt)
-#   --ui-apps, --no-ui-apps   Install GUI apps - macOS only (default: prompt on macOS)
+#   --ui-apps, --no-ui-apps   Install GUI apps (default: prompt on macOS, no on Linux)
+#   --homebrew, --no-homebrew Use Homebrew on Linux/Debian (default: no)
 #   --decrypt, --no-decrypt   Enable encrypted config decryption (default: no)
 #   --branch <branch>         Git branch for remote install (default: main)
-#   --defaults                Use default values, no prompts (dev=yes, ui-apps=yes, decrypt=no, work=no)
+#   --defaults                Use default values, no prompts (dev=yes, ui-apps=yes, decrypt=no, work=no, homebrew=no)
 #   --quiet, -q               Minimal output
 #   --help, -h                Show this help
 #
 # Environment variables (overridden by flags):
-#   DOTFILES_BRANCH, DOTFILES_IS_DEV, DOTFILES_IS_WORK, DOTFILES_UI_APPS, DOTFILES_DECRYPT
+#   DOTFILES_BRANCH, DOTFILES_IS_DEV, DOTFILES_IS_WORK, DOTFILES_UI_APPS, DOTFILES_DECRYPT, DOTFILES_HOMEBREW
 
 set -e
 
@@ -35,6 +36,7 @@ OPT_IS_DEV="${DOTFILES_IS_DEV:-}"
 OPT_IS_WORK="${DOTFILES_IS_WORK:-}"
 OPT_UI_APPS="${DOTFILES_UI_APPS:-}"
 OPT_DECRYPT="${DOTFILES_DECRYPT:-}"
+OPT_HOMEBREW="${DOTFILES_HOMEBREW:-}"
 
 # =============================================================================
 # Output helpers
@@ -83,6 +85,8 @@ while [[ $# -gt 0 ]]; do
         --no-work)    OPT_IS_WORK=0; shift ;;
         --ui-apps)    OPT_UI_APPS=1; shift ;;
         --no-ui-apps) OPT_UI_APPS=0; shift ;;
+        --homebrew)   OPT_HOMEBREW=1; shift ;;
+        --no-homebrew) OPT_HOMEBREW=0; shift ;;
         --decrypt)    OPT_DECRYPT=1; shift ;;
         --no-decrypt) OPT_DECRYPT=0; shift ;;
         --branch)     DOTFILES_BRANCH="$2"; shift 2 ;;
@@ -100,6 +104,7 @@ if [[ "$USE_DEFAULTS" == true ]]; then
     OPT_IS_WORK="${OPT_IS_WORK:-0}"
     OPT_UI_APPS="${OPT_UI_APPS:-1}"
     OPT_DECRYPT="${OPT_DECRYPT:-0}"
+    OPT_HOMEBREW="${OPT_HOMEBREW:-0}"
 fi
 
 # Detect local source
@@ -228,20 +233,29 @@ if [[ -z "$OPT_IS_WORK" ]]; then
 fi
 export DOTFILES_IS_WORK="$OPT_IS_WORK"
 
-# --- install_ui_apps (macOS only) ---
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    if [[ -z "$OPT_UI_APPS" ]]; then
+# --- install_ui_apps ---
+if [[ -z "$OPT_UI_APPS" ]]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
         log ""
         if prompt_yn "Install GUI applications (IDEs, browsers, etc)?" "y"; then
             OPT_UI_APPS=1
         else
             OPT_UI_APPS=0
         fi
+    else
+        # Linux: default to no unless explicitly requested
+        OPT_UI_APPS=0
     fi
-else
-    OPT_UI_APPS=0
 fi
 export DOTFILES_UI_APPS="$OPT_UI_APPS"
+
+# --- homebrew (Linux only) ---
+if [[ "$OSTYPE" != "darwin"* ]]; then
+    if [[ -z "$OPT_HOMEBREW" ]]; then
+        OPT_HOMEBREW=0
+    fi
+    export DOTFILES_HOMEBREW="$OPT_HOMEBREW"
+fi
 
 # --- should_decrypt ---
 if [[ -z "$OPT_DECRYPT" ]]; then
