@@ -107,10 +107,12 @@ if [[ "$USE_DEFAULTS" == true ]]; then
     OPT_HOMEBREW="${OPT_HOMEBREW:-0}"
 fi
 
-# Detect local source
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
-if [[ -n "$SCRIPT_DIR" ]] && [[ -f "$SCRIPT_DIR/.chezmoi.toml.tmpl" ]]; then
-    LOCAL_SOURCE="$SCRIPT_DIR"
+# Detect local source (skip when piped from curl — BASH_SOURCE[0] is empty)
+if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
+    if [[ -n "$SCRIPT_DIR" ]] && [[ -f "$SCRIPT_DIR/.chezmoi.toml.tmpl" ]]; then
+        LOCAL_SOURCE="$SCRIPT_DIR"
+    fi
 fi
 
 # =============================================================================
