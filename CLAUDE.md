@@ -90,9 +90,9 @@ The `run_onchange_01-install-packages.sh` script detects the distro and routes t
 
 **Package availability on Debian/Ubuntu:**
 Due to Debian's conservative package policies, ~15 modern Rust tools are not available in apt repositories and will be skipped with warnings:
-- **Unavailable:** atuin, starship, sd, dust, procs, bottom, difftastic, git-delta, choose, broot, xh, doggo, gping, lazygit, yq, chezmoi (Tier 1)
-- **Unavailable:** uv, tokei, hyperfine, grex, llm, gemini-cli, opencode (Tier 2)
-- **Available:** fish, zoxide, direnv, neovim, eza, bat, fd, ripgrep, duf, trash-cli, tealdeer, git, git-lfs, gh, fzf, jq, tmux, wget, gnupg, tree
+- **Unavailable:** atuin, starship, eza, sd, dust, procs, bottom, difftastic, git-delta, choose, broot, xh, doggo, gping, lazygit, yq, chezmoi (Tier 1)
+- **Unavailable:** uv, mise, tokei, hyperfine, grex, llm, gemini-cli, opencode (Tier 2)
+- **Available:** fish, zoxide, direnv, neovim, bat, fd, ripgrep, duf, trash-cli, tealdeer, git, git-lfs, gh, fzf, jq, tmux, wget, gnupg, tree
 
 **Binary renames on Debian:**
 - `bat` → `batcat` (symlink created automatically in `~/.local/bin`)
