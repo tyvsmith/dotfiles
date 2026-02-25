@@ -1,27 +1,26 @@
 # =============================================================================
-# Package definitions for multi-platform package management
-# Single source of truth for all packages across macOS, Arch, Debian, Silverblue
+# Package definitions — single source of truth for all platforms
 # =============================================================================
 #
-# Schema:
-#   tier: 1 = Core CLI (all machines), 2 = Dev tools (is_dev), 3 = GUI apps (install_ui_apps)
-#   desc: Short description (doubles as Brewfile inline comment)
+# Defaults:
+#   name:       YAML key          # override for syntax issues (e.g., 7zip)
+#   tier:       (required)        # 1=core CLI, 2=dev tools, 3=GUI apps
+#   desc:       (required)        # short description
+#   brew:       true              # install via Homebrew
+#   brew_cask:  false             # use cask instead of formula
+#   brew_name:  name              # override Homebrew package name
+#   brew_tap:   null              # tap required before install
+#   arch:       true              # install on Arch via paru
+#   arch_name:  name              # override Arch package name
+#   apt:        true              # install via apt
+#   apt_name:   name              # override Debian package name
+#   apt_bin:    null              # binary name when different on Debian
+#   flatpak:    null              # Flatpak app ID (Linux GUI)
+#   mas:        null              # Mac App Store ID
+#   appimage:   null              # GitHub repo (owner/name) for AppImage
+#   os:         null              # restrict to: darwin | linux
 #
-#   Install methods per platform (omit = not available on that platform):
-#     brew:       Homebrew formula name (macOS, Silverblue CLI)
-#     brew_tap:   Homebrew tap required before install
-#     brew_cask:  Homebrew cask name (macOS GUI apps)
-#     pacman:     Arch Linux official repo package name
-#     aur:        AUR package name (when not in official repos)
-#     apt:        Debian/Ubuntu package name
-#     flatpak:    Flatpak application ID (Linux GUI apps, Silverblue)
-#     appimage:   GitHub repo (owner/name) for AppImage releases
-#     mas:        Mac App Store ID (integer)
-#     script:     Manual install command (fallback when not in any repo)
-#
-#   Modifiers:
-#     apt_bin:    Binary name on Debian when different from package name
-#     os:         Restrict to OS: darwin | linux (omit = all platforms)
+# Only specify fields that differ from defaults.
 
 packages:
   # ===========================================================================
@@ -30,41 +29,24 @@ packages:
   fish:
     tier: 1
     desc: "Modern shell"
-    brew: fish
-    pacman: fish
-    apt: fish
-
-  tpm:
-    tier: 1
-    desc: "Tmux Plugin Manager"
-    brew: tpm
-    script: "git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm"
 
   atuin:
     tier: 1
     desc: "Magical shell history"
-    brew: atuin
-    pacman: atuin
+    apt: false
 
   zoxide:
     tier: 1
     desc: "Smarter cd command"
-    brew: zoxide
-    pacman: zoxide
-    apt: zoxide
 
   starship:
     tier: 1
     desc: "Cross-shell prompt"
-    brew: starship
-    pacman: starship
+    apt: false
 
   direnv:
     tier: 1
     desc: "Per-directory env vars"
-    brew: direnv
-    pacman: direnv
-    apt: direnv
 
   # ===========================================================================
   # Tier 1: Editor
@@ -72,9 +54,6 @@ packages:
   neovim:
     tier: 1
     desc: "Hyperextensible text editor"
-    brew: neovim
-    pacman: neovim
-    apt: neovim
 
   # ===========================================================================
   # Tier 1: Modern CLI Replacements
@@ -82,119 +61,88 @@ packages:
   eza:
     tier: 1
     desc: "ls replacement"
-    brew: eza
-    pacman: eza
-    apt: eza
 
   bat:
     tier: 1
     desc: "cat replacement"
-    brew: bat
-    pacman: bat
-    apt: bat
     apt_bin: batcat
 
   fd:
     tier: 1
     desc: "find replacement"
-    brew: fd
-    pacman: fd
-    apt: fd-find
+    apt_name: fd-find
     apt_bin: fdfind
 
   ripgrep:
     tier: 1
     desc: "grep replacement"
-    brew: ripgrep
-    pacman: ripgrep
-    apt: ripgrep
 
   sd:
     tier: 1
     desc: "sed replacement"
-    brew: sd
-    pacman: sd
+    apt: false
 
   dust:
     tier: 1
     desc: "du replacement"
-    brew: dust
-    pacman: dust
+    apt: false
 
   duf:
     tier: 1
     desc: "df replacement"
-    brew: duf
-    pacman: duf
-    apt: duf
 
   procs:
     tier: 1
     desc: "ps replacement"
-    brew: procs
-    pacman: procs
+    apt: false
 
   bottom:
     tier: 1
     desc: "top/htop replacement"
-    brew: bottom
-    pacman: bottom
+    apt: false
 
   difftastic:
     tier: 1
     desc: "Structural diff tool"
-    brew: difftastic
-    pacman: difftastic
+    apt: false
 
   git-delta:
     tier: 1
     desc: "Git pager with syntax highlighting"
-    brew: git-delta
-    pacman: git-delta
+    apt: false
 
   trash-cli:
     tier: 1
     desc: "Safe rm replacement"
-    brew: trash-cli
-    pacman: trash-cli
-    apt: trash-cli
 
   choose:
     tier: 1
     desc: "cut/awk replacement"
-    brew: choose
-    pacman: choose
+    apt: false
 
   broot:
     tier: 1
     desc: "Interactive tree explorer"
-    brew: broot
-    pacman: broot
+    apt: false
 
   xh:
     tier: 1
     desc: "curl replacement"
-    brew: xh
-    pacman: xh
+    apt: false
 
   doggo:
     tier: 1
     desc: "dig replacement"
-    brew: doggo
-    pacman: doggo
+    apt: false
 
   gping:
     tier: 1
     desc: "ping with graph"
-    brew: gping
-    pacman: gping
+    apt: false
 
   tealdeer:
     tier: 1
     desc: "tldr pages client"
-    brew: tealdeer
-    pacman: tealdeer
-    apt: tealdeer
 
   # ===========================================================================
   # Tier 1: Git Tools
@@ -202,29 +150,20 @@ packages:
   git:
     tier: 1
     desc: "Version control"
-    brew: git
-    pacman: git
-    apt: git
 
   git-lfs:
     tier: 1
     desc: "Git Large File Storage"
-    brew: git-lfs
-    pacman: git-lfs
-    apt: git-lfs
 
   gh:
     tier: 1
     desc: "GitHub CLI"
-    brew: gh
-    pacman: github-cli
-    apt: gh
+    arch_name: github-cli
 
   lazygit:
     tier: 1
     desc: "Terminal UI for git"
-    brew: lazygit
-    pacman: lazygit
+    apt: false
 
   # ===========================================================================
   # Tier 1: Essential Utilities
@@ -232,56 +171,36 @@ packages:
   chezmoi:
     tier: 1
     desc: "Dotfile manager"
-    brew: chezmoi
-    pacman: chezmoi
+    apt: false
 
   fzf:
     tier: 1
     desc: "Fuzzy finder"
-    brew: fzf
-    pacman: fzf
-    apt: fzf
 
   jq:
     tier: 1
     desc: "JSON processor"
-    brew: jq
-    pacman: jq
-    apt: jq
 
   yq:
     tier: 1
     desc: "YAML processor"
-    brew: yq
-    pacman: yq
+    apt: false
 
   tmux:
     tier: 1
     desc: "Terminal multiplexer"
-    brew: tmux
-    pacman: tmux
-    apt: tmux
 
   wget:
     tier: 1
     desc: "Network downloader"
-    brew: wget
-    pacman: wget
-    apt: wget
 
   gnupg:
     tier: 1
     desc: "GnuPG encryption"
-    brew: gnupg
-    pacman: gnupg
-    apt: gnupg
 
   tree:
     tier: 1
     desc: "Directory tree listing"
-    brew: tree
-    pacman: tree
-    apt: tree
 
   # ===========================================================================
   # Tier 2: Development SDKs & Package Managers
@@ -289,22 +208,18 @@ packages:
   mise:
     tier: 2
     desc: "Polyglot runtime version manager"
-    brew: mise
-    pacman: mise
-    apt: mise
+    apt: false
 
   uv:
     tier: 2
     desc: "Python package manager"
-    brew: uv
-    pacman: uv
+    apt: false
 
   node:
     tier: 2
     desc: "Node.js runtime"
-    brew: node
-    pacman: nodejs
-    apt: nodejs
+    arch_name: nodejs
+    apt_name: nodejs
 
   # ===========================================================================
   # Tier 2: Build & Image Tools
@@ -312,16 +227,12 @@ packages:
   imagemagick:
     tier: 2
     desc: "Image manipulation"
-    brew: imagemagick
-    pacman: imagemagick
-    apt: imagemagick
 
   7zip:
     tier: 2
     desc: "Archive tool"
-    brew: p7zip
-    pacman: 7zip
-    apt: p7zip-full
+    brew_name: p7zip
+    apt_name: p7zip-full
 
   # ===========================================================================
   # Tier 2: Development Utilities
@@ -329,27 +240,21 @@ packages:
   shellcheck:
     tier: 2
     desc: "Shell script linter"
-    brew: shellcheck
-    pacman: shellcheck
-    apt: shellcheck
 
   tokei:
     tier: 2
     desc: "Code statistics"
-    brew: tokei
-    pacman: tokei
+    apt: false
 
   hyperfine:
     tier: 2
     desc: "Command benchmarking"
-    brew: hyperfine
-    pacman: hyperfine
+    apt: false
 
   grex:
     tier: 2
     desc: "Regex generator"
-    brew: grex
-    pacman: grex
+    apt: false
 
   # ===========================================================================
   # Tier 2: AI Tools
@@ -357,50 +262,48 @@ packages:
   llm:
     tier: 2
     desc: "LLM CLI tool"
-    brew: llm
+    arch: false
+    apt: false
 
   gemini-cli:
     tier: 2
     desc: "Google Gemini CLI"
-    brew: gemini-cli
+    arch: false
+    apt: false
 
   opencode:
     tier: 2
     desc: "AI coding agent"
-    brew: opencode
+    arch: false
+    apt: false
 
   # ===========================================================================
-  # Tier 2: macOS GNU Tools (darwin only)
+  # Tier 2: macOS GNU Tools
   # ===========================================================================
   coreutils:
     tier: 2
     os: darwin
     desc: "GNU coreutils"
-    brew: coreutils
 
   findutils:
     tier: 2
     os: darwin
     desc: "GNU findutils"
-    brew: findutils
 
   gnu-sed:
     tier: 2
     os: darwin
     desc: "GNU sed"
-    brew: gnu-sed
 
-  grep-gnu:
+  grep:
     tier: 2
     os: darwin
     desc: "GNU grep"
-    brew: grep
 
   moreutils:
     tier: 2
     os: darwin
     desc: "Additional Unix utilities"
-    brew: moreutils
 
   # ===========================================================================
   # Tier 3: Fonts
@@ -408,8 +311,8 @@ packages:
   font-hack-nerd-font:
     tier: 3
     desc: "Hack Nerd Font"
-    brew_cask: font-hack-nerd-font
-    pacman: ttf-hack-nerd
+    brew_cask: true
+    arch_name: ttf-hack-nerd
 
   # ===========================================================================
   # Tier 3: Development Tools (GUI)
@@ -417,31 +320,32 @@ packages:
   visual-studio-code:
     tier: 3
     desc: "Code editor"
-    brew_cask: visual-studio-code
+    brew_cask: true
+    arch_name: visual-studio-code-bin
     flatpak: com.visualstudio.code
-    aur: visual-studio-code-bin
 
   jetbrains-toolbox:
     tier: 3
     desc: "JetBrains IDE manager"
-    brew_cask: jetbrains-toolbox
-    aur: jetbrains-toolbox
+    brew_cask: true
 
   iterm2:
     tier: 3
     os: darwin
     desc: "macOS terminal"
-    brew_cask: iterm2
+    brew_cask: true
 
   claude-code:
     tier: 3
     desc: "Anthropic Claude Code"
-    brew_cask: claude-code
+    brew_cask: true
+    arch: false
 
   codex:
     tier: 3
     desc: "OpenAI Codex"
-    brew_cask: codex
+    brew_cask: true
+    arch: false
 
   # ===========================================================================
   # Tier 3: Productivity & Utilities
@@ -449,33 +353,32 @@ packages:
   1password:
     tier: 3
     desc: "Password manager"
-    brew_cask: 1password
+    brew_cask: true
     flatpak: com.onepassword.OnePassword
-    aur: 1password
 
   alfred:
     tier: 3
     os: darwin
     desc: "Launcher/automation"
-    brew_cask: alfred
+    brew_cask: true
 
   moom:
     tier: 3
     os: darwin
     desc: "Window manager"
-    brew_cask: moom
+    brew_cask: true
 
   the-unarchiver:
     tier: 3
     os: darwin
     desc: "Archive extraction"
-    brew_cask: the-unarchiver
+    brew_cask: true
 
   app-cleaner:
     tier: 3
     os: darwin
     desc: "App uninstaller"
-    brew_cask: app-cleaner
+    brew_cask: true
 
   # ===========================================================================
   # Tier 3: Communication
@@ -483,13 +386,15 @@ packages:
   discord:
     tier: 3
     desc: "Voice & text chat"
-    brew_cask: discord
+    brew_cask: true
+    arch: false
     flatpak: com.discordapp.Discord
 
   beeper:
     tier: 3
     desc: "Unified messaging"
-    brew_cask: beeper
+    brew_cask: true
+    arch: false
     appimage: nickvdp/beeper
 
   # ===========================================================================
@@ -498,9 +403,9 @@ packages:
   brave-browser:
     tier: 3
     desc: "Privacy-focused browser"
-    brew_cask: brave-browser
+    brew_cask: true
+    arch_name: brave-bin
     flatpak: com.brave.Browser
-    aur: brave-bin
 
   # ===========================================================================
   # Tier 3: Media
@@ -508,15 +413,14 @@ packages:
   vlc:
     tier: 3
     desc: "Media player"
-    brew_cask: vlc
+    brew_cask: true
     flatpak: org.videolan.VLC
-    pacman: vlc
 
   soundsource:
     tier: 3
     os: darwin
     desc: "Audio control"
-    brew_cask: soundsource
+    brew_cask: true
 
   # ===========================================================================
   # Tier 3: Other Utilities
@@ -524,20 +428,23 @@ packages:
   deskflow:
     tier: 3
     desc: "Software KVM"
-    brew_cask: deskflow
+    brew_cask: true
+    arch: false
     flatpak: org.deskflow.deskflow
 
   # ===========================================================================
-  # Tier 3: Mac App Store (macOS only)
+  # Tier 3: Mac App Store
   # ===========================================================================
   amphetamine:
     tier: 3
     os: darwin
     desc: "Keep Mac awake"
+    brew: false
     mas: 937984704
 
   velja:
     tier: 3
     os: darwin
     desc: "Browser/app picker"
+    brew: false
     mas: 1607635845

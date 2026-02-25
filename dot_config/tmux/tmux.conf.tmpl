@@ -123,5 +123,5 @@ run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/dis
 
 
 
-# Initialize TMUX plugin manager
-run '{{ template "brew-prefix" . }}/opt/tpm/share/tpm/tpm'
+# Initialize TMUX plugin manager (cloned by chezmoi to ~/.config/tmux/plugins/tpm)
+run '~/.config/tmux/plugins/tpm/tpm'
