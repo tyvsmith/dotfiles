@@ -213,6 +213,7 @@ packages:
   gnupg:
     tier: 1
     desc: "GnuPG encryption"
+    dnf_name: gnupg2
 
   tree:
     tier: 1
@@ -235,6 +236,7 @@ packages:
   imagemagick:
     tier: 2
     desc: "Image manipulation"
+    dnf_name: ImageMagick
 
   7zip:
     tier: 2
@@ -249,6 +251,7 @@ packages:
   shellcheck:
     tier: 2
     desc: "Shell script linter"
+    dnf_name: ShellCheck
 
   tokei:
     tier: 2
