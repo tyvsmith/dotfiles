@@ -1,50 +1,30 @@
 #!/usr/bin/env bash
-# Chezmoi run_onchange script: Install packages based on detected distro
+# Chezmoi run_onchange script: Install packages using profile-driven dispatch
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
 # Brewfile hash: {{ include "Brewfile.tmpl" | sha256sum }}
 set -euo pipefail
 
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
-DISTRO="{{ .distro }}"
-log "Detected distro: $DISTRO"
+{{ $p := index .profiles .profile -}}
+log "Using profile '{{ .profile }}' (distro={{ .distro }})"
 
-{{ $useBrew := or (eq .distro "macos") (eq .distro "silverblue") (and (eq .distro "debian") .homebrew) -}}
-
-# =============================================================================
-# Step 1: Homebrew (macOS, Silverblue, Debian with homebrew=true)
-# =============================================================================
-{{ if $useBrew -}}
-log "Installing packages via Homebrew..."
-
-{{ if ne .distro "macos" -}}
-# Install Homebrew itself on Linux if needed
-bash <(render_template scripts/install-homebrew.sh.tmpl)
+{{ if and (hasKey $p "brew") $p.brew -}}
+bash <(render_template scripts/install-packages-brew.sh.tmpl)
 {{ end -}}
 
-ensure_brew_in_path
-require_cmd brew
-brew bundle --file=<(render_template Brewfile.tmpl)
-{{ end -}}
-
-# =============================================================================
-# Step 2: Native package manager
-# =============================================================================
-{{ if eq .distro "arch" -}}
-log "Installing packages via paru/pacman (Arch Linux)..."
+{{ if and (hasKey $p "pacman") $p.pacman -}}
 bash <(render_template scripts/install-packages-pacman.sh.tmpl)
-
-{{ else if and (eq .distro "debian") (not .homebrew) -}}
-log "Installing packages via apt (Debian/Ubuntu)..."
-bash <(render_template scripts/install-packages-apt.sh.tmpl)
-
-{{ else if eq .distro "unknown" -}}
-{{ if not $useBrew -}}
-warn "Unknown distro '$DISTRO' and no Homebrew configured."
-warn "Supported: macOS, Arch Linux, Debian/Ubuntu, Fedora Silverblue/Bazzite"
-fail "Cannot install packages — set homebrew=true or use a supported distro."
 {{ end -}}
+
+{{ if and (hasKey $p "apt") $p.apt -}}
+bash <(render_template scripts/install-packages-apt.sh.tmpl)
+{{ end -}}
+
+{{ if and (hasKey $p "dnf") $p.dnf -}}
+bash <(render_template scripts/install-packages-dnf.sh.tmpl)
 {{ end -}}
 
 log "Package installation complete!"

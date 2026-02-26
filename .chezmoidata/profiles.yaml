@@ -1,0 +1,34 @@
+# =============================================================================
+# Machine profiles — maps distro to package manager strategy
+# =============================================================================
+#
+# Each profile enables one or more package managers. The install router
+# runs every enabled manager in order: brew → pacman → apt → dnf.
+#
+# Profile selection is automatic (based on distro detection + homebrew flag)
+# but can be overridden via DOTFILES_PROFILE env var.
+
+profiles:
+  macos:
+    desc: "macOS with Homebrew"
+    brew: true
+
+  arch:
+    desc: "Arch Linux with paru/pacman"
+    pacman: true
+
+  debian:
+    desc: "Debian/Ubuntu with apt"
+    apt: true
+
+  debian-brew:
+    desc: "Debian/Ubuntu with Homebrew"
+    brew: true
+
+  silverblue:
+    desc: "Fedora Silverblue/Bazzite (immutable)"
+    brew: true
+
+  fedora:
+    desc: "Fedora Workstation with dnf"
+    dnf: true

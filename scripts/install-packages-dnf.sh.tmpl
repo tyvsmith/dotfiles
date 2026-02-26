@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Fedora package installer — generated from .chezmoidata/packages.yaml
+#
+# Uses runtime dnf checks to determine availability, so it works
+# correctly across Fedora versions.
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Installing packages via dnf..."
+
+# =============================================================================
+# Candidate packages (all tiers, resolved to dnf names)
+# =============================================================================
+declare -A CANDIDATE_PACKAGES  # dnf_name -> display_name
+
+# Tier 1: Core CLI tools
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $dn := default $n (index $pkg "dnf_name") }}
+{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) }}
+CANDIDATE_PACKAGES[{{ $dn }}]="{{ $n }}"
+{{-   end }}
+{{- end }}
+
+{{ if .is_dev -}}
+# Tier 2: Development tools
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $dn := default $n (index $pkg "dnf_name") }}
+{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) }}
+CANDIDATE_PACKAGES[{{ $dn }}]="{{ $n }}"
+{{-   end }}
+{{- end }}
+{{ end -}}
+
+# =============================================================================
+# Check availability and split into installable vs missing
+# =============================================================================
+DNF_PACKAGES=()
+MISSING_PACKAGES=()
+
+for dnf_name in "${!CANDIDATE_PACKAGES[@]}"; do
+    if dnf info "$dnf_name" &>/dev/null; then
+        DNF_PACKAGES+=("$dnf_name")
+    else
+        MISSING_PACKAGES+=("${CANDIDATE_PACKAGES[$dnf_name]}")
+    fi
+done
+
+# Sort for deterministic output
+IFS=$'\n' DNF_PACKAGES=($(sort <<<"${DNF_PACKAGES[*]}")); unset IFS
+IFS=$'\n' MISSING_PACKAGES=($(sort <<<"${MISSING_PACKAGES[*]}")); unset IFS
+
+# =============================================================================
+# Install available packages
+# =============================================================================
+log "Installing ${#DNF_PACKAGES[@]} packages from dnf repositories..."
+if [[ ${#DNF_PACKAGES[@]} -gt 0 ]]; then
+    sudo dnf install -y "${DNF_PACKAGES[@]}"
+fi
+
+# =============================================================================
+# Warn about missing packages
+# =============================================================================
+if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
+    warn "The following packages are not available in your dnf repositories:"
+    for pkg in "${MISSING_PACKAGES[@]}"; do
+        warn "  - $pkg"
+    done
+    log ""
+    log "To install missing tools, consider:"
+    log "  1. COPR repositories: dnf copr enable <repo>"
+    log "  2. cargo install <package>"
+    log "  3. Homebrew on Linux (re-run with --homebrew)"
+fi
+
+log ""
+log "dnf package installation complete!"
