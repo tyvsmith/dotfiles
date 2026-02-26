@@ -6,6 +6,7 @@
        DOTFILES_DECRYPT=1 chezmoi init
        DOTFILES_IS_WORK=1 chezmoi init
        DOTFILES_HOMEBREW=1 chezmoi init
+       DOTFILES_PROFILE=arch chezmoi init
 
      Or use install.sh for interactive prompts.
 */ -}}
@@ -15,6 +16,7 @@
 {{- $envDecrypt := lower (env "DOTFILES_DECRYPT") -}}
 {{- $envIsWork := lower (env "DOTFILES_IS_WORK") -}}
 {{- $envHomebrew := lower (env "DOTFILES_HOMEBREW") -}}
+{{- $envProfile := lower (env "DOTFILES_PROFILE") -}}
 
 {{- /* Use env vars, fall back to existing config, default to false */ -}}
 {{- $isDev := false -}}
@@ -54,7 +56,7 @@
 {{- end -}}
 
 {{- /* Detect distribution for package manager selection
-     Order matters: Silverblue check before Fedora, Arch before Debian */ -}}
+     Order matters: Silverblue before Fedora, Arch before Debian */ -}}
 {{- $distro := "unknown" -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $distro = "macos" -}}
@@ -62,8 +64,21 @@
 {{-   $distro = "silverblue" -}}
 {{- else if stat "/etc/arch-release" -}}
 {{-   $distro = "arch" -}}
+{{- else if stat "/etc/fedora-release" -}}
+{{-   $distro = "fedora" -}}
 {{- else if stat "/etc/debian_version" -}}
 {{-   $distro = "debian" -}}
+{{- end -}}
+
+{{- /* Compute package profile from distro + flags, or use explicit override */ -}}
+{{- $profile := $distro -}}
+{{- if and (eq $distro "debian") $homebrew -}}
+{{-   $profile = "debian-brew" -}}
+{{- end -}}
+{{- if ne $envProfile "" -}}
+{{-   $profile = $envProfile -}}
+{{- else if hasKey .chezmoi.config.data "profile" -}}
+{{-   $profile = .chezmoi.config.data.profile -}}
 {{- end -}}
 
 {{ if $shouldDecrypt -}}
@@ -71,6 +86,7 @@ encryption = "age"
 {{ end }}
 [data]
     distro = "{{ $distro }}"
+    profile = "{{ $profile }}"
     is_dev = {{ $isDev }}
     install_ui_apps = {{ $installUIApps }}
     should_decrypt = {{ $shouldDecrypt }}

@@ -13,6 +13,7 @@
 #   arch:       true              # install on Arch via paru
 #   arch_name:  name              # override Arch package name
 #   apt_name:   name              # override apt package name (availability checked at runtime)
+#   dnf_name:   name              # override dnf package name (availability checked at runtime)
 #   flatpak:    null              # Flatpak app ID (Linux GUI)
 #   mas:        null              # Mac App Store ID
 #   appimage:   null              # GitHub repo (owner/name) for AppImage
@@ -70,6 +71,7 @@ packages:
     tier: 1
     desc: "find replacement"
     apt_name: fd-find
+    dnf_name: fd-find
 
   ripgrep:
     tier: 1
@@ -239,6 +241,7 @@ packages:
     desc: "Archive tool"
     brew_name: p7zip
     apt_name: p7zip-full
+    dnf_name: p7zip
 
   # ===========================================================================
   # Tier 2: Development Utilities
