@@ -80,28 +80,20 @@ Packages are defined once in `.chezmoidata/packages.yaml` and installed via plat
 
 The YAML key is the default package name for all package managers. Packages are available on all platforms by default. Only add fields when they differ from defaults:
 - `brew_name:`/`arch_name:`/`apt_name:` — override name for a specific manager
-- `brew: false`/`arch: false`/`apt: false` — exclude from a platform
+- `brew: false`/`arch: false` — exclude from a platform
 - `brew_cask: true` — install as Homebrew cask instead of formula
 
 The `run_onchange_01-install-packages.sh` script detects the distro and routes to the appropriate installer:
 - macOS: `brew bundle` with `Brewfile.tmpl`
 - Arch: `scripts/install-packages-pacman.sh.tmpl`
-- Debian: `scripts/install-packages-apt.sh.tmpl`
+- Debian/Ubuntu: `scripts/install-packages-apt.sh.tmpl`
 
-**Package availability on Debian/Ubuntu:**
-Due to Debian's conservative package policies, ~15 modern Rust tools are not available in apt repositories and will be skipped with warnings:
-- **Unavailable:** atuin, starship, eza, sd, dust, procs, bottom, difftastic, git-delta, choose, broot, xh, doggo, gping, lazygit, yq, chezmoi (Tier 1)
-- **Unavailable:** uv, mise, tokei, hyperfine, grex, llm, gemini-cli, opencode (Tier 2)
-- **Available:** fish, zoxide, direnv, neovim, bat, fd, ripgrep, duf, trash-cli, tealdeer, git, git-lfs, gh, fzf, jq, tmux, wget, gnupg, tree
+**Debian/Ubuntu apt availability:**
+The apt install script uses runtime `apt-cache` checks to determine package availability, so it works correctly across different Debian/Ubuntu versions without static exclusion lists. Packages available in Ubuntu 24.04 but missing in Debian Bookworm (e.g., eza, sd, git-delta, gping, yq, hyperfine) will be installed where available and skipped with warnings where not.
 
-**Binary renames on Debian:**
+**Binary renames on Debian/Ubuntu:**
 - `bat` → `batcat` (symlink created automatically in `~/.local/bin`)
 - `fd` → `fdfind` (symlink created automatically in `~/.local/bin`)
-
-Missing packages can be installed manually via:
-- Rust toolchain: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-- Cargo: `cargo install <package-name>`
-- Alternative package sources (PPAs, backports, flatpak)
 
 ### Key Files
 - `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Debian/Ubuntu package installer — generated from .chezmoidata/packages.yaml
+#
+# Uses runtime apt-cache checks to determine availability, so the same
+# template works correctly on Debian Bookworm, Ubuntu 24.04, etc.
 set -euo pipefail
 
 # shellcheck source=/dev/null
@@ -8,46 +11,28 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 log "Installing packages via apt..."
 
 # =============================================================================
-# Collect packages
+# Candidate packages (all tiers, resolved to apt names)
 # =============================================================================
-APT_PACKAGES=(
-    # Tier 1: Core CLI tools
+declare -A CANDIDATE_PACKAGES  # apt_name -> display_name
+
+# Tier 1: Core CLI tools
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
 {{-   $an := default $n (index $pkg "apt_name") }}
-{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "apt")) $pkg.apt) }}
-    {{ $an }}
+{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "brew")) $pkg.brew) }}
+CANDIDATE_PACKAGES[{{ $an }}]="{{ $n }}"
 {{-   end }}
 {{- end }}
-)
-
-SKIPPED_PACKAGES=(
-{{- range $key, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) (hasKey $pkg "apt") (not $pkg.apt) }}
-    {{ default $key (index $pkg "name") }}
-{{-   end }}
-{{- end }}
-)
 
 {{ if .is_dev -}}
 # Tier 2: Development tools
-APT_PACKAGES+=(
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
 {{-   $an := default $n (index $pkg "apt_name") }}
-{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "apt")) $pkg.apt) }}
-    {{ $an }}
+{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "brew")) $pkg.brew) }}
+CANDIDATE_PACKAGES[{{ $an }}]="{{ $n }}"
 {{-   end }}
 {{- end }}
-)
-
-SKIPPED_PACKAGES+=(
-{{- range $key, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) (hasKey $pkg "apt") (not $pkg.apt) }}
-    {{ default $key (index $pkg "name") }}
-{{-   end }}
-{{- end }}
-)
 {{ end -}}
 
 # =============================================================================
@@ -57,10 +42,30 @@ log "Updating apt cache..."
 sudo apt-get update
 
 # =============================================================================
+# Check availability and split into installable vs missing
+# =============================================================================
+APT_PACKAGES=()
+MISSING_PACKAGES=()
+
+for apt_name in "${!CANDIDATE_PACKAGES[@]}"; do
+    if apt-cache show "$apt_name" &>/dev/null; then
+        APT_PACKAGES+=("$apt_name")
+    else
+        MISSING_PACKAGES+=("${CANDIDATE_PACKAGES[$apt_name]}")
+    fi
+done
+
+# Sort for deterministic output
+IFS=$'\n' APT_PACKAGES=($(sort <<<"${APT_PACKAGES[*]}")); unset IFS
+IFS=$'\n' MISSING_PACKAGES=($(sort <<<"${MISSING_PACKAGES[*]}")); unset IFS
+
+# =============================================================================
 # Install available packages
 # =============================================================================
 log "Installing ${#APT_PACKAGES[@]} packages from apt repositories..."
-sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${APT_PACKAGES[@]}"
+if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${APT_PACKAGES[@]}"
+fi
 
 # =============================================================================
 # Create symlinks for renamed binaries
@@ -78,11 +83,11 @@ fi
 {{- end }}
 
 # =============================================================================
-# Warn about skipped packages
+# Warn about missing packages
 # =============================================================================
-if [[ ${#SKIPPED_PACKAGES[@]} -gt 0 ]]; then
-    warn "The following packages are not available in Debian repositories:"
-    for pkg in "${SKIPPED_PACKAGES[@]}"; do
+if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
+    warn "The following packages are not available in your apt repositories:"
+    for pkg in "${MISSING_PACKAGES[@]}"; do
         warn "  - $pkg"
     done
     log ""
@@ -90,7 +95,8 @@ if [[ ${#SKIPPED_PACKAGES[@]} -gt 0 ]]; then
     log "  1. Rust toolchain: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
     log "  2. cargo install <package>"
     log "  3. Alternative package sources (PPAs, third-party repos)"
+    log "  4. Re-run with --homebrew flag to use Homebrew on Linux"
 fi
 
 log ""
-log "Debian package installation complete!"
+log "apt package installation complete!"
