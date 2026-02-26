@@ -58,7 +58,7 @@ IFS=$'\n' MISSING_PACKAGES=($(sort <<<"${MISSING_PACKAGES[*]}")); unset IFS
 # =============================================================================
 log "Installing ${#DNF_PACKAGES[@]} packages from dnf repositories..."
 if [[ ${#DNF_PACKAGES[@]} -gt 0 ]]; then
-    sudo dnf install -y "${DNF_PACKAGES[@]}"
+    sudo dnf install -y --skip-unavailable "${DNF_PACKAGES[@]}"
 fi
 
 # =============================================================================
