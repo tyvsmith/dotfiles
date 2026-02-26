@@ -11,6 +11,11 @@ set -gx SUDO_EDITOR $EDITOR
 # Bat — use ansi theme so terminal colors aren't overridden
 set -gx BAT_THEME ansi
 
+# Podman — point Docker-compatible tools (lazydocker, etc.) at podman socket
+{{ if ne .chezmoi.os "darwin" -}}
+set -gx DOCKER_HOST "unix:///run/user/"(id -u)"/podman/podman.sock"
+{{ end -}}
+
 # Mise — polyglot runtime version manager (Java, Python, Node, etc.)
 if command -q mise
     mise activate fish | source
