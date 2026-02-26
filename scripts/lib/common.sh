@@ -54,7 +54,7 @@ ensure_pkg() {
     paru -S --needed --noconfirm "$pkg"
   elif command -v pacman &>/dev/null; then
     sudo pacman -S --needed --noconfirm "$pkg"
-  elif command -v brew &>/dev/null; then
+  elif ensure_brew_in_path && command -v brew &>/dev/null; then
     brew install "$pkg"
   elif command -v apt-get &>/dev/null; then
     sudo apt-get install -y "$pkg"

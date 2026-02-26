@@ -8,7 +8,6 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
-ensure_brew_in_path
 ensure_pkg age
 
 AGE_KEY_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi/age-key.txt"
