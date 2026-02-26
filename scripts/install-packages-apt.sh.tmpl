@@ -68,21 +68,6 @@ if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
 fi
 
 # =============================================================================
-# Create symlinks for renamed binaries
-# =============================================================================
-log "Creating symlinks for renamed binaries..."
-mkdir -p ~/.local/bin
-{{- range $key, $pkg := .packages }}
-{{-   if hasKey $pkg "apt_bin" }}
-
-if command -v {{ $pkg.apt_bin }} &>/dev/null && ! command -v {{ $key }} &>/dev/null; then
-    ln -sf "$(command -v {{ $pkg.apt_bin }})" ~/.local/bin/{{ $key }}
-    log "Created {{ $key }} -> {{ $pkg.apt_bin }} symlink"
-fi
-{{-   end }}
-{{- end }}
-
-# =============================================================================
 # Warn about missing packages
 # =============================================================================
 if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
