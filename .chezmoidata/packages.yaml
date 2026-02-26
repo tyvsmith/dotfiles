@@ -12,9 +12,8 @@
 #   brew_tap:   null              # tap required before install
 #   arch:       true              # install on Arch via paru
 #   arch_name:  name              # override Arch package name
-#   apt:        true              # install via apt
-#   apt_name:   name              # override Debian package name
-#   apt_bin:    null              # binary name when different on Debian
+#   apt_name:   name              # override apt package name (availability checked at runtime)
+#   apt_bin:    null              # binary name when different on Debian/Ubuntu
 #   flatpak:    null              # Flatpak app ID (Linux GUI)
 #   mas:        null              # Mac App Store ID
 #   appimage:   null              # GitHub repo (owner/name) for AppImage
@@ -33,7 +32,6 @@ packages:
   atuin:
     tier: 1
     desc: "Magical shell history"
-    apt: false
 
   zoxide:
     tier: 1
@@ -42,7 +40,6 @@ packages:
   starship:
     tier: 1
     desc: "Cross-shell prompt"
-    apt: false
 
   direnv:
     tier: 1
@@ -61,7 +58,6 @@ packages:
   eza:
     tier: 1
     desc: "ls replacement"
-    apt: false
 
   bat:
     tier: 1
@@ -81,12 +77,10 @@ packages:
   sd:
     tier: 1
     desc: "sed replacement"
-    apt: false
 
   dust:
     tier: 1
     desc: "du replacement"
-    apt: false
 
   duf:
     tier: 1
@@ -95,22 +89,18 @@ packages:
   procs:
     tier: 1
     desc: "ps replacement"
-    apt: false
 
   bottom:
     tier: 1
     desc: "top/htop replacement"
-    apt: false
 
   difftastic:
     tier: 1
     desc: "Structural diff tool"
-    apt: false
 
   git-delta:
     tier: 1
     desc: "Git pager with syntax highlighting"
-    apt: false
 
   trash-cli:
     tier: 1
@@ -119,27 +109,22 @@ packages:
   choose:
     tier: 1
     desc: "cut/awk replacement"
-    apt: false
 
   broot:
     tier: 1
     desc: "Interactive tree explorer"
-    apt: false
 
   xh:
     tier: 1
     desc: "curl replacement"
-    apt: false
 
   doggo:
     tier: 1
     desc: "dig replacement"
-    apt: false
 
   gping:
     tier: 1
     desc: "ping with graph"
-    apt: false
 
   tealdeer:
     tier: 1
@@ -164,7 +149,6 @@ packages:
   lazygit:
     tier: 1
     desc: "Terminal UI for git"
-    apt: false
 
   # ===========================================================================
   # Tier 1: Essential Utilities
@@ -172,7 +156,6 @@ packages:
   chezmoi:
     tier: 1
     desc: "Dotfile manager"
-    apt: false
 
   fzf:
     tier: 1
@@ -185,7 +168,6 @@ packages:
   yq:
     tier: 1
     desc: "YAML processor"
-    apt: false
 
   tmux:
     tier: 1
@@ -209,12 +191,10 @@ packages:
   mise:
     tier: 2
     desc: "Polyglot runtime version manager"
-    apt: false
 
   uv:
     tier: 2
     desc: "Python package manager"
-    apt: false
 
   node:
     tier: 2
@@ -245,17 +225,14 @@ packages:
   tokei:
     tier: 2
     desc: "Code statistics"
-    apt: false
 
   hyperfine:
     tier: 2
     desc: "Command benchmarking"
-    apt: false
 
   grex:
     tier: 2
     desc: "Regex generator"
-    apt: false
 
   # ===========================================================================
   # Tier 2: AI Tools
@@ -264,19 +241,16 @@ packages:
     tier: 2
     desc: "LLM CLI tool"
     arch: false
-    apt: false
 
   gemini-cli:
     tier: 2
     desc: "Google Gemini CLI"
     arch: false
-    apt: false
 
   opencode:
     tier: 2
     desc: "AI coding agent"
     arch: false
-    apt: false
 
   # ===========================================================================
   # Tier 2: macOS GNU Tools
