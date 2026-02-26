@@ -91,10 +91,6 @@ The `run_onchange_01-install-packages.sh` script detects the distro and routes t
 **Debian/Ubuntu apt availability:**
 The apt install script uses runtime `apt-cache` checks to determine package availability, so it works correctly across different Debian/Ubuntu versions without static exclusion lists. Packages available in Ubuntu 24.04 but missing in Debian Bookworm (e.g., eza, sd, git-delta, gping, yq, hyperfine) will be installed where available and skipped with warnings where not.
 
-**Binary renames on Debian/Ubuntu:**
-- `bat` → `batcat` (symlink created automatically in `~/.local/bin`)
-- `fd` → `fdfind` (symlink created automatically in `~/.local/bin`)
-
 ### Key Files
 - `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
 - `Brewfile.tmpl` - Package manifest for Homebrew (macOS, tiers 1-2 only)

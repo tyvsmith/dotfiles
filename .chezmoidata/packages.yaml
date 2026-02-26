@@ -13,7 +13,6 @@
 #   arch:       true              # install on Arch via paru
 #   arch_name:  name              # override Arch package name
 #   apt_name:   name              # override apt package name (availability checked at runtime)
-#   apt_bin:    null              # binary name when different on Debian/Ubuntu
 #   flatpak:    null              # Flatpak app ID (Linux GUI)
 #   mas:        null              # Mac App Store ID
 #   appimage:   null              # GitHub repo (owner/name) for AppImage
@@ -62,13 +61,11 @@ packages:
   bat:
     tier: 1
     desc: "cat replacement"
-    apt_bin: batcat
 
   fd:
     tier: 1
     desc: "find replacement"
     apt_name: fd-find
-    apt_bin: fdfind
 
   ripgrep:
     tier: 1
