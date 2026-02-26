@@ -8,65 +8,43 @@ set -euo pipefail
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 DISTRO="{{ .distro }}"
-
 log "Detected distro: $DISTRO"
 
-{{ if eq .distro "macos" -}}
-# =============================================================================
-# macOS: Use Homebrew
-# =============================================================================
-log "Installing packages via Homebrew (macOS)..."
-ensure_brew_in_path
-require_cmd brew
+{{ $useBrew := or (eq .distro "macos") (eq .distro "silverblue") (and (eq .distro "debian") .homebrew) -}}
 
-brew bundle --file=<(render_template Brewfile.tmpl)
-
-{{ else if eq .distro "arch" -}}
 # =============================================================================
-# Arch Linux: Use pacman/yay/flatpak
+# Step 1: Homebrew (macOS, Silverblue, Debian with homebrew=true)
 # =============================================================================
-log "Installing packages via pacman/yay (Arch Linux)..."
+{{ if $useBrew -}}
+log "Installing packages via Homebrew..."
 
-bash <(render_template scripts/install-packages-pacman.sh.tmpl)
-
-{{ else if eq .distro "debian" -}}
-# =============================================================================
-# Debian/Ubuntu
-# =============================================================================
-{{ if .homebrew -}}
-log "Installing packages via Homebrew (Debian/Ubuntu, homebrew=true)..."
-
+{{ if ne .distro "macos" -}}
+# Install Homebrew itself on Linux if needed
 bash <(render_template scripts/install-homebrew.sh.tmpl)
-ensure_brew_in_path
-brew bundle --file=<(render_template Brewfile.tmpl)
-{{ else -}}
-log "Installing packages via apt (Debian/Ubuntu)..."
-
-bash <(render_template scripts/install-packages-apt.sh.tmpl)
 {{ end -}}
 
-{{ else if eq .distro "silverblue" -}}
-# =============================================================================
-# Fedora Silverblue/Bazzite: Homebrew for CLI, Flatpak for GUI
-# =============================================================================
-log "Installing packages on Silverblue/Bazzite..."
+ensure_brew_in_path
+require_cmd brew
+brew bundle --file=<(render_template Brewfile.tmpl)
+{{ end -}}
 
-bash <(render_template scripts/install-packages-silverblue.sh.tmpl)
+# =============================================================================
+# Step 2: Native package manager
+# =============================================================================
+{{ if eq .distro "arch" -}}
+log "Installing packages via paru/pacman (Arch Linux)..."
+bash <(render_template scripts/install-packages-pacman.sh.tmpl)
 
-{{ else -}}
-# =============================================================================
-# Unknown distro: Try Homebrew as fallback
-# =============================================================================
-warn "Unknown or unsupported distro: $DISTRO"
+{{ else if and (eq .distro "debian") (not .homebrew) -}}
+log "Installing packages via apt (Debian/Ubuntu)..."
+bash <(render_template scripts/install-packages-apt.sh.tmpl)
+
+{{ else if eq .distro "unknown" -}}
+{{ if not $useBrew -}}
+warn "Unknown distro '$DISTRO' and no Homebrew configured."
 warn "Supported: macOS, Arch Linux, Debian/Ubuntu, Fedora Silverblue/Bazzite"
-
-if command -v brew &>/dev/null; then
-    log "Homebrew detected on Linux — using it as fallback..."
-    ensure_brew_in_path
-    brew bundle --file=<(render_template Brewfile.tmpl)
-else
-    fail "Cannot install packages on unsupported distro without Homebrew"
-fi
+fail "Cannot install packages — set homebrew=true or use a supported distro."
+{{ end -}}
 {{ end -}}
 
 log "Package installation complete!"
