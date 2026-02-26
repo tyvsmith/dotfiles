@@ -44,6 +44,10 @@ packages:
     tier: 1
     desc: "Per-directory env vars"
 
+  fastfetch:
+    tier: 1
+    desc: "System information display"
+
   # ===========================================================================
   # Tier 1: Editor
   # ===========================================================================
@@ -87,9 +91,17 @@ packages:
     tier: 1
     desc: "ps replacement"
 
+  btop:
+    tier: 1
+    desc: "System resource monitor TUI"
+
   bottom:
     tier: 1
     desc: "top/htop replacement"
+
+  glances:
+    tier: 1
+    desc: "Cross-platform system monitor"
 
   difftastic:
     tier: 1
@@ -127,6 +139,24 @@ packages:
     tier: 1
     desc: "tldr pages client"
 
+  yazi:
+    tier: 1
+    desc: "Terminal file manager"
+
+  superfile:
+    tier: 1
+    desc: "Terminal file manager TUI"
+
+  pv:
+    tier: 1
+    desc: "Pipe viewer / progress monitor"
+
+  bluetui:
+    tier: 1
+    desc: "Bluetooth manager TUI"
+    os: linux
+    brew: false
+
   # ===========================================================================
   # Tier 1: Git Tools
   # ===========================================================================
@@ -146,10 +176,6 @@ packages:
   lazygit:
     tier: 1
     desc: "Terminal UI for git"
-
-  lazydocker:
-    tier: 2
-    desc: "Terminal UI for Docker/Podman"
 
   # ===========================================================================
   # Tier 1: Essential Utilities
@@ -173,6 +199,10 @@ packages:
   tmux:
     tier: 1
     desc: "Terminal multiplexer"
+
+  zellij:
+    tier: 1
+    desc: "Terminal workspace/multiplexer"
 
   wget:
     tier: 1
@@ -228,6 +258,22 @@ packages:
   grex:
     tier: 2
     desc: "Regex generator"
+
+  gum:
+    tier: 2
+    desc: "TUI toolkit for shell scripts"
+
+  tree-sitter-cli:
+    tier: 2
+    desc: "Parser generator for editors"
+
+  usage:
+    tier: 2
+    desc: "CLI spec and completions tool"
+
+  lazydocker:
+    tier: 2
+    desc: "Terminal UI for Docker/Podman"
 
   # ===========================================================================
   # Tier 2: AI Tools
