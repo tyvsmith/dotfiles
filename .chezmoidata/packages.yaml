@@ -193,12 +193,6 @@ packages:
     tier: 2
     desc: "Python package manager"
 
-  node:
-    tier: 2
-    desc: "Node.js runtime"
-    arch_name: nodejs
-    apt_name: nodejs
-
   # ===========================================================================
   # Tier 2: Build & Image Tools
   # ===========================================================================
