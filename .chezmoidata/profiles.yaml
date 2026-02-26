@@ -4,6 +4,7 @@
 #
 # Each profile enables one or more package managers. The install router
 # runs every enabled manager in order: brew → pacman → apt → dnf.
+# Flatpak is used for tier 3 GUI apps on all Linux profiles.
 #
 # Profile selection is automatic (based on distro detection + homebrew flag)
 # but can be overridden via DOTFILES_PROFILE env var.
@@ -16,19 +17,24 @@ profiles:
   arch:
     desc: "Arch Linux with paru/pacman"
     pacman: true
+    flatpak: true
 
   debian:
     desc: "Debian/Ubuntu with apt"
     apt: true
+    flatpak: true
 
   debian-brew:
     desc: "Debian/Ubuntu with Homebrew"
     brew: true
+    flatpak: true
 
   silverblue:
     desc: "Fedora Silverblue/Bazzite (immutable)"
     brew: true
+    flatpak: true
 
   fedora:
     desc: "Fedora Workstation with dnf"
     dnf: true
+    flatpak: true
