@@ -147,6 +147,10 @@ packages:
     tier: 1
     desc: "Terminal UI for git"
 
+  lazydocker:
+    tier: 2
+    desc: "Terminal UI for Docker/Podman"
+
   # ===========================================================================
   # Tier 1: Essential Utilities
   # ===========================================================================
