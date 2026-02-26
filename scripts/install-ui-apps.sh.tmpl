@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Install GUI applications (Tier 3) — generated from .chezmoidata/packages.yaml
 #
-# Platform strategies:
+# Platform strategies (native package managers only — Flatpak handled separately):
 #   macOS:      Homebrew casks + Mac App Store (mas)
-#   Arch:       paru (AUR) + Flatpak fallback
-#   Silverblue: Flatpak + AppImage
-#   Debian:     Skipped (no GUI app management)
+#   Arch:       paru (AUR) for native packages
+#   Silverblue: AppImages
+#   Debian:     Flatpak only (no native GUI management)
+#   Fedora:     Flatpak only (no native GUI management)
 set -euo pipefail
 
 # shellcheck source=/dev/null
@@ -45,7 +46,7 @@ brew bundle --file=<(echo "$CASK_BREWFILE")
 
 {{ else if eq .distro "arch" -}}
 # =============================================================================
-# Arch Linux: paru (AUR) + Flatpak
+# Arch Linux: paru (AUR) for native packages (Flatpak handled by dedicated script)
 # =============================================================================
 
 # --- Native packages via paru ---
@@ -78,56 +79,10 @@ if [[ ${#PACKAGES[@]} -gt 0 ]]; then
     fi
 fi
 
-# --- Flatpak apps ---
-FLATPAK_PACKAGES=(
-{{- range $key, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "flatpak") }}
-{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux") }}
-    {{ $pkg.flatpak }}  # {{ default $key (index $pkg "name") }}
-{{-     end }}
-{{-   end }}
-{{- end }}
-)
-
-if [[ ${#FLATPAK_PACKAGES[@]} -gt 0 ]]; then
-    if command -v flatpak &>/dev/null; then
-        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
-        log "Installing ${#FLATPAK_PACKAGES[@]} Flatpak apps..."
-        for app_id in "${FLATPAK_PACKAGES[@]}"; do
-            flatpak install -y --noninteractive flathub "$app_id" 2>/dev/null || \
-                warn "Failed to install flatpak: $app_id"
-        done
-    else
-        warn "flatpak not found. Skipping Flatpak apps."
-    fi
-fi
-
 {{ else if eq .distro "silverblue" -}}
 # =============================================================================
-# Fedora Silverblue/Bazzite: Flatpak + AppImage
+# Fedora Silverblue/Bazzite: AppImages (Flatpak handled by dedicated script)
 # =============================================================================
-
-# --- Flatpak apps ---
-FLATPAK_APPS=(
-{{- range $name, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "flatpak") }}
-{{-     if not (hasKey $pkg "os") }}
-    {{ $pkg.flatpak }}  # {{ $name }}
-{{-     end }}
-{{-   end }}
-{{- end }}
-)
-
-if command -v flatpak &>/dev/null; then
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
-    log "Installing ${#FLATPAK_APPS[@]} Flatpak apps..."
-    for app_id in "${FLATPAK_APPS[@]}"; do
-        flatpak install -y --noninteractive flathub "$app_id" 2>/dev/null || \
-            warn "Failed to install flatpak: $app_id"
-    done
-else
-    warn "flatpak not found — cannot install GUI apps"
-fi
 
 # --- AppImage downloads ---
 APPIMAGE_DIR="${HOME}/Applications"
@@ -157,9 +112,15 @@ fi
 
 {{ else if eq .distro "debian" -}}
 # =============================================================================
-# Debian/Ubuntu: No GUI app management
+# Debian/Ubuntu: GUI apps handled by Flatpak (see install-packages-flatpak.sh)
 # =============================================================================
-log "Skipping GUI apps on Debian/Ubuntu (not supported)."
+log "Native GUI app management skipped on Debian/Ubuntu (Flatpak handles GUI apps)."
+
+{{ else if eq .distro "fedora" -}}
+# =============================================================================
+# Fedora: GUI apps handled by Flatpak (see install-packages-flatpak.sh)
+# =============================================================================
+log "Native GUI app management skipped on Fedora (Flatpak handles GUI apps)."
 
 {{ else -}}
 warn "Unknown distro: {{ .distro }} — cannot install GUI apps."
