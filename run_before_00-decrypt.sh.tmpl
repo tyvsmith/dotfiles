@@ -9,13 +9,7 @@ set -euo pipefail
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 ensure_brew_in_path
-require_cmd brew
-
-# Install age for decryption (needed before file operations)
-if ! command -v age &>/dev/null; then
-    echo "Installing age for decryption..."
-    brew install age
-fi
+ensure_pkg age
 
 AGE_KEY_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi/age-key.txt"
 

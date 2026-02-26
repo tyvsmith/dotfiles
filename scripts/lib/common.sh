@@ -40,3 +40,25 @@ ensure_brew_in_path() {
     fi
   fi
 }
+
+# Install a package using whatever package manager is available.
+# Usage: ensure_pkg <command_name> [package_name]
+# If package_name is omitted, command_name is used as the package name.
+ensure_pkg() {
+  local cmd="$1"
+  local pkg="${2:-$1}"
+  command -v "$cmd" &>/dev/null && return 0
+
+  log "Installing $pkg..."
+  if command -v paru &>/dev/null; then
+    paru -S --needed --noconfirm "$pkg"
+  elif command -v pacman &>/dev/null; then
+    sudo pacman -S --needed --noconfirm "$pkg"
+  elif command -v brew &>/dev/null; then
+    brew install "$pkg"
+  elif command -v apt-get &>/dev/null; then
+    sudo apt-get install -y "$pkg"
+  else
+    fail "Cannot install $pkg: no supported package manager found"
+  fi
+}
