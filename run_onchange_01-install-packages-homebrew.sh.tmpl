@@ -50,16 +50,14 @@ require_cmd brew
 log "Running brew bundle (formulas)..."
 brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
 {{- range $key, $pkg := .packages }}
-{{-   if hasKey $pkg "brew_tap" }}
+{{-   if hasKey $pkg "tap" }}
 {{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $.chezmoi.os) }}
-tap "{{ $pkg.brew_tap }}"
+tap "{{ $pkg.tap }}"
 {{-     end }}
 {{-   end }}
 {{- end }}
 {{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   $bn := default $n (index $pkg "brew_name") }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "brew" "line" (printf "brew \"%s\"" $bn)) }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "brew" "fmt" "brew \"%s\"") }}
 {{- end }}
 {{ if eq .chezmoi.os "darwin" -}}
 brew "mas"

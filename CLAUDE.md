@@ -77,22 +77,24 @@ Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else
 ### Package Management
 
 Packages are defined once in `.chezmoidata/packages.yaml` and installed via platform-specific package managers:
-- **macOS**: Homebrew (via `Brewfile.tmpl`)
+- **macOS**: Homebrew formulas + casks
 - **Arch Linux**: paru (handles both official repos and AUR)
 - **Debian/Ubuntu**: apt (native repos only)
+- **Fedora**: dnf
+- **Linux GUI**: Flatpak (Flathub) or AppImage (GitHub releases)
 
-The YAML key is the default package name for all package managers. Packages are available on all platforms by default. Only add fields when they differ from defaults:
-- `brew_name:`/`arch_name:`/`apt_name:` — override name for a specific manager
-- `brew: false`/`arch: false` — exclude from a platform
-- `cask: true` — install as Homebrew cask instead of formula
+The YAML key is the default package name for all package managers. Manager fields are **tri-state**:
+- absent → available, use YAML key as package name
+- string → available, use string as package name (e.g., `arch: python-llm`)
+- `false` → excluded from this manager (e.g., `brew: false`)
 
-The `run_onchange_01-install-packages.sh` script reads the profile and routes to the appropriate installer:
-- macOS: `brew bundle` with `Brewfile.tmpl` (tiers 1-2 formulas + tier 3 casks/MAS)
-- Arch: `scripts/install-packages-pacman.sh.tmpl` (tiers 1-3 via paru)
-- Debian/Ubuntu: `scripts/install-packages-apt.sh.tmpl` (tiers 1-2)
-- Fedora: `scripts/install-packages-dnf.sh.tmpl` (tiers 1-2)
-- Linux GUI apps: `scripts/install-packages-flatpak.sh.tmpl` (tier 3, for profiles with `flatpak: true`)
-- Silverblue: AppImage downloads for packages with `appimage:` field (tier 3)
+Other package fields:
+- `cask: true` — Homebrew cask (macOS-only, cascades to next manager on Linux)
+- `tap:` — Homebrew tap required before install
+- `flatpak:` — Flatpak app ID
+- `appimage:` — GitHub repo (`owner/name`) for AppImage download
+
+Cascade order: `brew → cask → pacman → apt → dnf → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
 
 **Debian/Ubuntu apt availability:**
 The apt install script uses runtime `apt-cache` checks to determine package availability, so it works correctly across different Debian/Ubuntu versions without static exclusion lists. Packages available in Ubuntu 24.04 but missing in Debian Bookworm (e.g., eza, sd, git-delta, gping, yq, hyperfine) will be installed where available and skipped with warnings where not.
@@ -100,13 +102,15 @@ The apt install script uses runtime `apt-cache` checks to determine package avai
 ### Key Files
 - `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
 - `.chezmoidata/profiles.yaml` - Machine profile definitions (tier, pkg managers, is_work, decrypt)
-- `Brewfile.tmpl` - Package manifest for Homebrew (macOS, tiers 1-3)
-- `scripts/install-packages-pacman.sh.tmpl` - Arch Linux package installer (tiers 1-3 via paru)
-- `scripts/install-packages-apt.sh.tmpl` - Debian/Ubuntu package installer (tiers 1-2)
-- `scripts/install-packages-dnf.sh.tmpl` - Fedora package installer (tiers 1-2)
-- `scripts/install-packages-flatpak.sh.tmpl` - Flatpak installer for tier 3 GUI apps (Linux)
-- `run_onchange_01-install-packages.sh.tmpl` - Routes all tiers to correct installer based on profile
-- `run_onchange_02-install-fisher.sh` - Installs Fisher and Fish plugins on changes
+- `.chezmoitemplates/cascade-filter` - Shared cascade logic for package manager selection
+- `run_onchange_01-install-packages-homebrew.sh.tmpl` - Homebrew formulas (+ Homebrew install on Linux)
+- `run_onchange_02-install-packages-cask.sh.tmpl` - Homebrew casks (macOS only)
+- `run_onchange_03-install-packages-pacman.sh.tmpl` - Arch Linux (paru, tiers 1-3)
+- `run_onchange_04-install-packages-apt.sh.tmpl` - Debian/Ubuntu (apt, tiers 1-2)
+- `run_onchange_05-install-packages-dnf.sh.tmpl` - Fedora (dnf, tiers 1-2)
+- `run_onchange_06-install-packages-flatpak.sh.tmpl` - Flatpak GUI apps (Linux, tier 3)
+- `run_onchange_07-install-packages-appimage.sh.tmpl` - AppImage downloads (Linux, last resort)
+- `run_onchange_08-install-fisher.sh.tmpl` - Installs Fisher and Fish plugins on changes
 - `dot_config/fish/conf.d/0_bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
 - `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
 - `dot_config/git/config.tmpl` - Git config with delta pager, useful aliases
