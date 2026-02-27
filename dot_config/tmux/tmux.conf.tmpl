@@ -1,4 +1,4 @@
-set -g default-shell '{{- template "brew-prefix" . -}}/bin/fish'
+set-option -g default-shell ${SHELL}
 set -g default-terminal "tmux-256color"
 set -as terminal-features ",xterm-256color:RGB:clipboard"
 
