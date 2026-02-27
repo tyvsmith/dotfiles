@@ -24,8 +24,8 @@ chezmoi cd
 # Update from remote and apply
 chezmoi update
 
-# Install packages (macOS only - auto-detects distro on Linux)
-brew bundle --file="$(chezmoi source-path)/Brewfile"
+# Re-run package installs (triggered automatically when packages.yaml changes)
+chezmoi apply
 ```
 
 ## Architecture
@@ -69,7 +69,7 @@ If no profile is specified, auto-detects from distro (macOS → `macos-personal`
 **Package tiers:**
 - **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux, essential utils
 - **Tier 2 (tier >= 2):** Development SDKs (mise, uv, node), build tools (imagemagick, p7zip), AI tools (llm, gemini-cli, opencode), dev utilities (shellcheck, tokei, hyperfine)
-- **Tier 3 (tier >= 3):** GUI applications (VS Code, JetBrains, browsers, productivity apps) — installed alongside CLI tools via the same `run_onchange_01` dispatcher
+- **Tier 3 (tier >= 3):** GUI applications (VS Code, JetBrains, browsers, productivity apps)
 
 ### OS Detection in Templates
 Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else }}` for Linux paths (e.g., Homebrew paths, SSH agent sockets).
@@ -103,17 +103,37 @@ The apt install script uses runtime `apt-cache` checks to determine package avai
 - `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
 - `.chezmoidata/profiles.yaml` - Machine profile definitions (tier, pkg managers, is_work, decrypt)
 - `.chezmoitemplates/cascade-filter` - Shared cascade logic for package manager selection
-- `run_onchange_10-install-packages-homebrew.sh.tmpl` - Homebrew formulas (+ Homebrew install on Linux)
-- `run_onchange_11-install-packages-cask.sh.tmpl` - Homebrew casks (macOS only)
-- `run_onchange_12-install-packages-pacman.sh.tmpl` - Arch Linux (paru, tiers 1-3)
-- `run_onchange_13-install-packages-apt.sh.tmpl` - Debian/Ubuntu (apt, tiers 1-2)
-- `run_onchange_14-install-packages-dnf.sh.tmpl` - Fedora (dnf, tiers 1-2)
-- `run_onchange_30-install-packages-flatpak.sh.tmpl` - Flatpak GUI apps (Linux, tier 3)
-- `run_onchange_31-install-packages-appimage.sh.tmpl` - AppImage downloads (Linux, last resort)
-- `run_onchange_60-install-fisher.sh.tmpl` - Installs Fisher and Fish plugins on changes
-- `dot_config/fish/conf.d/0_bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
 - `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
 - `dot_config/git/config.tmpl` - Git config with delta pager, useful aliases
+
+### Install Scripts
+
+Scripts use category-based numeric prefixes with gaps for future expansion:
+
+```
+00-09  Setup & prereqs
+10-19  Native package managers
+20-29  (reserved)
+30-39  Containerized/sandboxed package managers
+40-49  Custom binaries (future)
+50-59  Language stacks & deps (future)
+60-69  Shell configuration
+70+    Future custom
+```
+
+| Script | Description |
+|---|---|
+| `run_before_00-decrypt.sh.tmpl` | Ensures age key exists (1Password or manual) |
+| `run_onchange_00-setup-directories.sh` | Creates required dirs (~/.ssh/sockets, etc.) |
+| `run_onchange_10-install-packages-homebrew.sh.tmpl` | Homebrew formulas (+ Homebrew install on Linux) |
+| `run_onchange_11-install-packages-cask.sh.tmpl` | Homebrew casks (macOS only) |
+| `run_onchange_12-install-packages-pacman.sh.tmpl` | Arch Linux packages via paru |
+| `run_onchange_13-install-packages-apt.sh.tmpl` | Debian/Ubuntu packages via apt |
+| `run_onchange_14-install-packages-dnf.sh.tmpl` | Fedora packages via dnf |
+| `run_onchange_30-install-packages-flatpak.sh.tmpl` | Flatpak GUI apps (Linux, tier 3) |
+| `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
+| `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
+| `run_onchange_61-configure-tide.sh.tmpl` | Configures Tide prompt |
 
 ### Philosophy
 - All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→trash`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.
