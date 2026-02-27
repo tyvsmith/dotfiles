@@ -8,7 +8,7 @@
 #
 # Fields:
 #   name:       YAML key          # override for display (e.g., 7zip)
-#   tier:       (required)        # 1=core CLI, 2=dev tools, 3=GUI apps
+#   tier:       (required)        # 1=core CLI, 2=dev, 3=(reserved), 4=basic UI, 5=extended UI
 #   desc:       (required)        # short description
 #   cask:       false             # Homebrew cask (macOS only)
 #   os:         null              # restrict to: darwin | linux
@@ -307,6 +307,17 @@ packages:
     tier: 2
     desc: "AI coding agent"
 
+  claude-code:
+    tier: 2
+    desc: "Anthropic Claude Code"
+    cask: true
+
+  codex:
+    tier: 2
+    desc: "OpenAI Codex"
+    cask: true
+    arch: openai-codex
+
   # ===========================================================================
   # Tier 2: macOS GNU Tools
   # ===========================================================================
@@ -336,141 +347,133 @@ packages:
     desc: "Additional Unix utilities"
 
   # ===========================================================================
-  # Tier 3: Fonts
+  # Tier 4: Fonts
   # ===========================================================================
   font-hack-nerd-font:
-    tier: 3
+    tier: 4
     desc: "Hack Nerd Font"
     cask: true
     arch: ttf-hack-nerd
 
   # ===========================================================================
-  # Tier 3: Development Tools (GUI)
+  # Tier 4: Development Tools (GUI)
   # ===========================================================================
   visual-studio-code:
-    tier: 3
+    tier: 4
     desc: "Code editor"
     cask: true
     arch: visual-studio-code-bin
     flatpak: com.visualstudio.code
 
+  # ===========================================================================
+  # Tier 5: Development Tools (Extended)
+  # ===========================================================================
   jetbrains-toolbox:
-    tier: 3
+    tier: 5
     desc: "JetBrains IDE manager"
     cask: true
 
-  claude-code:
-    tier: 3
-    desc: "Anthropic Claude Code"
-    cask: true
-
-  codex:
-    tier: 3
-    desc: "OpenAI Codex"
-    cask: true
-    arch: openai-codex
-
   # ===========================================================================
-  # Tier 3: Productivity & Utilities
+  # Tier 4: Productivity & Utilities
   # ===========================================================================
   1password:
-    tier: 3
+    tier: 4
     desc: "Password manager"
     cask: true
     flatpak: com.onepassword.OnePassword
 
   # ===========================================================================
-  # Tier 3: Communication
+  # Tier 5: Communication
   # ===========================================================================
   discord:
-    tier: 3
+    tier: 5
     desc: "Voice & text chat"
     cask: true
     flatpak: com.discordapp.Discord
 
   beeper:
-    tier: 3
+    tier: 5
     desc: "Unified messaging"
     cask: true
     arch: beeper-v4-bin
     appimage: nickvdp/beeper
 
   # ===========================================================================
-  # Tier 3: Browsers
+  # Tier 4: Browsers
   # ===========================================================================
   brave-browser:
-    tier: 3
+    tier: 4
     desc: "Privacy-focused browser"
     cask: true
     arch: brave-bin
     flatpak: com.brave.Browser
 
   # ===========================================================================
-  # Tier 3: Media
+  # Tier 5: Media
   # ===========================================================================
   vlc:
-    tier: 3
+    tier: 5
     desc: "Media player"
     cask: true
     flatpak: org.videolan.VLC
 
   # ===========================================================================
-  # Tier 3: Other Utilities
+  # Tier 5: Other Utilities
   # ===========================================================================
   deskflow:
-    tier: 3
+    tier: 5
     desc: "Software KVM"
     cask: true
     flatpak: org.deskflow.deskflow
 
   # ===========================================================================
-  # Tier 3: macOS Apps (cask + Mac App Store)
+  # Tier 5: macOS Apps (cask + Mac App Store)
   # ===========================================================================
   iterm2:
-    tier: 3
+    tier: 5
     os: darwin
     desc: "macOS terminal"
     cask: true
 
   alfred:
-    tier: 3
+    tier: 5
     os: darwin
     desc: "Launcher/automation"
     cask: true
 
   moom:
-    tier: 3
+    tier: 5
     os: darwin
     desc: "Window manager"
     cask: true
 
   soundsource:
-    tier: 3
+    tier: 5
     os: darwin
     desc: "Audio control"
     cask: true
 
   the-unarchiver:
-    tier: 3
+    tier: 5
     os: darwin
     desc: "Archive extraction"
     cask: true
 
   app-cleaner:
-    tier: 3
+    tier: 5
     os: darwin
     desc: "App uninstaller"
     cask: true
 
   amphetamine:
-    tier: 3
+    tier: 5
     os: darwin
     desc: "Keep Mac awake"
     brew: false
     mas: 937984704
 
   velja:
-    tier: 3
+    tier: 5
     os: darwin
     desc: "Browser/app picker"
     brew: false

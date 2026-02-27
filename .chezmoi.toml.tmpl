@@ -62,10 +62,12 @@
 
   If you add a new profile to profiles.yaml, update the lists below too.
 */ -}}
-{{- $tier3 := list "arch" "fedora" "macos-personal" "macos-work" "silverblue" -}}
+{{- $tier5 := list "arch" "fedora" "macos-personal" "macos-work" -}}
+{{- $tier4 := list "silverblue" -}}
 {{- $tier1 := list "debian-server" -}}
 {{- $tier := 2 -}}
-{{- if has $profile $tier3 -}}{{- $tier = 3 -}}
+{{- if has $profile $tier5 -}}{{- $tier = 5 -}}
+{{- else if has $profile $tier4 -}}{{- $tier = 4 -}}
 {{- else if has $profile $tier1 -}}{{- $tier = 1 -}}
 {{- end -}}
 
