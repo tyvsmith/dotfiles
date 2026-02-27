@@ -22,10 +22,9 @@ log "Installing AppImages..."
 APPIMAGE_DIR="${HOME}/Applications"
 mkdir -p "$APPIMAGE_DIR"
 
-declare -A APPIMAGE_CANDIDATES  # canonical_key -> github_repo
+declare -A APPIMAGE_CANDIDATES  # display_name -> github_repo
 {{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "appimage" "line" (printf "APPIMAGE_CANDIDATES[%s]=\"%s\"" $n (default "" (index $pkg "appimage")))) }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "appimage" "fmt" "APPIMAGE_CANDIDATES[%[2]s]=\"%[1]s\"") }}
 {{- end }}
 
 if [[ ${#APPIMAGE_CANDIDATES[@]} -eq 0 ]]; then

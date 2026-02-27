@@ -20,11 +20,9 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 log "Using profile '{{ .profile }}' — installing packages via apt"
 
-declare -A CANDIDATE_PACKAGES  # apt_name -> display_name
+declare -A CANDIDATE_PACKAGES  # pkg_name -> display_name
 {{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   $resolved := default $n (index $pkg "apt_name") }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "apt" "line" (printf "CANDIDATE_PACKAGES[%s]=\"%s\"" $resolved $n)) }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "apt" "fmt" "CANDIDATE_PACKAGES[%s]=\"%s\"") }}
 {{- end }}
 
 # =============================================================================

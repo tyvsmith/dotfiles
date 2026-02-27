@@ -6,17 +6,24 @@
 #   name:       YAML key          # override for syntax issues (e.g., 7zip)
 #   tier:       (required)        # 1=core CLI, 2=dev tools, 3=GUI apps
 #   desc:       (required)        # short description
-#   brew:       true              # install via Homebrew
-#   cask:  false             # use cask instead of formula
-#   brew_name:  name              # override Homebrew package name
-#   brew_tap:   null              # tap required before install
-#   arch_name:  name              # override Arch package name
-#   apt_name:   name              # override apt package name (availability checked at runtime)
-#   dnf_name:   name              # override dnf package name (availability checked at runtime)
+#   cask:       false             # Homebrew cask (macOS only)
+#   os:         null              # restrict to: darwin | linux
+#
+#   Manager fields (tri-state):
+#     absent  = available, use YAML key as package name
+#     string  = available, use string as package name
+#     false   = excluded from this manager
+#
+#   brew:       (absent)          # Homebrew formula name or false
+#   tap:        null              # Homebrew tap required before install
+#   arch:       (absent)          # Arch/AUR package name or false
+#   apt:        (absent)          # apt package name or false
+#   dnf:        (absent)          # dnf package name or false
+#
+#   Resource locator fields (value = available):
 #   flatpak:    null              # Flatpak app ID (Linux GUI)
 #   mas:        null              # Mac App Store ID
 #   appimage:   null              # GitHub repo (owner/name) for AppImage
-#   os:         null              # restrict to: darwin | linux
 #
 # Only specify fields that differ from defaults.
 
@@ -69,8 +76,8 @@ packages:
   fd:
     tier: 1
     desc: "find replacement"
-    apt_name: fd-find
-    dnf_name: fd-find
+    apt: fd-find
+    dnf: fd-find
 
   ripgrep:
     tier: 1
@@ -172,7 +179,7 @@ packages:
   gh:
     tier: 1
     desc: "GitHub CLI"
-    arch_name: github-cli
+    arch: github-cli
 
   lazygit:
     tier: 1
@@ -212,7 +219,7 @@ packages:
   gnupg:
     tier: 1
     desc: "GnuPG encryption"
-    dnf_name: gnupg2
+    dnf: gnupg2
 
   tree:
     tier: 1
@@ -235,14 +242,14 @@ packages:
   imagemagick:
     tier: 2
     desc: "Image manipulation"
-    dnf_name: ImageMagick
+    dnf: ImageMagick
 
   7zip:
     tier: 2
     desc: "Archive tool"
-    brew_name: p7zip
-    apt_name: p7zip-full
-    dnf_name: p7zip
+    brew: p7zip
+    apt: p7zip-full
+    dnf: p7zip
 
   # ===========================================================================
   # Tier 2: Development Utilities
@@ -250,7 +257,7 @@ packages:
   shellcheck:
     tier: 2
     desc: "Shell script linter"
-    dnf_name: ShellCheck
+    dnf: ShellCheck
 
   tokei:
     tier: 2
@@ -286,7 +293,7 @@ packages:
   llm:
     tier: 2
     desc: "LLM CLI tool"
-    arch_name: python-llm
+    arch: python-llm
 
   gemini-cli:
     tier: 2
@@ -331,7 +338,7 @@ packages:
     tier: 3
     desc: "Hack Nerd Font"
     cask: true
-    arch_name: ttf-hack-nerd
+    arch: ttf-hack-nerd
 
   # ===========================================================================
   # Tier 3: Development Tools (GUI)
@@ -340,7 +347,7 @@ packages:
     tier: 3
     desc: "Code editor"
     cask: true
-    arch_name: visual-studio-code-bin
+    arch: visual-studio-code-bin
     flatpak: com.visualstudio.code
 
   jetbrains-toolbox:
@@ -363,7 +370,7 @@ packages:
     tier: 3
     desc: "OpenAI Codex"
     cask: true
-    arch_name: openai-codex
+    arch: openai-codex
 
   # ===========================================================================
   # Tier 3: Productivity & Utilities
@@ -411,7 +418,7 @@ packages:
     tier: 3
     desc: "Unified messaging"
     cask: true
-    arch_name: beeper-v4-bin
+    arch: beeper-v4-bin
     appimage: nickvdp/beeper
 
   # ===========================================================================
@@ -421,7 +428,7 @@ packages:
     tier: 3
     desc: "Privacy-focused browser"
     cask: true
-    arch_name: brave-bin
+    arch: brave-bin
     flatpak: com.brave.Browser
 
   # ===========================================================================

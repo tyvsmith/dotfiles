@@ -31,8 +31,7 @@ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flat
 
 FLATPAK_APPS=(
 {{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "flatpak" "line" (printf "    %s  # %s" (default "" (index $pkg "flatpak")) $n)) }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "flatpak" "fmt" "    %s  # %s") }}
 {{- end }}
 )
 

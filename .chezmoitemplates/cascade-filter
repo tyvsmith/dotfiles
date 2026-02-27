@@ -1,27 +1,35 @@
 {{- /*
-  cascade-filter: Outputs .line if the package belongs to the specified manager.
+  cascade-filter: Outputs a formatted line if the package belongs to the
+  specified manager, with the manager-specific package name resolved.
 
   Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
   A package goes to the first enabled manager that can handle it.
-  Native managers (brew/cask/pacman/apt/dnf) handle a package by default
-  unless explicitly excluded (e.g., arch: false). Cask requires cask: true
-  and is macOS-only. Flatpak/appimage require their respective field
-  (flatpak:/appimage:) to be present.
+
+  Manager fields are tri-state:
+    absent  = available, use YAML key as package name
+    string  = available, use string as package name override
+    false   = excluded from this manager
+
+  Cask requires cask: true and is macOS-only.
+  Flatpak/appimage require their respective field to be present.
 
   Parameters (via dict):
     .root      - root template context ($)
     .pkg       - package data from .packages range
+    .key       - YAML key (canonical package name)
     .manager   - which manager this script handles
-    .line      - bash line to output if this package belongs here
+    .fmt       - printf format string; receives (resolved_name, display_name)
 */ -}}
 {{- $pkg := .pkg -}}
+{{- $key := .key -}}
 {{- $mgr := .manager -}}
 {{- $p := index .root.profiles .root.profile -}}
 {{- $os := .root.chezmoi.os -}}
+{{- $display := default $key (index $pkg "name") -}}
 
 {{- /* Tier and OS gate */ -}}
 {{- $tier_ok := le (int $pkg.tier) (int .root.tier) -}}
-{{- $os_ok := or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux") -}}
+{{- $os_ok := or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $os) -}}
 
 {{- /* Cask/flatpak/appimage require their field to exist */ -}}
 {{- $field_ok := true -}}
@@ -29,9 +37,10 @@
 {{- if eq $mgr "flatpak" -}}{{- $field_ok = hasKey $pkg "flatpak" -}}{{- end -}}
 {{- if eq $mgr "appimage" -}}{{- $field_ok = hasKey $pkg "appimage" -}}{{- end -}}
 
-{{- /* Compute availability: profile enables manager AND package not excluded */ -}}
+{{- /* Tri-state availability: profile enables manager AND field is not false
+     absent = available (default name), string = available (override), false = excluded */ -}}
 {{- $avail_brew := and (and (hasKey $p "brew") $p.brew) (or (not (hasKey $pkg "brew")) $pkg.brew) (not (and (hasKey $pkg "cask") $pkg.cask)) -}}
-{{- $avail_cask := and (and (hasKey $p "brew") $p.brew) (eq $os "darwin") (and (hasKey $pkg "cask") $pkg.cask) -}}
+{{- $avail_cask := and (and (hasKey $p "brew") $p.brew) (eq $os "darwin") (and (hasKey $pkg "cask") $pkg.cask) (or (not (hasKey $pkg "brew")) $pkg.brew) -}}
 {{- $avail_pacman := and (and (hasKey $p "pacman") $p.pacman) (or (not (hasKey $pkg "arch")) $pkg.arch) -}}
 {{- $avail_apt := and (and (hasKey $p "apt") $p.apt) (or (not (hasKey $pkg "apt")) $pkg.apt) -}}
 {{- $avail_dnf := and (and (hasKey $p "dnf") $p.dnf) (or (not (hasKey $pkg "dnf")) $pkg.dnf) -}}
@@ -48,6 +57,22 @@
 {{- else if (hasKey $pkg "appimage") -}}{{- $winner = "appimage" -}}
 {{- end -}}
 
-{{- if and $tier_ok $os_ok $field_ok (eq $winner $mgr) }}
-{{ .line }}
+{{- if and $tier_ok $os_ok $field_ok (eq $winner $mgr) -}}
+{{-   $resolved := $display -}}
+{{-   if and (eq $mgr "brew") (hasKey $pkg "brew") -}}
+{{-     $resolved = index $pkg "brew" -}}
+{{-   else if and (eq $mgr "cask") (hasKey $pkg "brew") -}}
+{{-     $resolved = index $pkg "brew" -}}
+{{-   else if and (eq $mgr "pacman") (hasKey $pkg "arch") -}}
+{{-     $resolved = index $pkg "arch" -}}
+{{-   else if and (eq $mgr "apt") (hasKey $pkg "apt") -}}
+{{-     $resolved = index $pkg "apt" -}}
+{{-   else if and (eq $mgr "dnf") (hasKey $pkg "dnf") -}}
+{{-     $resolved = index $pkg "dnf" -}}
+{{-   else if eq $mgr "flatpak" -}}
+{{-     $resolved = index $pkg "flatpak" -}}
+{{-   else if eq $mgr "appimage" -}}
+{{-     $resolved = index $pkg "appimage" -}}
+{{-   end }}
+{{ printf .fmt $resolved $display }}
 {{- end -}}
