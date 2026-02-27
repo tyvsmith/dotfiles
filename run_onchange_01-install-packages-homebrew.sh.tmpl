@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Chezmoi run_onchange script: Install packages via Homebrew
-# Used on macOS (native), Silverblue (immutable), and Debian-brew profiles.
+# Chezmoi run_onchange script: Install Homebrew formulas
+#
+# Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
+# Only includes non-cask packages assigned to brew by the cascade.
 #
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 # profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
-# Brewfile hash: {{ include "Brewfile.tmpl" | sha256sum }}
 
 {{ $p := index .profiles .profile -}}
 {{ if not (and (hasKey $p "brew") $p.brew) -}}
@@ -16,7 +17,7 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
-log "Using profile '{{ .profile }}' — installing packages via Homebrew"
+log "Using profile '{{ .profile }}' — installing Homebrew formulas"
 
 # =============================================================================
 # Install Homebrew (Linux only — macOS ships with it or user installs manually)
@@ -44,10 +45,31 @@ ensure_brew_in_path
 require_cmd brew
 
 # =============================================================================
-# Install packages via brew bundle
+# Install formulas via brew bundle
 # =============================================================================
-log "Running brew bundle..."
-brew bundle --file=<(render_template Brewfile.tmpl)
+log "Running brew bundle (formulas)..."
+brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
+{{- range $key, $pkg := .packages }}
+{{-   if hasKey $pkg "brew_tap" }}
+{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $.chezmoi.os) }}
+tap "{{ $pkg.brew_tap }}"
+{{-     end }}
+{{-   end }}
+{{- end }}
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $bn := default $n (index $pkg "brew_name") }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "brew" "line" (printf "brew \"%s\"" $bn)) }}
+{{- end }}
+{{ if eq .chezmoi.os "darwin" -}}
+brew "mas"
+{{- range $key, $pkg := .packages }}
+{{-   if and (le (int $pkg.tier) (int $.tier)) (hasKey $pkg "mas") }}
+mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
+{{-   end }}
+{{- end }}
+{{ end -}}
+BREWFILE
 
-log "Homebrew package installation complete!"
+log "Homebrew formula installation complete!"
 {{ end -}}
