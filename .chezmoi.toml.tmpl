@@ -69,10 +69,18 @@
 {{- else if has $profile $tier1 -}}{{- $tier = 1 -}}
 {{- end -}}
 
-{{- $decrypt := has $profile (list "arch" "debian-brew" "debian-dev" "fedora" "macos-personal" "macos-work" "silverblue") -}}
+{{- $wantsDecrypt := has $profile (list "arch" "debian-brew" "debian-dev" "fedora" "macos-personal" "macos-work" "silverblue") -}}
 {{- $isWork := has $profile (list "devpod" "macos-work") -}}
 
-{{ if $decrypt -}}
+{{- /* Enable encryption only when the key file exists. The decrypt data flag
+     reflects whether the profile WANTS decryption (so run_before scripts can
+     try to fetch the key). On first run without a key, the decrypt script
+     warns and encrypted files are skipped via .chezmoiignore. After placing
+     the key, re-run chezmoi init to enable decryption. */ -}}
+{{- $ageKeyPath := joinPath .chezmoi.homeDir ".config" "chezmoi" "age-key.txt" -}}
+{{- $hasKey := stat $ageKeyPath -}}
+
+{{ if and $wantsDecrypt $hasKey -}}
 encryption = "age"
 {{ end }}
 [data]
@@ -80,8 +88,9 @@ encryption = "age"
     profile = "{{ $profile }}"
     tier = {{ $tier }}
     is_work = {{ $isWork }}
-    decrypt = {{ $decrypt }}
-{{ if $decrypt }}
+    decrypt = {{ $wantsDecrypt }}
+    decrypt_active = {{ not (not (and $wantsDecrypt $hasKey)) }}
+{{ if and $wantsDecrypt $hasKey }}
 [age]
     identity = "~/.config/chezmoi/age-key.txt"
     recipient = "{{ include ".age-public-key" | trim }}"
