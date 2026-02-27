@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install packages via pacman/paru (Arch Linux)
 #
-# Cascade order: brew → pacman → apt → dnf → flatpak → appimage
+# Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
 # Only includes packages not handled by an earlier manager.
 #
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
