@@ -10,30 +10,17 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 log "Installing packages via dnf..."
 
-# =============================================================================
-# Candidate packages (all tiers, resolved to dnf names)
-# =============================================================================
 declare -A CANDIDATE_PACKAGES  # dnf_name -> display_name
-
-# Tier 1: Core CLI tools
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
-{{-   $dn := default $n (index $pkg "dnf_name") }}
-{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) }}
-CANDIDATE_PACKAGES[{{ $dn }}]="{{ $n }}"
+{{-   $resolved := default $n (index $pkg "dnf_name") }}
+{{-   if and
+        (le (int $pkg.tier) (int $.tier))
+        (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux"))
+}}
+CANDIDATE_PACKAGES[{{ $resolved }}]="{{ $n }}"
 {{-   end }}
 {{- end }}
-
-{{ if .is_dev -}}
-# Tier 2: Development tools
-{{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   $dn := default $n (index $pkg "dnf_name") }}
-{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) }}
-CANDIDATE_PACKAGES[{{ $dn }}]="{{ $n }}"
-{{-   end }}
-{{- end }}
-{{ end -}}
 
 # =============================================================================
 # Check availability and split into installable vs missing
@@ -73,7 +60,7 @@ if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
     log "To install missing tools, consider:"
     log "  1. COPR repositories: dnf copr enable <repo>"
     log "  2. cargo install <package>"
-    log "  3. Homebrew on Linux (re-run with --homebrew)"
+    log "  3. Homebrew on Linux (re-run with --profile fedora + Homebrew)"
 fi
 
 log ""
