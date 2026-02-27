@@ -52,12 +52,24 @@ ensure_pkg() {
   log "Installing $pkg..."
   if command -v paru &>/dev/null; then
     paru -S --needed --noconfirm "$pkg"
+  elif command -v yay &>/dev/null; then
+    yay -S --needed --noconfirm "$pkg"
   elif command -v pacman &>/dev/null; then
-    sudo pacman -S --needed --noconfirm "$pkg"
+    # Try official repos first, fall back to building from AUR
+    if ! sudo pacman -S --needed --noconfirm "$pkg" 2>/dev/null; then
+      log "$pkg not in official repos, building from AUR..."
+      sudo pacman -S --needed --noconfirm base-devel git
+      local aur_tmp="$(mktemp -d)"
+      git clone "https://aur.archlinux.org/${pkg}.git" "$aur_tmp/$pkg"
+      (cd "$aur_tmp/$pkg" && makepkg -si --noconfirm)
+      rm -rf "$aur_tmp"
+    fi
   elif ensure_brew_in_path && command -v brew &>/dev/null; then
     brew install "$pkg"
   elif command -v apt-get &>/dev/null; then
     sudo apt-get install -y "$pkg"
+  elif command -v dnf &>/dev/null; then
+    sudo dnf install -y "$pkg"
   else
     fail "Cannot install $pkg: no supported package manager found"
   fi

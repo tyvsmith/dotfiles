@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Install packages via AppImage
+#
+# Cascade order: brew → pacman → apt → dnf → flatpak → appimage
+# Last resort: only includes packages with an appimage: field that aren't
+# handled by any earlier manager (native or flatpak).
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+
+{{ if eq .chezmoi.os "darwin" -}}
+# AppImages are Linux-only — nothing to do on macOS.
+exit 0
+{{ else -}}
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Installing AppImages..."
+
+APPIMAGE_DIR="${HOME}/Applications"
+mkdir -p "$APPIMAGE_DIR"
+
+declare -A APPIMAGE_CANDIDATES  # canonical_key -> github_repo
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "appimage" "line" (printf "APPIMAGE_CANDIDATES[%s]=\"%s\"" $n (default "" (index $pkg "appimage")))) }}
+{{- end }}
+
+if [[ ${#APPIMAGE_CANDIDATES[@]} -eq 0 ]]; then
+    log "No AppImages to install."
+    exit 0
+fi
+
+# =============================================================================
+# Install AppImages from GitHub releases
+# =============================================================================
+log "Installing ${#APPIMAGE_CANDIDATES[@]} AppImages..."
+INSTALLED=0
+SKIPPED=0
+FAILED=0
+
+for key in "${!APPIMAGE_CANDIDATES[@]}"; do
+    repo="${APPIMAGE_CANDIDATES[$key]}"
+
+    if [[ -f "$APPIMAGE_DIR/${key}.AppImage" ]]; then
+        log "  Already installed: $key"
+        SKIPPED=$((SKIPPED + 1))
+        continue
+    fi
+
+    log "  Fetching $key from GitHub ($repo)..."
+    APPIMAGE_URL=$(curl -sL "https://api.github.com/repos/${repo}/releases/latest" \
+        | jq -r '.assets[] | select(.name | test("AppImage$")) | .browser_download_url' \
+        | head -1)
+
+    if [[ -n "$APPIMAGE_URL" && "$APPIMAGE_URL" != "null" ]]; then
+        curl -sL "$APPIMAGE_URL" -o "$APPIMAGE_DIR/${key}.AppImage"
+        chmod +x "$APPIMAGE_DIR/${key}.AppImage"
+        log "  Installed: $key"
+        INSTALLED=$((INSTALLED + 1))
+    else
+        warn "  Failed: $key — no AppImage asset found in $repo"
+        FAILED=$((FAILED + 1))
+    fi
+done
+
+log ""
+log "AppImage installation complete! ($INSTALLED installed, $SKIPPED already present, $FAILED failed)"
+{{ end -}}

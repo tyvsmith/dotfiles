@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
-# Flatpak package installer — installs packages with flatpak IDs up to the profile tier
+# Chezmoi run_onchange script: Install packages via Flatpak
 #
-# On Arch, packages with native AUR support are skipped (installed via paru).
-# On all other Linux distros, flatpak is the primary GUI app installer.
+# Cascade order: brew → pacman → apt → dnf → flatpak → appimage
+# Only includes packages with a flatpak: field that aren't handled by any
+# earlier native manager.
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+
+{{ $p := index .profiles .profile -}}
+{{ if not (and (hasKey $p "flatpak") $p.flatpak) -}}
+# Profile '{{ .profile }}' does not use Flatpak — nothing to do.
+exit 0
+{{ else -}}
 set -euo pipefail
 
 # shellcheck source=/dev/null
@@ -14,7 +24,7 @@ if ! command -v flatpak &>/dev/null; then
     exit 0
 fi
 
-log "Installing Flatpak apps..."
+log "Using profile '{{ .profile }}' — installing packages via Flatpak"
 
 # Ensure Flathub remote is configured
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
@@ -22,19 +32,12 @@ flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flat
 FLATPAK_APPS=(
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
-{{-   if and
-        (le (int $pkg.tier) (int $.tier))
-        (hasKey $pkg "flatpak")
-        (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux"))
-        (not (and (eq $.distro "arch") (or (not (hasKey $pkg "arch")) $pkg.arch)))
-}}
-    {{ $pkg.flatpak }}  # {{ $n }} — {{ $pkg.desc }}
-{{-   end }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "flatpak" "line" (printf "    %s  # %s" (default "" (index $pkg "flatpak")) $n)) }}
 {{- end }}
 )
 
 if [[ ${#FLATPAK_APPS[@]} -eq 0 ]]; then
-    log "No Flatpak apps to install."
+    log "No Flatpak apps to install (all handled by native package manager)."
     exit 0
 fi
 
@@ -59,3 +62,4 @@ done
 
 log ""
 log "Flatpak installation complete! ($INSTALLED installed, $FAILED failed)"
+{{ end -}}

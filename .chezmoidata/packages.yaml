@@ -7,10 +7,9 @@
 #   tier:       (required)        # 1=core CLI, 2=dev tools, 3=GUI apps
 #   desc:       (required)        # short description
 #   brew:       true              # install via Homebrew
-#   brew_cask:  false             # use cask instead of formula
+#   cask:  false             # use cask instead of formula
 #   brew_name:  name              # override Homebrew package name
 #   brew_tap:   null              # tap required before install
-#   arch:       true              # install on Arch via paru
 #   arch_name:  name              # override Arch package name
 #   apt_name:   name              # override apt package name (availability checked at runtime)
 #   dnf_name:   name              # override dnf package name (availability checked at runtime)
@@ -287,17 +286,15 @@ packages:
   llm:
     tier: 2
     desc: "LLM CLI tool"
-    arch: false
+    arch_name: python-llm
 
   gemini-cli:
     tier: 2
     desc: "Google Gemini CLI"
-    arch: false
 
   opencode:
     tier: 2
     desc: "AI coding agent"
-    arch: false
 
   # ===========================================================================
   # Tier 2: macOS GNU Tools
@@ -333,7 +330,7 @@ packages:
   font-hack-nerd-font:
     tier: 3
     desc: "Hack Nerd Font"
-    brew_cask: true
+    cask: true
     arch_name: ttf-hack-nerd
 
   # ===========================================================================
@@ -342,32 +339,31 @@ packages:
   visual-studio-code:
     tier: 3
     desc: "Code editor"
-    brew_cask: true
+    cask: true
     arch_name: visual-studio-code-bin
     flatpak: com.visualstudio.code
 
   jetbrains-toolbox:
     tier: 3
     desc: "JetBrains IDE manager"
-    brew_cask: true
+    cask: true
 
   iterm2:
     tier: 3
     os: darwin
     desc: "macOS terminal"
-    brew_cask: true
+    cask: true
 
   claude-code:
     tier: 3
     desc: "Anthropic Claude Code"
-    brew_cask: true
-    arch: false
+    cask: true
 
   codex:
     tier: 3
     desc: "OpenAI Codex"
-    brew_cask: true
-    arch: false
+    cask: true
+    arch_name: openai-codex
 
   # ===========================================================================
   # Tier 3: Productivity & Utilities
@@ -375,32 +371,32 @@ packages:
   1password:
     tier: 3
     desc: "Password manager"
-    brew_cask: true
+    cask: true
     flatpak: com.onepassword.OnePassword
 
   alfred:
     tier: 3
     os: darwin
     desc: "Launcher/automation"
-    brew_cask: true
+    cask: true
 
   moom:
     tier: 3
     os: darwin
     desc: "Window manager"
-    brew_cask: true
+    cask: true
 
   the-unarchiver:
     tier: 3
     os: darwin
     desc: "Archive extraction"
-    brew_cask: true
+    cask: true
 
   app-cleaner:
     tier: 3
     os: darwin
     desc: "App uninstaller"
-    brew_cask: true
+    cask: true
 
   # ===========================================================================
   # Tier 3: Communication
@@ -408,15 +404,14 @@ packages:
   discord:
     tier: 3
     desc: "Voice & text chat"
-    brew_cask: true
-    arch: false
+    cask: true
     flatpak: com.discordapp.Discord
 
   beeper:
     tier: 3
     desc: "Unified messaging"
-    brew_cask: true
-    arch: false
+    cask: true
+    arch_name: beeper-v4-bin
     appimage: nickvdp/beeper
 
   # ===========================================================================
@@ -425,7 +420,7 @@ packages:
   brave-browser:
     tier: 3
     desc: "Privacy-focused browser"
-    brew_cask: true
+    cask: true
     arch_name: brave-bin
     flatpak: com.brave.Browser
 
@@ -435,14 +430,14 @@ packages:
   vlc:
     tier: 3
     desc: "Media player"
-    brew_cask: true
+    cask: true
     flatpak: org.videolan.VLC
 
   soundsource:
     tier: 3
     os: darwin
     desc: "Audio control"
-    brew_cask: true
+    cask: true
 
   # ===========================================================================
   # Tier 3: Other Utilities
@@ -450,8 +445,7 @@ packages:
   deskflow:
     tier: 3
     desc: "Software KVM"
-    brew_cask: true
-    arch: false
+    cask: true
     flatpak: org.deskflow.deskflow
 
   # ===========================================================================

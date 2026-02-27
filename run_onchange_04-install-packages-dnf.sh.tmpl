@@ -1,25 +1,30 @@
 #!/usr/bin/env bash
-# Fedora package installer — generated from .chezmoidata/packages.yaml
+# Chezmoi run_onchange script: Install packages via dnf (Fedora)
 #
-# Uses runtime dnf checks to determine availability, so it works
-# correctly across Fedora versions.
+# Cascade order: brew → pacman → apt → dnf → flatpak → appimage
+# Only includes packages not handled by an earlier manager.
+# Uses runtime dnf checks to determine availability.
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+
+{{ $p := index .profiles .profile -}}
+{{ if not (and (hasKey $p "dnf") $p.dnf) -}}
+# Profile '{{ .profile }}' does not use dnf — nothing to do.
+exit 0
+{{ else -}}
 set -euo pipefail
 
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
-log "Installing packages via dnf..."
+log "Using profile '{{ .profile }}' — installing packages via dnf"
 
 declare -A CANDIDATE_PACKAGES  # dnf_name -> display_name
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
 {{-   $resolved := default $n (index $pkg "dnf_name") }}
-{{-   if and
-        (le (int $pkg.tier) (int $.tier))
-        (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux"))
-}}
-CANDIDATE_PACKAGES[{{ $resolved }}]="{{ $n }}"
-{{-   end }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "dnf" "line" (printf "CANDIDATE_PACKAGES[%s]=\"%s\"" $resolved $n)) }}
 {{- end }}
 
 # =============================================================================
@@ -65,3 +70,4 @@ fi
 
 log ""
 log "dnf package installation complete!"
+{{ end -}}
