@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Install Homebrew casks (macOS only)
+#
+# Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
+# Cask packages on non-macOS cascade to the next available manager.
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+
+{{ $p := index .profiles .profile -}}
+{{ if not (and (and (hasKey $p "brew") $p.brew) (eq .chezmoi.os "darwin")) -}}
+# Profile '{{ .profile }}' does not use Homebrew casks — nothing to do.
+exit 0
+{{ else -}}
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Using profile '{{ .profile }}' — installing Homebrew casks"
+
+ensure_brew_in_path
+require_cmd brew
+
+# =============================================================================
+# Install casks via brew bundle
+# =============================================================================
+log "Running brew bundle (casks)..."
+brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $bn := default $n (index $pkg "brew_name") }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "cask" "line" (printf "cask \"%s\"" $bn)) }}
+{{- end }}
+BREWFILE
+
+log "Homebrew cask installation complete!"
+{{ end -}}
