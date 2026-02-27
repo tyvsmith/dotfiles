@@ -1,7 +1,8 @@
 {{- /* Profile-driven machine configuration for chezmoi
-     Select profile via environment variable or install.sh:
+     Profile is selected interactively during chezmoi init, or via:
        DOTFILES_PROFILE=arch chezmoi init
-     Auto-detects from distro if not specified.
+       chezmoi init --promptChoice profile=arch
+     Auto-detects from distro if non-interactive.
 */ -}}
 
 {{- /* Detect distribution */ -}}
@@ -18,26 +19,58 @@
 {{-   $distro = "debian" -}}
 {{- end -}}
 
-{{- /* Resolve profile: env var > existing config > auto-detect from distro */ -}}
+{{- /* Auto-detect default profile from distro */ -}}
+{{- $defaultProfile := $distro -}}
+{{- if eq $distro "macos" -}}
+{{-   $defaultProfile = "macos-personal" -}}
+{{- end -}}
+
+{{- /* Resolve profile: env var > interactive prompt > auto-detect */ -}}
 {{- $envProfile := env "DOTFILES_PROFILE" -}}
 {{- $profile := "" -}}
 {{- if ne $envProfile "" -}}
 {{-   $profile = $envProfile -}}
-{{- else if hasKey .chezmoi.config.data "profile" -}}
-{{-   $profile = .chezmoi.config.data.profile -}}
 {{- else -}}
-{{-   if eq $distro "macos" -}}
-{{-     $profile = "macos-personal" -}}
-{{-   else -}}
-{{-     $profile = $distro -}}
-{{-   end -}}
+{{-   $choices := list
+       "arch"
+       "debian-brew"
+       "debian-dev"
+       "debian-server"
+       "devpod"
+       "fedora"
+       "macos-personal"
+       "macos-work"
+       "silverblue" -}}
+{{-   writeToStdout "\nAvailable profiles:\n" -}}
+{{-   writeToStdout "  arch               Arch Linux desktop — paru + flatpak\n" -}}
+{{-   writeToStdout "  debian-brew        Debian/Ubuntu dev — Homebrew + flatpak\n" -}}
+{{-   writeToStdout "  debian-dev         Debian/Ubuntu dev — CLI + dev tools via apt\n" -}}
+{{-   writeToStdout "  debian-server      Debian/Ubuntu server — CLI tools only\n" -}}
+{{-   writeToStdout "  devpod             Work devpod — dev tools via Homebrew\n" -}}
+{{-   writeToStdout "  fedora             Fedora Workstation — dnf + flatpak\n" -}}
+{{-   writeToStdout "  macos-personal     Personal Mac — full dev + GUI\n" -}}
+{{-   writeToStdout "  macos-work         Work Mac — corporate dev + GUI\n" -}}
+{{-   writeToStdout "  silverblue         Silverblue/Bazzite — immutable desktop\n" -}}
+{{-   writeToStdout "\n" -}}
+{{-   $profile = promptChoiceOnce . "profile" "Machine profile" $choices $defaultProfile -}}
 {{- end -}}
 
-{{- /* Look up profile and extract properties */ -}}
-{{- $p := index .profiles $profile -}}
-{{- $tier := int (default 1 (index $p "tier")) -}}
-{{- $isWork := false -}}{{- if hasKey $p "is_work" }}{{ $isWork = $p.is_work }}{{ end -}}
-{{- $decrypt := false -}}{{- if hasKey $p "decrypt" }}{{ $decrypt = $p.decrypt }}{{ end -}}
+{{- /*
+  Derive profile properties. These duplicate profiles.yaml because chezmoi
+  renders this config template before .chezmoidata is available. The profile
+  name is the single input; everything below is a pure function of it.
+
+  If you add a new profile to profiles.yaml, update the lists below too.
+*/ -}}
+{{- $tier3 := list "arch" "fedora" "macos-personal" "macos-work" "silverblue" -}}
+{{- $tier1 := list "debian-server" -}}
+{{- $tier := 2 -}}
+{{- if has $profile $tier3 -}}{{- $tier = 3 -}}
+{{- else if has $profile $tier1 -}}{{- $tier = 1 -}}
+{{- end -}}
+
+{{- $decrypt := has $profile (list "arch" "debian-brew" "debian-dev" "fedora" "macos-personal" "macos-work" "silverblue") -}}
+{{- $isWork := has $profile (list "devpod" "macos-work") -}}
 
 {{ if $decrypt -}}
 encryption = "age"

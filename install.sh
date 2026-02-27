@@ -7,22 +7,13 @@
 #   Local:   ./install.sh [options]
 #
 # Options:
-#   --profile <name>          Machine profile (see profiles below)
-#   --branch <branch>         Git branch for remote install (default: main)
-#   --defaults                Use auto-detected profile, no prompts
+#   --profile <name>          Machine profile (skips interactive prompt)
+#   --branch <branch>         Git branch (default: main)
 #   --quiet, -q               Minimal output
 #   --help, -h                Show this help
 #
-# Profiles:
-#   macos-personal   Personal Mac — full dev setup with GUI apps
-#   macos-work       Work Mac — full dev setup with corporate config
-#   arch             Arch Linux desktop — full setup with paru + flatpak
-#   debian-server    Debian/Ubuntu server — CLI tools only
-#   debian-dev       Debian/Ubuntu dev — CLI + dev tools via apt
-#   debian-brew      Debian/Ubuntu dev — Homebrew + flatpak
-#   devpod           Work devpod — dev tools via Homebrew
-#   fedora           Fedora Workstation — full setup with dnf + flatpak
-#   silverblue       Silverblue/Bazzite — immutable desktop
+# Profile selection happens interactively during chezmoi init.
+# Override with --profile or DOTFILES_PROFILE env var for automation.
 #
 # Environment variables (overridden by flags):
 #   DOTFILES_BRANCH, DOTFILES_PROFILE
@@ -36,7 +27,6 @@ DOTFILES_REPO="tyvsmith/dotfiles"
 DOTFILES_BRANCH="${DOTFILES_BRANCH:-main}"
 LOCAL_SOURCE=""
 QUIET=false
-USE_DEFAULTS=false
 OPT_PROFILE="${DOTFILES_PROFILE:-}"
 
 # =============================================================================
@@ -52,7 +42,6 @@ info()    { [[ "$QUIET" == true ]] || echo -e "${BLUE}==>${NC} $1"; }
 success() { [[ "$QUIET" == true ]] || echo -e "${GREEN}==>${NC} $1"; }
 warn()    { echo -e "${YELLOW}==>${NC} $1"; }
 error()   { echo -e "${RED}==>${NC} $1" >&2; }
-log()     { [[ "$QUIET" == true ]] || echo "$1"; }
 
 show_help() {
     sed -n '2,/^$/p' "$0" | grep '^#' | sed 's/^# \?//'
@@ -68,7 +57,6 @@ while [[ $# -gt 0 ]]; do
         --profile=*)  OPT_PROFILE="${1#*=}"; shift ;;
         --branch)     DOTFILES_BRANCH="$2"; shift 2 ;;
         --branch=*)   DOTFILES_BRANCH="${1#*=}"; shift ;;
-        --defaults)   USE_DEFAULTS=true; shift ;;
         --quiet|-q)   QUIET=true; shift ;;
         --help|-h)    show_help ;;
         *)            error "Unknown option: $1"; show_help ;;
@@ -82,27 +70,6 @@ if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
         LOCAL_SOURCE="$SCRIPT_DIR"
     fi
 fi
-
-# =============================================================================
-# Detect distro and default profile
-# =============================================================================
-detect_default_profile() {
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "macos-personal"
-    elif [[ -e /run/ostree-booted ]]; then
-        echo "silverblue"
-    elif [[ -f /etc/arch-release ]]; then
-        echo "arch"
-    elif [[ -f /etc/fedora-release ]]; then
-        echo "fedora"
-    elif [[ -f /etc/debian_version ]]; then
-        echo "debian-server"
-    else
-        echo "unknown"
-    fi
-}
-
-DEFAULT_PROFILE="$(detect_default_profile)"
 
 # =============================================================================
 # Banner
@@ -136,8 +103,8 @@ if ! command -v git &>/dev/null || ! command -v gcc &>/dev/null; then
         fi
     elif command -v rpm-ostree &>/dev/null; then
         error "Missing build tools on rpm-ostree system"
-        log "  Option 1: distrobox enter <container>"
-        log "  Option 2: sudo rpm-ostree install gcc gcc-c++ make procps-ng curl file git && reboot"
+        echo "  Option 1: distrobox enter <container>"
+        echo "  Option 2: sudo rpm-ostree install gcc gcc-c++ make procps-ng curl file git && reboot"
         exit 1
     elif [[ -f /etc/debian_version ]]; then
         sudo apt-get update && sudo apt-get install -y build-essential procps curl file git
@@ -179,42 +146,21 @@ if ! command -v chezmoi &>/dev/null; then
 fi
 
 # =============================================================================
-# Profile selection
+# Initialize and apply dotfiles
 # =============================================================================
-if [[ -z "$OPT_PROFILE" ]]; then
-    if [[ "$USE_DEFAULTS" == true ]]; then
-        OPT_PROFILE="$DEFAULT_PROFILE"
-    else
-        log ""
-        log "Select a machine profile (defines packages, dev tools, GUI apps, etc.):"
-        log ""
-        log "  macos-personal   Personal Mac — full dev setup with GUI apps"
-        log "  macos-work       Work Mac — full dev setup with corporate config"
-        log "  arch             Arch Linux desktop — full setup with paru + flatpak"
-        log "  debian-server    Debian/Ubuntu server — CLI tools only"
-        log "  debian-dev       Debian/Ubuntu dev — CLI + dev tools via apt"
-        log "  debian-brew      Debian/Ubuntu dev — Homebrew + flatpak"
-        log "  devpod           Work devpod — dev tools via Homebrew"
-        log "  fedora           Fedora Workstation — full setup with dnf + flatpak"
-        log "  silverblue       Silverblue/Bazzite — immutable desktop"
-        log ""
-        read -r -p "Profile [$DEFAULT_PROFILE]: " OPT_PROFILE
-        OPT_PROFILE="${OPT_PROFILE:-$DEFAULT_PROFILE}"
-    fi
-fi
+# Profile is set via env var (--profile flag or DOTFILES_PROFILE).
+# If unset, chezmoi init will prompt interactively via .chezmoi.toml.tmpl.
+[[ -n "$OPT_PROFILE" ]] && export DOTFILES_PROFILE="$OPT_PROFILE"
 
-export DOTFILES_PROFILE="$OPT_PROFILE"
-info "Using profile: $OPT_PROFILE"
+CHEZMOI_ARGS=(--apply)
+[[ "$DOTFILES_BRANCH" != "main" ]] && CHEZMOI_ARGS+=(--branch="$DOTFILES_BRANCH")
 
-# =============================================================================
-# Initialize chezmoi
-# =============================================================================
 if [[ -n "$LOCAL_SOURCE" ]]; then
     info "Applying dotfiles from local source..."
-    chezmoi init --apply --source="$LOCAL_SOURCE"
+    chezmoi init "${CHEZMOI_ARGS[@]}" --source="$LOCAL_SOURCE"
 else
     info "Applying dotfiles from $DOTFILES_REPO..."
-    chezmoi init --apply --branch="$DOTFILES_BRANCH" "$DOTFILES_REPO"
+    chezmoi init "${CHEZMOI_ARGS[@]}" "$DOTFILES_REPO"
 fi
 
 success "Done! Restart your shell or run: exec fish"
