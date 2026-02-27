@@ -45,7 +45,7 @@ DOTFILES_PROFILE=arch chezmoi init
 ```
 
 Each profile (defined in `.chezmoidata/profiles.yaml`) fully specifies:
-- **`tier`**: 1 = CLI tools only, 2 = + dev tools, 3 = + GUI apps
+- **`tier`**: 1 = core CLI, 2 = dev tools, 3 = (reserved), 4 = basic UI, 5 = extended UI
 - **Package managers**: `brew`, `pacman`, `apt`, `dnf`, `flatpak`
 - **`is_work`**: work machine (system SSH agent, corporate configs)
 - **`decrypt`**: enable age decryption of private configs
@@ -56,20 +56,22 @@ If no profile is specified, auto-detects from distro (macOS → `macos-personal`
 
 | Profile | Tier | Pkg Managers | Work | Decrypt | Description |
 |---|---|---|---|---|---|
-| `macos-personal` | 3 | brew | | yes | Personal Mac — full dev + GUI |
-| `macos-work` | 3 | brew | yes | yes | Work Mac — corporate dev + GUI |
-| `arch` | 3 | pacman, flatpak | | yes | Arch Linux desktop |
+| `macos-personal` | 5 | brew | | yes | Personal Mac — full dev + GUI |
+| `macos-work` | 5 | brew | yes | yes | Work Mac — corporate dev + GUI |
+| `arch` | 5 | pacman, flatpak | | yes | Arch Linux desktop |
 | `debian-server` | 1 | apt | | | Debian/Ubuntu server — CLI only |
 | `debian-dev` | 2 | apt | | yes | Debian/Ubuntu dev |
 | `debian-brew` | 2 | brew, flatpak | | yes | Debian/Ubuntu dev + Homebrew |
 | `devpod` | 2 | brew | yes | | Work devpod |
-| `fedora` | 3 | dnf, flatpak | | yes | Fedora Workstation |
-| `silverblue` | 3 | brew, flatpak | | yes | Silverblue/Bazzite immutable |
+| `fedora` | 5 | dnf, flatpak | | yes | Fedora Workstation |
+| `silverblue` | 4 | brew, flatpak | | yes | Silverblue/Bazzite immutable |
 
 **Package tiers:**
 - **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux, essential utils
-- **Tier 2 (tier >= 2):** Development SDKs (mise, uv, node), build tools (imagemagick, p7zip), AI tools (llm, gemini-cli, opencode), dev utilities (shellcheck, tokei, hyperfine)
-- **Tier 3 (tier >= 3):** GUI applications (VS Code, JetBrains, browsers, productivity apps)
+- **Tier 2 (tier >= 2):** Development SDKs (mise, uv, node), build tools (imagemagick, p7zip), AI tools (llm, gemini-cli, claude-code), dev utilities (shellcheck, tokei, hyperfine)
+- **Tier 3 (tier >= 3):** (reserved)
+- **Tier 4 (tier >= 4):** Basic UI — fonts, VS Code, browser, 1Password
+- **Tier 5 (tier >= 5):** Extended UI — JetBrains, Discord, media apps, macOS extras
 
 ### OS Detection in Templates
 Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else }}` for Linux paths (e.g., Homebrew paths, SSH agent sockets).
