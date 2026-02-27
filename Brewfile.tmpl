@@ -5,45 +5,46 @@
 # --- Taps ---
 {{- range $key, $pkg := .packages }}
 {{-   if hasKey $pkg "brew_tap" }}
-{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "darwin") }}
+{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) .chezmoi.os) }}
 tap "{{ $pkg.brew_tap }}"
 {{-     end }}
 {{-   end }}
 {{- end }}
 
-# =============================================================================
-# Tier 1: Core CLI Tools — installed on ALL machines
-# =============================================================================
+# --- Formulas ---
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
 {{-   $bn := default $n (index $pkg "brew_name") }}
-{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "brew")) $pkg.brew) (not (and (hasKey $pkg "brew_cask") $pkg.brew_cask)) }}
-brew "{{ $bn }}"  # {{ $pkg.desc }}
-{{-   end }}
-{{- end }}
-
-{{ if .is_dev -}}
-# =============================================================================
-# Tier 2: Development Tools (is_dev=true)
-# =============================================================================
-{{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   $bn := default $n (index $pkg "brew_name") }}
-{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "brew")) $pkg.brew) }}
+{{-   if and
+        (le (int $pkg.tier) (int $.tier))
+        (or (not (hasKey $pkg "brew")) $pkg.brew)
+        (not (and (hasKey $pkg "brew_cask") $pkg.brew_cask))
+        (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $.chezmoi.os))
+}}
 brew "{{ $bn }}"  # {{ $pkg.desc }}
 {{-   end }}
 {{- end }}
 
 {{ if eq .chezmoi.os "darwin" -}}
-# macOS-only: GNU tools (Linux has these natively)
+# --- Casks ---
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
 {{-   $bn := default $n (index $pkg "brew_name") }}
-{{-   if and (eq (int $pkg.tier) 2) (hasKey $pkg "os") (eq $pkg.os "darwin") }}
-brew "{{ $bn }}"
+{{-   if and
+        (le (int $pkg.tier) (int $.tier))
+        (or (not (hasKey $pkg "brew")) $pkg.brew)
+        (and (hasKey $pkg "brew_cask") $pkg.brew_cask)
+        (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "darwin"))
+}}
+cask "{{ $bn }}"  # {{ $pkg.desc }}
+{{-   end }}
+{{- end }}
+
+# --- Mac App Store ---
+brew "mas"
+{{- range $key, $pkg := .packages }}
+{{-   if and (le (int $pkg.tier) (int $.tier)) (hasKey $pkg "mas") }}
+mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
 {{-   end }}
 {{- end }}
 {{ end -}}
-{{ end -}}
-
-{{- /* Tier 3 (GUI apps) is handled separately by run_onchange_03-install-ui-apps.sh.tmpl */ -}}

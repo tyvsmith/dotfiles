@@ -1,40 +1,77 @@
 # =============================================================================
-# Machine profiles — maps distro to package manager strategy
+# Machine profiles — single source of truth for machine configuration
 # =============================================================================
 #
-# Each profile enables one or more package managers. The install router
-# runs every enabled manager in order: brew → pacman → apt → dnf.
-# Flatpak is used for tier 3 GUI apps on all Linux profiles.
+# Each profile fully defines a machine setup:
+#   tier:     1 = CLI tools only, 2 = + dev tools, 3 = + GUI apps
+#   brew/pacman/apt/dnf/flatpak: which package managers to use
+#   is_work:  work machine (system SSH agent, corporate configs)
+#   decrypt:  enable age decryption of private configs
 #
-# Profile selection is automatic (based on distro detection + homebrew flag)
-# but can be overridden via DOTFILES_PROFILE env var.
+# Select via: DOTFILES_PROFILE=<name> chezmoi init
+# Auto-detected from distro if not specified.
 
 profiles:
-  macos:
-    desc: "macOS with Homebrew"
+  # --- macOS ---
+  macos-personal:
+    desc: "Personal Mac — full dev setup with GUI apps"
+    tier: 3
     brew: true
+    decrypt: true
 
+  macos-work:
+    desc: "Work Mac — full dev setup with corporate config"
+    tier: 3
+    brew: true
+    is_work: true
+    decrypt: true
+
+  # --- Arch Linux ---
   arch:
-    desc: "Arch Linux with paru/pacman"
+    desc: "Arch Linux desktop — full setup with paru + flatpak"
+    tier: 3
     pacman: true
     flatpak: true
+    decrypt: true
 
-  debian:
-    desc: "Debian/Ubuntu with apt"
+  # --- Debian/Ubuntu ---
+  debian-server:
+    desc: "Debian/Ubuntu server — CLI tools only"
+    tier: 1
     apt: true
-    flatpak: true
+
+  debian-dev:
+    desc: "Debian/Ubuntu dev — CLI + dev tools via apt"
+    tier: 2
+    apt: true
+    decrypt: true
 
   debian-brew:
-    desc: "Debian/Ubuntu with Homebrew"
+    desc: "Debian/Ubuntu dev — Homebrew + flatpak"
+    tier: 2
     brew: true
     flatpak: true
+    decrypt: true
 
-  silverblue:
-    desc: "Fedora Silverblue/Bazzite (immutable)"
+  # --- Devpods ---
+  devpod:
+    desc: "Work devpod — dev tools via Homebrew"
+    tier: 2
     brew: true
-    flatpak: true
+    is_work: true
 
+  # --- Fedora ---
   fedora:
-    desc: "Fedora Workstation with dnf"
+    desc: "Fedora Workstation — full setup with dnf + flatpak"
+    tier: 3
     dnf: true
     flatpak: true
+    decrypt: true
+
+  # --- Immutable Fedora ---
+  silverblue:
+    desc: "Fedora Silverblue/Bazzite — immutable desktop"
+    tier: 3
+    brew: true
+    flatpak: true
+    decrypt: true

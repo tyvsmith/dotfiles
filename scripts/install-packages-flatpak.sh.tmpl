@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Flatpak package installer — installs tier 3 GUI apps via Flatpak
+# Flatpak package installer — installs packages with flatpak IDs up to the profile tier
 #
 # On Arch, packages with native AUR support are skipped (installed via paru).
 # On all other Linux distros, flatpak is the primary GUI app installer.
@@ -19,19 +19,16 @@ log "Installing Flatpak apps..."
 # Ensure Flathub remote is configured
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo 2>/dev/null || true
 
-# =============================================================================
-# Tier 3 packages with Flatpak IDs
-# On Arch, skip packages with native arch support (paru handles those)
-# =============================================================================
 FLATPAK_APPS=(
 {{- range $key, $pkg := .packages }}
-{{-   if and (eq (int $pkg.tier) 3) (hasKey $pkg "flatpak") }}
-{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux") }}
-{{-       $skipNative := and (eq $.distro "arch") (or (not (hasKey $pkg "arch")) $pkg.arch) }}
-{{-       if not $skipNative }}
-    {{ $pkg.flatpak }}  # {{ default $key (index $pkg "name") }} — {{ $pkg.desc }}
-{{-       end }}
-{{-     end }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   if and
+        (le (int $pkg.tier) (int $.tier))
+        (hasKey $pkg "flatpak")
+        (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux"))
+        (not (and (eq $.distro "arch") (or (not (hasKey $pkg "arch")) $pkg.arch)))
+}}
+    {{ $pkg.flatpak }}  # {{ $n }} — {{ $pkg.desc }}
 {{-   end }}
 {{- end }}
 )
@@ -41,9 +38,6 @@ if [[ ${#FLATPAK_APPS[@]} -eq 0 ]]; then
     exit 0
 fi
 
-# =============================================================================
-# Install Flatpak apps
-# =============================================================================
 log "Installing ${#FLATPAK_APPS[@]} Flatpak apps from Flathub..."
 INSTALLED=0
 FAILED=0
@@ -51,14 +45,14 @@ FAILED=0
 for app_id in "${FLATPAK_APPS[@]}"; do
     if flatpak info "$app_id" &>/dev/null; then
         log "  Already installed: $app_id"
-        ((INSTALLED++))
+        INSTALLED=$((INSTALLED + 1))
     else
         if flatpak install -y --noninteractive flathub "$app_id"; then
             log "  Installed: $app_id"
-            ((INSTALLED++))
+            INSTALLED=$((INSTALLED + 1))
         else
             warn "  Failed to install: $app_id"
-            ((FAILED++))
+            FAILED=$((FAILED + 1))
         fi
     fi
 done

@@ -2,7 +2,8 @@
 # PATH Configuration
 # =============================================================================
 
-{{ if or (eq .chezmoi.os "darwin") .homebrew -}}
+{{ $p := index .profiles .profile -}}
+{{ if or (eq .chezmoi.os "darwin") (and (hasKey $p "brew") $p.brew) -}}
 # Homebrew
 set -l brew_prefix {{ template "brew-prefix" . }}
 if test -x $brew_prefix/bin/brew

@@ -1,4 +1,4 @@
-{{ if .is_dev -}}
+{{ if ge (int .tier) 2 -}}
 [tools]
 node = "latest"
 {{ end -}}

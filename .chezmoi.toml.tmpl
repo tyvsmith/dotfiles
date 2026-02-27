@@ -1,62 +1,10 @@
-{{- /* Machine type configuration for chezmoi
-
-     Set via environment variables or install.sh:
-       DOTFILES_IS_DEV=1 chezmoi init
-       DOTFILES_UI_APPS=1 chezmoi init
-       DOTFILES_DECRYPT=1 chezmoi init
-       DOTFILES_IS_WORK=1 chezmoi init
-       DOTFILES_HOMEBREW=1 chezmoi init
+{{- /* Profile-driven machine configuration for chezmoi
+     Select profile via environment variable or install.sh:
        DOTFILES_PROFILE=arch chezmoi init
-
-     Or use install.sh for interactive prompts.
+     Auto-detects from distro if not specified.
 */ -}}
 
-{{- $envIsDev := lower (env "DOTFILES_IS_DEV") -}}
-{{- $envUIApps := lower (env "DOTFILES_UI_APPS") -}}
-{{- $envDecrypt := lower (env "DOTFILES_DECRYPT") -}}
-{{- $envIsWork := lower (env "DOTFILES_IS_WORK") -}}
-{{- $envHomebrew := lower (env "DOTFILES_HOMEBREW") -}}
-{{- $envProfile := lower (env "DOTFILES_PROFILE") -}}
-
-{{- /* Use env vars, fall back to existing config, default to false */ -}}
-{{- $isDev := false -}}
-{{- $installUIApps := false -}}
-{{- $shouldDecrypt := false -}}
-{{- $isWork := false -}}
-{{- $homebrew := false -}}
-
-{{- if ne $envIsDev "" -}}
-{{-   $isDev = or (eq $envIsDev "1") (eq $envIsDev "true") -}}
-{{- else if hasKey .chezmoi.config.data "is_dev" -}}
-{{-   $isDev = .chezmoi.config.data.is_dev -}}
-{{- end -}}
-
-{{- if ne $envUIApps "" -}}
-{{-   $installUIApps = or (eq $envUIApps "1") (eq $envUIApps "true") -}}
-{{- else if hasKey .chezmoi.config.data "install_ui_apps" -}}
-{{-   $installUIApps = .chezmoi.config.data.install_ui_apps -}}
-{{- end -}}
-
-{{- if ne $envDecrypt "" -}}
-{{-   $shouldDecrypt = or (eq $envDecrypt "1") (eq $envDecrypt "true") -}}
-{{- else if hasKey .chezmoi.config.data "should_decrypt" -}}
-{{-   $shouldDecrypt = .chezmoi.config.data.should_decrypt -}}
-{{- end -}}
-
-{{- if ne $envIsWork "" -}}
-{{-   $isWork = or (eq $envIsWork "1") (eq $envIsWork "true") -}}
-{{- else if hasKey .chezmoi.config.data "is_work" -}}
-{{-   $isWork = .chezmoi.config.data.is_work -}}
-{{- end -}}
-
-{{- if ne $envHomebrew "" -}}
-{{-   $homebrew = or (eq $envHomebrew "1") (eq $envHomebrew "true") -}}
-{{- else if hasKey .chezmoi.config.data "homebrew" -}}
-{{-   $homebrew = .chezmoi.config.data.homebrew -}}
-{{- end -}}
-
-{{- /* Detect distribution for package manager selection
-     Order matters: Silverblue before Fedora, Arch before Debian */ -}}
+{{- /* Detect distribution */ -}}
 {{- $distro := "unknown" -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $distro = "macos" -}}
@@ -70,29 +18,37 @@
 {{-   $distro = "debian" -}}
 {{- end -}}
 
-{{- /* Compute package profile from distro + flags, or use explicit override */ -}}
-{{- $profile := $distro -}}
-{{- if and (eq $distro "debian") $homebrew -}}
-{{-   $profile = "debian-brew" -}}
-{{- end -}}
+{{- /* Resolve profile: env var > existing config > auto-detect from distro */ -}}
+{{- $envProfile := env "DOTFILES_PROFILE" -}}
+{{- $profile := "" -}}
 {{- if ne $envProfile "" -}}
 {{-   $profile = $envProfile -}}
 {{- else if hasKey .chezmoi.config.data "profile" -}}
 {{-   $profile = .chezmoi.config.data.profile -}}
+{{- else -}}
+{{-   if eq $distro "macos" -}}
+{{-     $profile = "macos-personal" -}}
+{{-   else -}}
+{{-     $profile = $distro -}}
+{{-   end -}}
 {{- end -}}
 
-{{ if $shouldDecrypt -}}
+{{- /* Look up profile and extract properties */ -}}
+{{- $p := index .profiles $profile -}}
+{{- $tier := int (default 1 (index $p "tier")) -}}
+{{- $isWork := false -}}{{- if hasKey $p "is_work" }}{{ $isWork = $p.is_work }}{{ end -}}
+{{- $decrypt := false -}}{{- if hasKey $p "decrypt" }}{{ $decrypt = $p.decrypt }}{{ end -}}
+
+{{ if $decrypt -}}
 encryption = "age"
 {{ end }}
 [data]
     distro = "{{ $distro }}"
     profile = "{{ $profile }}"
-    is_dev = {{ $isDev }}
-    install_ui_apps = {{ $installUIApps }}
-    should_decrypt = {{ $shouldDecrypt }}
+    tier = {{ $tier }}
     is_work = {{ $isWork }}
-    homebrew = {{ $homebrew }}
-{{ if $shouldDecrypt }}
+    decrypt = {{ $decrypt }}
+{{ if $decrypt }}
 [age]
     identity = "~/.config/chezmoi/age-key.txt"
     recipient = "{{ include ".age-public-key" | trim }}"

@@ -10,30 +10,17 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 log "Installing packages via apt..."
 
-# =============================================================================
-# Candidate packages (all tiers, resolved to apt names)
-# =============================================================================
 declare -A CANDIDATE_PACKAGES  # apt_name -> display_name
-
-# Tier 1: Core CLI tools
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
-{{-   $an := default $n (index $pkg "apt_name") }}
-{{-   if and (eq (int $pkg.tier) 1) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "brew")) $pkg.brew) }}
-CANDIDATE_PACKAGES[{{ $an }}]="{{ $n }}"
+{{-   $resolved := default $n (index $pkg "apt_name") }}
+{{-   if and
+        (le (int $pkg.tier) (int $.tier))
+        (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux"))
+}}
+CANDIDATE_PACKAGES[{{ $resolved }}]="{{ $n }}"
 {{-   end }}
 {{- end }}
-
-{{ if .is_dev -}}
-# Tier 2: Development tools
-{{- range $key, $pkg := .packages }}
-{{-   $n := default $key (index $pkg "name") }}
-{{-   $an := default $n (index $pkg "apt_name") }}
-{{-   if and (eq (int $pkg.tier) 2) (not (hasKey $pkg "os")) (or (not (hasKey $pkg "brew")) $pkg.brew) }}
-CANDIDATE_PACKAGES[{{ $an }}]="{{ $n }}"
-{{-   end }}
-{{- end }}
-{{ end -}}
 
 # =============================================================================
 # Update package cache
@@ -80,7 +67,7 @@ if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
     log "  1. Rust toolchain: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
     log "  2. cargo install <package>"
     log "  3. Alternative package sources (PPAs, third-party repos)"
-    log "  4. Re-run with --homebrew flag to use Homebrew on Linux"
+    log "  4. Re-run with --profile debian-brew to use Homebrew on Linux"
 fi
 
 log ""

@@ -12,7 +12,7 @@ scripts/
 # Plaintext versions of encrypted files are for local editing only, never deployed
 **/decrypted_*
 
-{{ if not .should_decrypt }}
+{{ if not .decrypt }}
 # Skip encrypted files when decryption is disabled
 **/*.age
 **/encrypted_*

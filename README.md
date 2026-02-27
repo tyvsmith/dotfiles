@@ -10,11 +10,11 @@ curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh |
 
 Or with options:
 ```bash
-# Non-interactive with defaults (dev machine, GUI apps on macOS, no decryption)
+# Non-interactive with auto-detected profile
 curl ... | bash -s -- --defaults
 
-# Specific configuration
-curl ... | bash -s -- --dev --no-ui-apps --quiet
+# Specific profile
+curl ... | bash -s -- --profile macos-work
 
 # From a specific branch
 curl ... | bash -s -- --branch feature-branch
@@ -22,11 +22,11 @@ curl ... | bash -s -- --branch feature-branch
 
 This will:
 1. Install prerequisites (Xcode CLI tools on macOS, build tools on Linux)
-2. Install [Homebrew](https://brew.sh/)
+2. Install Homebrew (macOS only)
 3. Install chezmoi
-4. Prompt for machine configuration (or use flags/env vars)
+4. Prompt for profile selection (or use `--profile` flag)
 5. Clone and apply dotfiles
-6. Install packages from Brewfile
+6. Install packages based on profile
 7. Install Fisher and Fish plugins
 8. Configure Tide prompt
 
@@ -34,26 +34,31 @@ This will:
 
 | Flag | Environment Variable | Description |
 |------|---------------------|-------------|
-| `--dev` / `--no-dev` | `DOTFILES_IS_DEV` | Development machine (SDKs, AI tools) |
-| `--ui-apps` / `--no-ui-apps` | `DOTFILES_UI_APPS` | GUI apps (macOS only) |
-| `--decrypt` / `--no-decrypt` | `DOTFILES_DECRYPT` | Enable encrypted config decryption |
+| `--profile <name>` | `DOTFILES_PROFILE` | Machine profile (see below) |
 | `--branch <name>` | `DOTFILES_BRANCH` | Git branch for remote install |
-| `--defaults` | - | Use defaults, no prompts |
+| `--defaults` | - | Use auto-detected profile, no prompts |
 | `--quiet`, `-q` | - | Minimal output |
 
-## Machine Types
+## Profiles
+
+Each profile fully specifies a machine setup: tier, package managers, work mode, and decryption.
+
+| Profile | Tier | Description |
+|---------|------|-------------|
+| `macos-personal` | 3 | Personal Mac — full dev + GUI apps |
+| `macos-work` | 3 | Work Mac — corporate dev + GUI apps |
+| `arch` | 3 | Arch Linux desktop — paru + flatpak |
+| `debian-server` | 1 | Debian/Ubuntu server — CLI only |
+| `debian-dev` | 2 | Debian/Ubuntu dev — apt |
+| `debian-brew` | 2 | Debian/Ubuntu dev — Homebrew + flatpak |
+| `devpod` | 2 | Work devpod — Homebrew |
+| `fedora` | 3 | Fedora Workstation — dnf + flatpak |
+| `silverblue` | 3 | Silverblue/Bazzite — Homebrew + flatpak |
 
 **Package tiers:**
-- **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux
-- **Tier 2 (is_dev=true):** Development SDKs (mise, uv, node), AI tools (llm, claude), dev utilities (shellcheck, tokei)
-- **Tier 3 (macOS + install_ui_apps=true):** GUI applications (VS Code, JetBrains, browsers)
-
-**Example configurations:**
-| Machine | is_dev | install_ui_apps |
-|---------|--------|-----------------|
-| Personal Linux dev | true | false |
-| Work Mac | true | true |
-| Homelab server | false | false |
+- **Tier 1:** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux
+- **Tier 2:** + Development SDKs (mise, uv, node), AI tools (llm, claude), dev utilities (shellcheck, tokei)
+- **Tier 3:** + GUI applications (VS Code, JetBrains, browsers, productivity apps)
 
 ## Encrypted Configs
 
@@ -131,10 +136,8 @@ If you prefer not to use the install script:
 # Install chezmoi
 brew install chezmoi
 
-# Set configuration via environment
-export DOTFILES_IS_DEV=1
-export DOTFILES_UI_APPS=0
-export DOTFILES_DECRYPT=0
+# Set profile via environment
+export DOTFILES_PROFILE=arch
 
 # Initialize and apply
 chezmoi init --apply tyvsmith/dotfiles

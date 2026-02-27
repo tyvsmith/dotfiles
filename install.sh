@@ -7,18 +7,25 @@
 #   Local:   ./install.sh [options]
 #
 # Options:
-#   --dev, --no-dev           Set machine type (default: prompt)
-#   --work, --no-work         Work machine - uses system SSH agent (default: prompt)
-#   --ui-apps, --no-ui-apps   Install GUI apps (default: prompt on macOS, no on Linux)
-#   --homebrew, --no-homebrew Use Homebrew on Linux/Debian (default: no)
-#   --decrypt, --no-decrypt   Enable encrypted config decryption (default: no)
+#   --profile <name>          Machine profile (see profiles below)
 #   --branch <branch>         Git branch for remote install (default: main)
-#   --defaults                Use default values, no prompts (dev=yes, ui-apps=yes, decrypt=no, work=no, homebrew=no)
+#   --defaults                Use auto-detected profile, no prompts
 #   --quiet, -q               Minimal output
 #   --help, -h                Show this help
 #
+# Profiles:
+#   macos-personal   Personal Mac — full dev setup with GUI apps
+#   macos-work       Work Mac — full dev setup with corporate config
+#   arch             Arch Linux desktop — full setup with paru + flatpak
+#   debian-server    Debian/Ubuntu server — CLI tools only
+#   debian-dev       Debian/Ubuntu dev — CLI + dev tools via apt
+#   debian-brew      Debian/Ubuntu dev — Homebrew + flatpak
+#   devpod           Work devpod — dev tools via Homebrew
+#   fedora           Fedora Workstation — full setup with dnf + flatpak
+#   silverblue       Silverblue/Bazzite — immutable desktop
+#
 # Environment variables (overridden by flags):
-#   DOTFILES_BRANCH, DOTFILES_IS_DEV, DOTFILES_IS_WORK, DOTFILES_UI_APPS, DOTFILES_DECRYPT, DOTFILES_HOMEBREW
+#   DOTFILES_BRANCH, DOTFILES_PROFILE
 
 set -e
 
@@ -30,13 +37,7 @@ DOTFILES_BRANCH="${DOTFILES_BRANCH:-main}"
 LOCAL_SOURCE=""
 QUIET=false
 USE_DEFAULTS=false
-
-# Config values (unset = prompt, 0 = no, 1 = yes)
-OPT_IS_DEV="${DOTFILES_IS_DEV:-}"
-OPT_IS_WORK="${DOTFILES_IS_WORK:-}"
-OPT_UI_APPS="${DOTFILES_UI_APPS:-}"
-OPT_DECRYPT="${DOTFILES_DECRYPT:-}"
-OPT_HOMEBREW="${DOTFILES_HOMEBREW:-}"
+OPT_PROFILE="${DOTFILES_PROFILE:-}"
 
 # =============================================================================
 # Output helpers
@@ -53,22 +54,6 @@ warn()    { echo -e "${YELLOW}==>${NC} $1"; }
 error()   { echo -e "${RED}==>${NC} $1" >&2; }
 log()     { [[ "$QUIET" == true ]] || echo "$1"; }
 
-prompt_yn() {
-    local prompt="$1"
-    local default="${2:-n}"
-    local reply
-
-    if [[ "$default" == "y" ]]; then
-        prompt="$prompt [Y/n] "
-    else
-        prompt="$prompt [y/N] "
-    fi
-
-    read -r -p "$prompt" reply
-    reply="${reply:-$default}"
-    [[ "$reply" =~ ^[Yy] ]]
-}
-
 show_help() {
     sed -n '2,/^$/p' "$0" | grep '^#' | sed 's/^# \?//'
     exit 0
@@ -79,16 +64,8 @@ show_help() {
 # =============================================================================
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --dev)        OPT_IS_DEV=1; shift ;;
-        --no-dev)     OPT_IS_DEV=0; shift ;;
-        --work)       OPT_IS_WORK=1; shift ;;
-        --no-work)    OPT_IS_WORK=0; shift ;;
-        --ui-apps)    OPT_UI_APPS=1; shift ;;
-        --no-ui-apps) OPT_UI_APPS=0; shift ;;
-        --homebrew)   OPT_HOMEBREW=1; shift ;;
-        --no-homebrew) OPT_HOMEBREW=0; shift ;;
-        --decrypt)    OPT_DECRYPT=1; shift ;;
-        --no-decrypt) OPT_DECRYPT=0; shift ;;
+        --profile)    OPT_PROFILE="$2"; shift 2 ;;
+        --profile=*)  OPT_PROFILE="${1#*=}"; shift ;;
         --branch)     DOTFILES_BRANCH="$2"; shift 2 ;;
         --branch=*)   DOTFILES_BRANCH="${1#*=}"; shift ;;
         --defaults)   USE_DEFAULTS=true; shift ;;
@@ -98,15 +75,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Apply defaults if requested
-if [[ "$USE_DEFAULTS" == true ]]; then
-    OPT_IS_DEV="${OPT_IS_DEV:-1}"
-    OPT_IS_WORK="${OPT_IS_WORK:-0}"
-    OPT_UI_APPS="${OPT_UI_APPS:-1}"
-    OPT_DECRYPT="${OPT_DECRYPT:-0}"
-    OPT_HOMEBREW="${OPT_HOMEBREW:-0}"
-fi
-
 # Detect local source (skip when piped from curl — BASH_SOURCE[0] is empty)
 if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
@@ -114,6 +82,27 @@ if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
         LOCAL_SOURCE="$SCRIPT_DIR"
     fi
 fi
+
+# =============================================================================
+# Detect distro and default profile
+# =============================================================================
+detect_default_profile() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "macos-personal"
+    elif [[ -e /run/ostree-booted ]]; then
+        echo "silverblue"
+    elif [[ -f /etc/arch-release ]]; then
+        echo "arch"
+    elif [[ -f /etc/fedora-release ]]; then
+        echo "fedora"
+    elif [[ -f /etc/debian_version ]]; then
+        echo "debian-server"
+    else
+        echo "unknown"
+    fi
+}
+
+DEFAULT_PROFILE="$(detect_default_profile)"
 
 # =============================================================================
 # Banner
@@ -138,7 +127,7 @@ fi
 info "Checking prerequisites..."
 
 if ! command -v git &>/dev/null || ! command -v gcc &>/dev/null; then
-    info "Installing Homebrew Dependencies..."
+    info "Installing build dependencies..."
     if [[ "$OSTYPE" == "darwin"* ]]; then
         if ! xcode-select -p &>/dev/null; then
             xcode-select --install
@@ -163,17 +152,14 @@ if ! command -v git &>/dev/null || ! command -v gcc &>/dev/null; then
 fi
 
 # =============================================================================
-# Install Homebrew (macOS only)
+# Install Homebrew (macOS only — Linux Homebrew handled by chezmoi scripts)
 # =============================================================================
 if [[ "$OSTYPE" == "darwin"* ]]; then
     if ! command -v brew &>/dev/null; then
         info "Installing Homebrew..."
         NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
         eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
     fi
-else
-    info "Skipping Homebrew on Linux - will use native package manager"
 fi
 
 # =============================================================================
@@ -181,20 +167,11 @@ fi
 # =============================================================================
 if ! command -v chezmoi &>/dev/null; then
     info "Installing chezmoi..."
-
     if command -v brew &>/dev/null; then
-        # macOS or Linux with Homebrew
         brew install chezmoi
     elif command -v pacman &>/dev/null; then
-        # Arch Linux
         sudo pacman -S --needed --noconfirm chezmoi
-    elif command -v apt &>/dev/null; then
-        # Debian/Ubuntu - chezmoi not in repos, use install script
-        info "Using chezmoi install script (not in apt repos)..."
-        sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
-        export PATH="$HOME/.local/bin:$PATH"
     else
-        # Fallback to chezmoi install script
         info "Using chezmoi install script..."
         sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
         export PATH="$HOME/.local/bin:$PATH"
@@ -202,76 +179,32 @@ if ! command -v chezmoi &>/dev/null; then
 fi
 
 # =============================================================================
-# Configuration
+# Profile selection
 # =============================================================================
-info "Configuring dotfiles..."
-
-# --- is_dev ---
-if [[ -z "$OPT_IS_DEV" ]]; then
-    log ""
-    log "Machine type determines which packages are installed:"
-    log "  • Dev: SDKs, AI tools, dev utilities"
-    log "  • Server: Modern CLI tools only"
-    log ""
-    if prompt_yn "Is this a development machine?" "y"; then
-        OPT_IS_DEV=1
+if [[ -z "$OPT_PROFILE" ]]; then
+    if [[ "$USE_DEFAULTS" == true ]]; then
+        OPT_PROFILE="$DEFAULT_PROFILE"
     else
-        OPT_IS_DEV=0
-    fi
-fi
-export DOTFILES_IS_DEV="$OPT_IS_DEV"
-
-# --- is_work ---
-if [[ -z "$OPT_IS_WORK" ]]; then
-    log ""
-    log "Work machines use the system SSH agent (for ussh compatibility)."
-    log "Personal machines use 1Password SSH agent."
-    log ""
-    if prompt_yn "Is this a work/corporate machine?" "n"; then
-        OPT_IS_WORK=1
-    else
-        OPT_IS_WORK=0
-    fi
-fi
-export DOTFILES_IS_WORK="$OPT_IS_WORK"
-
-# --- install_ui_apps ---
-if [[ -z "$OPT_UI_APPS" ]]; then
-    if [[ "$OSTYPE" == "darwin"* ]]; then
         log ""
-        if prompt_yn "Install GUI applications (IDEs, browsers, etc)?" "y"; then
-            OPT_UI_APPS=1
-        else
-            OPT_UI_APPS=0
-        fi
-    else
-        # Linux: default to no unless explicitly requested
-        OPT_UI_APPS=0
+        log "Select a machine profile (defines packages, dev tools, GUI apps, etc.):"
+        log ""
+        log "  macos-personal   Personal Mac — full dev setup with GUI apps"
+        log "  macos-work       Work Mac — full dev setup with corporate config"
+        log "  arch             Arch Linux desktop — full setup with paru + flatpak"
+        log "  debian-server    Debian/Ubuntu server — CLI tools only"
+        log "  debian-dev       Debian/Ubuntu dev — CLI + dev tools via apt"
+        log "  debian-brew      Debian/Ubuntu dev — Homebrew + flatpak"
+        log "  devpod           Work devpod — dev tools via Homebrew"
+        log "  fedora           Fedora Workstation — full setup with dnf + flatpak"
+        log "  silverblue       Silverblue/Bazzite — immutable desktop"
+        log ""
+        read -r -p "Profile [$DEFAULT_PROFILE]: " OPT_PROFILE
+        OPT_PROFILE="${OPT_PROFILE:-$DEFAULT_PROFILE}"
     fi
-fi
-export DOTFILES_UI_APPS="$OPT_UI_APPS"
-
-# --- homebrew (Linux only) ---
-if [[ "$OSTYPE" != "darwin"* ]]; then
-    if [[ -z "$OPT_HOMEBREW" ]]; then
-        OPT_HOMEBREW=0
-    fi
-    export DOTFILES_HOMEBREW="$OPT_HOMEBREW"
 fi
 
-# --- should_decrypt ---
-if [[ -z "$OPT_DECRYPT" ]]; then
-    log ""
-    log "Some configs (SSH trusted hosts) are encrypted with age."
-    log "Requires: 1Password CLI or key at ~/.config/chezmoi/age-key.txt"
-    log ""
-    if prompt_yn "Enable decryption of private configs?" "n"; then
-        OPT_DECRYPT=1
-    else
-        OPT_DECRYPT=0
-    fi
-fi
-export DOTFILES_DECRYPT="$OPT_DECRYPT"
+export DOTFILES_PROFILE="$OPT_PROFILE"
+info "Using profile: $OPT_PROFILE"
 
 # =============================================================================
 # Initialize chezmoi
