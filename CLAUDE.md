@@ -108,8 +108,8 @@ The apt install script uses runtime `apt-cache` checks to determine package avai
 - `run_onchange_12-install-packages-pacman.sh.tmpl` - Arch Linux (paru, tiers 1-3)
 - `run_onchange_13-install-packages-apt.sh.tmpl` - Debian/Ubuntu (apt, tiers 1-2)
 - `run_onchange_14-install-packages-dnf.sh.tmpl` - Fedora (dnf, tiers 1-2)
-- `run_onchange_15-install-packages-flatpak.sh.tmpl` - Flatpak GUI apps (Linux, tier 3)
-- `run_onchange_30-install-packages-appimage.sh.tmpl` - AppImage downloads (Linux, last resort)
+- `run_onchange_30-install-packages-flatpak.sh.tmpl` - Flatpak GUI apps (Linux, tier 3)
+- `run_onchange_31-install-packages-appimage.sh.tmpl` - AppImage downloads (Linux, last resort)
 - `run_onchange_60-install-fisher.sh.tmpl` - Installs Fisher and Fish plugins on changes
 - `dot_config/fish/conf.d/0_bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
 - `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
