@@ -28,18 +28,19 @@ if command -v op &>/dev/null && op account list &>/dev/null; then
     # Verify the key was retrieved successfully
     if [[ ! -s "$AGE_KEY_FILE" ]] || ! grep -q "AGE-SECRET-KEY" "$AGE_KEY_FILE"; then
         rm -f "$AGE_KEY_FILE"
-        echo "Error: Failed to retrieve valid age key from 1Password"
-        exit 1
+        warn "Failed to retrieve valid age key from 1Password"
+        warn "Encrypted files won't be decrypted until key is available."
+        exit 0
     fi
 
     chmod 600 "$AGE_KEY_FILE"
 else
-    echo "Error: Age key not found at $AGE_KEY_FILE"
-    echo "Options:"
-    echo "  1. Place key manually at $AGE_KEY_FILE"
-    echo "  2. Sign in to 1Password CLI: op signin"
+    warn "Age key not found at $AGE_KEY_FILE"
+    echo "  Options:"
+    echo "    1. Place key manually at $AGE_KEY_FILE"
+    echo "    2. Sign in to 1Password CLI: op signin"
     echo ""
-    echo "Encrypted files won't be decrypted until key is available."
-    exit 1
+    warn "Encrypted files won't be decrypted until key is available."
+    exit 0
 fi
 {{ end -}}

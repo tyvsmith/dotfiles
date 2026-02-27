@@ -21,7 +21,7 @@ log "Using profile '{{ .profile }}' — installing packages via pacman/paru"
 
 ensure_pkg paru paru-bin
 
-declare -A CANDIDATE_PACKAGES  # pkg_name -> display_name
+declare -A CANDIDATE_PACKAGES=()  # pkg_name -> display_name
 {{- range $key, $pkg := .packages }}
 {{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "pacman" "fmt" "CANDIDATE_PACKAGES[%s]=\"%s\"") }}
 {{- end }}
