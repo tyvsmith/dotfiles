@@ -12,12 +12,9 @@ scripts/
 **/decrypted_*
 
 {{ if not (and (hasKey . "decrypt_active") .decrypt_active) }}
-# Skip encrypted files when decryption is not active
-# (either profile doesn't want it, or age key not yet available)
-# NOTE: patterns match TARGET paths — chezmoi strips encrypted_/private_/dot_/.tmpl/.age
-.ssh/config.d/00-trusted
-.config/git/conf.d/config
-.config/git/conf.d/oss
-.config/git/conf.d/work
-.config/fish/conf.d/zz_00-work.fish
+# Skip encrypted files when decryption is not active.
+# When encryption is not configured, chezmoi retains the .age suffix in
+# target paths, so **/*.age matches them. When encryption IS configured,
+# chezmoi strips .age and these patterns harmlessly match nothing.
+**/*.age
 {{ end }}
