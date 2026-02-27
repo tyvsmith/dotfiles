@@ -103,14 +103,14 @@ The apt install script uses runtime `apt-cache` checks to determine package avai
 - `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
 - `.chezmoidata/profiles.yaml` - Machine profile definitions (tier, pkg managers, is_work, decrypt)
 - `.chezmoitemplates/cascade-filter` - Shared cascade logic for package manager selection
-- `run_onchange_01-install-packages-homebrew.sh.tmpl` - Homebrew formulas (+ Homebrew install on Linux)
-- `run_onchange_02-install-packages-cask.sh.tmpl` - Homebrew casks (macOS only)
-- `run_onchange_03-install-packages-pacman.sh.tmpl` - Arch Linux (paru, tiers 1-3)
-- `run_onchange_04-install-packages-apt.sh.tmpl` - Debian/Ubuntu (apt, tiers 1-2)
-- `run_onchange_05-install-packages-dnf.sh.tmpl` - Fedora (dnf, tiers 1-2)
-- `run_onchange_06-install-packages-flatpak.sh.tmpl` - Flatpak GUI apps (Linux, tier 3)
-- `run_onchange_07-install-packages-appimage.sh.tmpl` - AppImage downloads (Linux, last resort)
-- `run_onchange_08-install-fisher.sh.tmpl` - Installs Fisher and Fish plugins on changes
+- `run_onchange_10-install-packages-homebrew.sh.tmpl` - Homebrew formulas (+ Homebrew install on Linux)
+- `run_onchange_11-install-packages-cask.sh.tmpl` - Homebrew casks (macOS only)
+- `run_onchange_12-install-packages-pacman.sh.tmpl` - Arch Linux (paru, tiers 1-3)
+- `run_onchange_13-install-packages-apt.sh.tmpl` - Debian/Ubuntu (apt, tiers 1-2)
+- `run_onchange_14-install-packages-dnf.sh.tmpl` - Fedora (dnf, tiers 1-2)
+- `run_onchange_15-install-packages-flatpak.sh.tmpl` - Flatpak GUI apps (Linux, tier 3)
+- `run_onchange_30-install-packages-appimage.sh.tmpl` - AppImage downloads (Linux, last resort)
+- `run_onchange_60-install-fisher.sh.tmpl` - Installs Fisher and Fish plugins on changes
 - `dot_config/fish/conf.d/0_bling.fish` - Shell abbreviations, atuin/zoxide init, CLI tips
 - `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
 - `dot_config/git/config.tmpl` - Git config with delta pager, useful aliases
