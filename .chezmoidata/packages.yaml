@@ -359,12 +359,6 @@ packages:
     desc: "JetBrains IDE manager"
     cask: true
 
-  iterm2:
-    tier: 3
-    os: darwin
-    desc: "macOS terminal"
-    cask: true
-
   claude-code:
     tier: 3
     desc: "Anthropic Claude Code"
@@ -384,30 +378,6 @@ packages:
     desc: "Password manager"
     cask: true
     flatpak: com.onepassword.OnePassword
-
-  alfred:
-    tier: 3
-    os: darwin
-    desc: "Launcher/automation"
-    cask: true
-
-  moom:
-    tier: 3
-    os: darwin
-    desc: "Window manager"
-    cask: true
-
-  the-unarchiver:
-    tier: 3
-    os: darwin
-    desc: "Archive extraction"
-    cask: true
-
-  app-cleaner:
-    tier: 3
-    os: darwin
-    desc: "App uninstaller"
-    cask: true
 
   # ===========================================================================
   # Tier 3: Communication
@@ -444,12 +414,6 @@ packages:
     cask: true
     flatpak: org.videolan.VLC
 
-  soundsource:
-    tier: 3
-    os: darwin
-    desc: "Audio control"
-    cask: true
-
   # ===========================================================================
   # Tier 3: Other Utilities
   # ===========================================================================
@@ -460,8 +424,44 @@ packages:
     flatpak: org.deskflow.deskflow
 
   # ===========================================================================
-  # Tier 3: Mac App Store
+  # Tier 3: macOS Apps (cask + Mac App Store)
   # ===========================================================================
+  iterm2:
+    tier: 3
+    os: darwin
+    desc: "macOS terminal"
+    cask: true
+
+  alfred:
+    tier: 3
+    os: darwin
+    desc: "Launcher/automation"
+    cask: true
+
+  moom:
+    tier: 3
+    os: darwin
+    desc: "Window manager"
+    cask: true
+
+  soundsource:
+    tier: 3
+    os: darwin
+    desc: "Audio control"
+    cask: true
+
+  the-unarchiver:
+    tier: 3
+    os: darwin
+    desc: "Archive extraction"
+    cask: true
+
+  app-cleaner:
+    tier: 3
+    os: darwin
+    desc: "App uninstaller"
+    cask: true
+
   amphetamine:
     tier: 3
     os: darwin
