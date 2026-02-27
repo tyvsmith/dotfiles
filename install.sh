@@ -146,21 +146,52 @@ if ! command -v chezmoi &>/dev/null; then
 fi
 
 # =============================================================================
-# Initialize and apply dotfiles
+# Initialize dotfiles (clone repo + render config, but don't apply yet)
 # =============================================================================
 # Profile is set via env var (--profile flag or DOTFILES_PROFILE).
 # If unset, chezmoi init will prompt interactively via .chezmoi.toml.tmpl.
 [[ -n "$OPT_PROFILE" ]] && export DOTFILES_PROFILE="$OPT_PROFILE"
 
-CHEZMOI_ARGS=(--apply)
-[[ "$DOTFILES_BRANCH" != "main" ]] && CHEZMOI_ARGS+=(--branch="$DOTFILES_BRANCH")
+INIT_ARGS=()
+[[ "$DOTFILES_BRANCH" != "main" ]] && INIT_ARGS+=(--branch="$DOTFILES_BRANCH")
 
 if [[ -n "$LOCAL_SOURCE" ]]; then
-    info "Applying dotfiles from local source..."
-    chezmoi init "${CHEZMOI_ARGS[@]}" --source="$LOCAL_SOURCE"
+    info "Initializing dotfiles from local source..."
+    chezmoi init "${INIT_ARGS[@]}" --source="$LOCAL_SOURCE"
 else
-    info "Applying dotfiles from $DOTFILES_REPO..."
-    chezmoi init "${CHEZMOI_ARGS[@]}" "$DOTFILES_REPO"
+    info "Initializing dotfiles from $DOTFILES_REPO..."
+    chezmoi init "${INIT_ARGS[@]}" "$DOTFILES_REPO"
 fi
+
+# =============================================================================
+# Back up existing files before apply
+# =============================================================================
+BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
+backed_up=0
+
+while IFS= read -r target; do
+    full_path="$HOME/$target"
+    if [[ -f "$full_path" ]] || [[ -L "$full_path" ]]; then
+        if [[ $backed_up -eq 0 ]]; then
+            info "Backing up existing files to $BACKUP_DIR/"
+        fi
+        backup_dest="$BACKUP_DIR/$target"
+        mkdir -p "$(dirname "$backup_dest")"
+        cp -a "$full_path" "$backup_dest"
+        backed_up=$((backed_up + 1))
+    fi
+done < <(chezmoi managed --include=files 2>/dev/null)
+
+if [[ $backed_up -gt 0 ]]; then
+    success "Backed up $backed_up file(s) to $BACKUP_DIR/"
+else
+    info "No existing files to back up"
+fi
+
+# =============================================================================
+# Apply dotfiles
+# =============================================================================
+info "Applying dotfiles..."
+chezmoi apply
 
 success "Done! Restart your shell or run: exec fish"
