@@ -3,13 +3,22 @@
 # =============================================================================
 #
 # Each profile fully defines a machine setup:
+#   desc:     human-readable description (shown during profile selection)
 #   tier:     1 = CLI tools only, 2 = + dev tools, 3 = + GUI apps
-#   brew/pacman/apt/dnf/flatpak: which package managers to use
+#   brew/pacman/apt/dnf/flatpak: which package managers to enable
 #   is_work:  work machine (system SSH agent, corporate configs)
 #   decrypt:  enable age decryption of private configs
 #
-# Select via: DOTFILES_PROFILE=<name> chezmoi init
-# Auto-detected from distro if not specified.
+# Profile is selected interactively during `chezmoi init`, or via:
+#   DOTFILES_PROFILE=arch chezmoi init
+#   chezmoi init --promptChoice profile=arch
+#
+# Auto-detected from distro if non-interactive.
+#
+# NOTE: Adding a new profile here also requires updating:
+#   - .chezmoi.toml.tmpl (choices list, writeToStdout descriptions,
+#     tier/decrypt/is_work derivation lists)
+#   - install.sh is NOT involved — profile selection is handled by chezmoi
 
 profiles:
   # --- macOS ---
