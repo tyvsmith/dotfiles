@@ -12,9 +12,7 @@ scripts/
 **/decrypted_*
 
 {{ if not (and (hasKey . "decrypt_active") .decrypt_active) }}
-# Skip encrypted files when decryption is not active.
-# When encryption is not configured, chezmoi retains the .age suffix in
-# target paths, so **/*.age matches them. When encryption IS configured,
-# chezmoi strips .age and these patterns harmlessly match nothing.
+# Encrypted files require encryption config + age key to process.
+# Without them chezmoi fatally aborts, so skip them entirely.
 **/*.age
 {{ end }}
