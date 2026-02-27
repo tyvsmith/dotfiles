@@ -18,7 +18,7 @@ tap "{{ $pkg.brew_tap }}"
 {{-   if and
         (le (int $pkg.tier) (int $.tier))
         (or (not (hasKey $pkg "brew")) $pkg.brew)
-        (not (and (hasKey $pkg "brew_cask") $pkg.brew_cask))
+        (not (and (hasKey $pkg "cask") $pkg.cask))
         (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $.chezmoi.os))
 }}
 brew "{{ $bn }}"  # {{ $pkg.desc }}
@@ -33,7 +33,7 @@ brew "{{ $bn }}"  # {{ $pkg.desc }}
 {{-   if and
         (le (int $pkg.tier) (int $.tier))
         (or (not (hasKey $pkg "brew")) $pkg.brew)
-        (and (hasKey $pkg "brew_cask") $pkg.brew_cask)
+        (and (hasKey $pkg "cask") $pkg.cask)
         (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "darwin"))
 }}
 cask "{{ $bn }}"  # {{ $pkg.desc }}

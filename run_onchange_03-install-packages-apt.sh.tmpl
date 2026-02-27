@@ -1,25 +1,30 @@
 #!/usr/bin/env bash
-# Debian/Ubuntu package installer — generated from .chezmoidata/packages.yaml
+# Chezmoi run_onchange script: Install packages via apt (Debian/Ubuntu)
 #
-# Uses runtime apt-cache checks to determine availability, so the same
-# template works correctly on Debian Bookworm, Ubuntu 24.04, etc.
+# Cascade order: brew → pacman → apt → dnf → flatpak → appimage
+# Only includes packages not handled by an earlier manager.
+# Uses runtime apt-cache checks to determine availability.
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+
+{{ $p := index .profiles .profile -}}
+{{ if not (and (hasKey $p "apt") $p.apt) -}}
+# Profile '{{ .profile }}' does not use apt — nothing to do.
+exit 0
+{{ else -}}
 set -euo pipefail
 
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
-log "Installing packages via apt..."
+log "Using profile '{{ .profile }}' — installing packages via apt"
 
 declare -A CANDIDATE_PACKAGES  # apt_name -> display_name
 {{- range $key, $pkg := .packages }}
 {{-   $n := default $key (index $pkg "name") }}
 {{-   $resolved := default $n (index $pkg "apt_name") }}
-{{-   if and
-        (le (int $pkg.tier) (int $.tier))
-        (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) "linux"))
-}}
-CANDIDATE_PACKAGES[{{ $resolved }}]="{{ $n }}"
-{{-   end }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "apt" "line" (printf "CANDIDATE_PACKAGES[%s]=\"%s\"" $resolved $n)) }}
 {{- end }}
 
 # =============================================================================
@@ -72,3 +77,4 @@ fi
 
 log ""
 log "apt package installation complete!"
+{{ end -}}

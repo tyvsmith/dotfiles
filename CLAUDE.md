@@ -84,7 +84,7 @@ Packages are defined once in `.chezmoidata/packages.yaml` and installed via plat
 The YAML key is the default package name for all package managers. Packages are available on all platforms by default. Only add fields when they differ from defaults:
 - `brew_name:`/`arch_name:`/`apt_name:` — override name for a specific manager
 - `brew: false`/`arch: false` — exclude from a platform
-- `brew_cask: true` — install as Homebrew cask instead of formula
+- `cask: true` — install as Homebrew cask instead of formula
 
 The `run_onchange_01-install-packages.sh` script reads the profile and routes to the appropriate installer:
 - macOS: `brew bundle` with `Brewfile.tmpl` (tiers 1-2 formulas + tier 3 casks/MAS)

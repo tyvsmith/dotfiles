@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Install packages via pacman/paru (Arch Linux)
+#
+# Cascade order: brew → pacman → apt → dnf → flatpak → appimage
+# Only includes packages not handled by an earlier manager.
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+
+{{ $p := index .profiles .profile -}}
+{{ if not (and (hasKey $p "pacman") $p.pacman) -}}
+# Profile '{{ .profile }}' does not use pacman — nothing to do.
+exit 0
+{{ else -}}
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Using profile '{{ .profile }}' — installing packages via pacman/paru"
+
+ensure_pkg paru paru-bin
+
+declare -A CANDIDATE_PACKAGES  # arch_name -> display_name
+{{- range $key, $pkg := .packages }}
+{{-   $n := default $key (index $pkg "name") }}
+{{-   $resolved := default $n (index $pkg "arch_name") }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "manager" "pacman" "line" (printf "CANDIDATE_PACKAGES[%s]=\"%s\"" $resolved $n)) }}
+{{- end }}
+
+# =============================================================================
+# Check availability and split into installable vs missing
+# =============================================================================
+ARCH_PACKAGES=()
+MISSING_PACKAGES=()
+
+for arch_name in "${!CANDIDATE_PACKAGES[@]}"; do
+    if paru -Si "$arch_name" &>/dev/null; then
+        ARCH_PACKAGES+=("$arch_name")
+    else
+        MISSING_PACKAGES+=("${CANDIDATE_PACKAGES[$arch_name]}")
+    fi
+done
+
+# Sort for deterministic output
+IFS=$'\n' ARCH_PACKAGES=($(sort <<<"${ARCH_PACKAGES[*]}")); unset IFS
+IFS=$'\n' MISSING_PACKAGES=($(sort <<<"${MISSING_PACKAGES[*]}")); unset IFS
+
+# =============================================================================
+# Install available packages
+# =============================================================================
+log "Installing ${#ARCH_PACKAGES[@]} packages via paru..."
+if [[ ${#ARCH_PACKAGES[@]} -gt 0 ]]; then
+    paru -S --needed --noconfirm "${ARCH_PACKAGES[@]}"
+fi
+
+# =============================================================================
+# Warn about missing packages
+# =============================================================================
+if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
+    warn "The following packages are not available in official repos or AUR:"
+    for pkg in "${MISSING_PACKAGES[@]}"; do
+        warn "  - $pkg"
+    done
+    log ""
+    log "To install missing tools, consider:"
+    log "  1. pipx install <package> (for Python tools)"
+    log "  2. cargo install <package>"
+    log "  3. npm install -g <package>"
+fi
+
+log ""
+log "Arch package installation complete!"
+{{ end -}}
