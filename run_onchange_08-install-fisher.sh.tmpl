@@ -7,7 +7,7 @@ set -euo pipefail
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 {{ $p := index .profiles .profile -}}
-{{ if or (eq .chezmoi.os "darwin") (and (hasKey $p "brew") $p.brew) -}}
+{{ if and (hasKey $p "brew") $p.brew -}}
 ensure_brew_in_path
 {{ end -}}
 require_cmd fish
