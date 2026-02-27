@@ -2,17 +2,21 @@
 # Package definitions — single source of truth for all platforms
 # =============================================================================
 #
-# Defaults:
-#   name:       YAML key          # override for syntax issues (e.g., 7zip)
+# Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
+# Each package goes to the first enabled manager that can handle it.
+# Cascade logic lives in .chezmoitemplates/cascade-filter.
+#
+# Fields:
+#   name:       YAML key          # override for display (e.g., 7zip)
 #   tier:       (required)        # 1=core CLI, 2=dev tools, 3=GUI apps
 #   desc:       (required)        # short description
 #   cask:       false             # Homebrew cask (macOS only)
 #   os:         null              # restrict to: darwin | linux
 #
-#   Manager fields (tri-state):
-#     absent  = available, use YAML key as package name
-#     string  = available, use string as package name
-#     false   = excluded from this manager
+# Manager fields (tri-state):
+#   absent  = available, use YAML key as package name
+#   string  = available, use string as override name
+#   false   = excluded from this manager
 #
 #   brew:       (absent)          # Homebrew formula name or false
 #   tap:        null              # Homebrew tap required before install
@@ -20,7 +24,7 @@
 #   apt:        (absent)          # apt package name or false
 #   dnf:        (absent)          # dnf package name or false
 #
-#   Resource locator fields (value = available):
+# Resource locator fields (present = available):
 #   flatpak:    null              # Flatpak app ID (Linux GUI)
 #   mas:        null              # Mac App Store ID
 #   appimage:   null              # GitHub repo (owner/name) for AppImage
