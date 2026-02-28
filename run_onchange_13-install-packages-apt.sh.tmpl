@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install packages via apt (Debian/Ubuntu)
 #
-# Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
+# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
 # Only includes packages not handled by an earlier manager.
 # Uses runtime apt-cache checks to determine availability.
 #

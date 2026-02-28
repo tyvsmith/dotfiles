@@ -46,7 +46,7 @@ DOTFILES_PROFILE=arch chezmoi init
 
 Each profile (defined in `.chezmoidata/profiles.yaml`) fully specifies:
 - **`tier`**: 1 = core CLI, 2 = containers, 3 = dev SDKs, 4 = hardware, 5 = basic UI, 6 = extended UI, 7 = gaming
-- **Package managers**: `brew`, `pacman`, `apt`, `dnf`, `flatpak`
+- **Package managers**: `brew`, `pacman`, `apt`, `dnf`, `rpm_ostree`, `flatpak`
 - **`work`**: work machine (system SSH agent, corporate configs)
 - **`decrypt`**: enable age decryption of private configs
 
@@ -60,7 +60,7 @@ If no profile is specified, auto-detects from distro (macOS → `macos-work`, Ar
 | `arch-desktop` | 7 | pacman, flatpak | | yes | Arch Linux desktop |
 | `debian-server` | 1 | apt | | | Debian/Ubuntu server — CLI only |
 | `debian-devpod` | 3 | apt | | yes | Debian/Ubuntu dev |
-| `silverblue` | 7 | brew, flatpak | | yes | Silverblue/Bazzite immutable |
+| `silverblue` | 7 | brew, rpm_ostree, flatpak | | yes | Silverblue/Bazzite immutable |
 
 **Package tiers:**
 - **Tier 1 (ALL machines):** Core CLIs — shell (fish, atuin, zoxide), modern CLI tools (eza, bat, fd, ripgrep, etc.), git, neovim, tmux, essential utils
@@ -81,6 +81,7 @@ Packages are defined once in `.chezmoidata/packages.yaml` and installed via plat
 - **Arch Linux**: paru (handles both official repos and AUR)
 - **Debian/Ubuntu**: apt (native repos only)
 - **Fedora**: dnf
+- **Immutable Fedora (Silverblue/Bazzite)**: rpm-ostree (for OS-integrated packages only)
 - **Linux GUI**: Flatpak (Flathub) or AppImage (GitHub releases)
 
 The YAML key is the default package name for all package managers. Native manager fields (`brew`, `arch`, `apt`, `dnf`) are **tri-state**:
@@ -93,10 +94,11 @@ Brew modifier fields:
 - `brew_tap:` — Homebrew tap required before install
 
 Opt-in manager fields are present when available:
+- `rpm_ostree:` — rpm-ostree package (`true` = use YAML key, string = override name; for immutable Fedora)
 - `flatpak:` — Flatpak app ID
 - `appimage:` — GitHub repo (`owner/name`) for AppImage download
 
-Cascade order: `brew → brew_cask → pacman → apt → dnf → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
+Cascade order: `brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
 
 **Debian/Ubuntu apt availability:**
 The apt install script uses runtime `apt-cache` checks to determine package availability, so it works correctly across different Debian/Ubuntu versions without static exclusion lists. Packages available in Ubuntu 24.04 but missing in Debian Bookworm (e.g., eza, sd, git-delta, gping, yq, hyperfine) will be installed where available and skipped with warnings where not.
@@ -132,6 +134,7 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_12-install-packages-pacman.sh.tmpl` | Arch Linux packages via paru |
 | `run_onchange_13-install-packages-apt.sh.tmpl` | Debian/Ubuntu packages via apt |
 | `run_onchange_14-install-packages-dnf.sh.tmpl` | Fedora packages via dnf |
+| `run_onchange_15-install-packages-rpm-ostree.sh.tmpl` | Immutable Fedora packages via rpm-ostree |
 | `run_onchange_30-install-packages-flatpak.sh.tmpl` | Flatpak GUI apps (Linux, tier 4+) |
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |

@@ -2,7 +2,7 @@
 # Package definitions — single source of truth for all platforms
 # =============================================================================
 #
-# Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
+# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
 # Each package goes to the first enabled manager that can handle it.
 # Cascade logic lives in .chezmoitemplates/cascade-filter.
 #
@@ -29,6 +29,7 @@
 #   brew_tap:   null              # Homebrew tap required before install
 #
 # Opt-in manager fields (present = available, absent = N/A):
+#   rpm_ostree: false             # true (use YAML key) or package name; immutable Fedora only
 #   flatpak:    null              # Flatpak app ID (Linux GUI), or false
 #   mas:        null              # Mac App Store ID
 #   appimage:   null              # GitHub repo (owner/name) for AppImage, or false
@@ -413,13 +414,15 @@ packages:
     tier: 5
     desc: "Password manager"
     brew_cask: true
-    flatpak: com.onepassword.OnePassword
     arch: 1password-beta
+    rpm_ostree: true
+    flatpak: com.onepassword.OnePassword
 
   1password-cli:
     tier: 5
     desc: "1Password CLI (op)"
     brew_cask: true
+    rpm_ostree: true
 
   brave-browser:
     tier: 5

@@ -2,7 +2,7 @@
   cascade-filter: Outputs a formatted line if the package belongs to the
   specified manager, with the manager-specific package name resolved.
 
-  Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
+  Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
   A package goes to the first enabled manager that can handle it.
 
   Native manager fields are tri-state:
@@ -14,7 +14,7 @@
     absent/false = brew formula (or not a brew package)
     true         = brew cask (macOS only); name comes from brew: or YAML key
 
-  Flatpak/appimage require their respective field to be present.
+  rpm_ostree/flatpak/appimage are opt-in: require their field to be present.
 
   work/decrypt fields are tri-state:
     absent  = no restriction (installs on all profiles)
@@ -44,6 +44,7 @@
 {{- /* Opt-in managers: require their field to exist and be truthy */ -}}
 {{- $field_ok := true -}}
 {{- if eq $mgr "brew_cask" -}}{{- $field_ok = and (hasKey $pkg "brew_cask") $pkg.brew_cask -}}{{- end -}}
+{{- if eq $mgr "rpm_ostree" -}}{{- $field_ok = and (hasKey $pkg "rpm_ostree") $pkg.rpm_ostree -}}{{- end -}}
 {{- if eq $mgr "flatpak" -}}{{- $field_ok = and (hasKey $pkg "flatpak") $pkg.flatpak -}}{{- end -}}
 {{- if eq $mgr "appimage" -}}{{- $field_ok = and (hasKey $pkg "appimage") $pkg.appimage -}}{{- end -}}
 
@@ -54,6 +55,7 @@
 {{- $avail_pacman := and (and (hasKey $p "pacman") $p.pacman) (or (not (hasKey $pkg "arch")) $pkg.arch) -}}
 {{- $avail_apt := and (and (hasKey $p "apt") $p.apt) (or (not (hasKey $pkg "apt")) $pkg.apt) -}}
 {{- $avail_dnf := and (and (hasKey $p "dnf") $p.dnf) (or (not (hasKey $pkg "dnf")) $pkg.dnf) -}}
+{{- $avail_rpm_ostree := and (and (hasKey $p "rpm_ostree") $p.rpm_ostree) (and (hasKey $pkg "rpm_ostree") $pkg.rpm_ostree) -}}
 {{- $avail_flatpak := and (and (hasKey $p "flatpak") $p.flatpak) (and (hasKey $pkg "flatpak") $pkg.flatpak) -}}
 
 {{- /* First enabled manager wins */ -}}
@@ -63,6 +65,7 @@
 {{- else if $avail_pacman -}}{{- $winner = "pacman" -}}
 {{- else if $avail_apt -}}{{- $winner = "apt" -}}
 {{- else if $avail_dnf -}}{{- $winner = "dnf" -}}
+{{- else if $avail_rpm_ostree -}}{{- $winner = "rpm_ostree" -}}
 {{- else if $avail_flatpak -}}{{- $winner = "flatpak" -}}
 {{- else if (and (hasKey $pkg "appimage") $pkg.appimage) -}}{{- $winner = "appimage" -}}
 {{- end -}}
@@ -79,6 +82,10 @@
 {{-     $resolved = index $pkg "apt" -}}
 {{-   else if and (eq $mgr "dnf") (hasKey $pkg "dnf") -}}
 {{-     $resolved = index $pkg "dnf" -}}
+{{-   else if and (eq $mgr "rpm_ostree") (hasKey $pkg "rpm_ostree") -}}
+{{-     if ne (printf "%T" (index $pkg "rpm_ostree")) "bool" -}}
+{{-       $resolved = index $pkg "rpm_ostree" -}}
+{{-     end -}}
 {{-   else if eq $mgr "flatpak" -}}
 {{-     $resolved = index $pkg "flatpak" -}}
 {{-   else if eq $mgr "appimage" -}}

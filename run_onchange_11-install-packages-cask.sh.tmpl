@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install Homebrew casks (macOS only)
 #
-# Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
+# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
 # Cask packages on non-macOS cascade to the next available manager.
 #
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}

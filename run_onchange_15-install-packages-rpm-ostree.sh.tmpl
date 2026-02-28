@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Install packages via rpm-ostree (immutable Fedora)
+#
+# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Only includes packages with rpm_ostree: true that need OS-level integration
+# on immutable Fedora systems (Silverblue, Bazzite, etc.).
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+
+{{ $p := index .profiles .profile -}}
+{{ if not (and (hasKey $p "rpm_ostree") $p.rpm_ostree) -}}
+# Profile '{{ .profile }}' does not use rpm-ostree — nothing to do.
+exit 0
+{{ else -}}
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Using profile '{{ .profile }}' — installing packages via rpm-ostree"
+
+require_cmd rpm-ostree
+
+RPM_PACKAGES=()
+{{- range $key, $pkg := .packages }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "rpm_ostree" "fmt" "RPM_PACKAGES+=(\"%s\") # %s") }}
+{{- end }}
+
+# =============================================================================
+# Install packages via rpm-ostree
+# =============================================================================
+if [[ ${#RPM_PACKAGES[@]} -gt 0 ]]; then
+    log "Installing ${#RPM_PACKAGES[@]} packages via rpm-ostree..."
+    rpm-ostree install --idempotent --allow-inactive "${RPM_PACKAGES[@]}"
+    log "rpm-ostree installation complete! A reboot may be required."
+else
+    log "No rpm-ostree packages to install."
+fi
+{{ end -}}
