@@ -22,7 +22,9 @@
 {{- /* Auto-detect default profile from distro */ -}}
 {{- $defaultProfile := $distro -}}
 {{- if eq $distro "macos" -}}
-{{-   $defaultProfile = "macos-personal" -}}
+{{-   $defaultProfile = "macos-work" -}}
+{{- else if eq $distro "arch" -}}
+{{-   $defaultProfile = "arch-desktop" -}}
 {{- end -}}
 
 {{- /* Resolve profile: env var > interactive prompt > auto-detect */ -}}
@@ -32,23 +34,15 @@
 {{-   $profile = $envProfile -}}
 {{- else -}}
 {{-   $choices := list
-       "arch"
-       "debian-brew"
-       "debian-dev"
+       "arch-desktop"
+       "debian-devpod"
        "debian-server"
-       "devpod"
-       "fedora"
-       "macos-personal"
        "macos-work"
        "silverblue" -}}
 {{-   writeToStdout "\nAvailable profiles:\n" -}}
-{{-   writeToStdout "  arch               Arch Linux desktop — paru + flatpak\n" -}}
-{{-   writeToStdout "  debian-brew        Debian/Ubuntu dev — Homebrew + flatpak\n" -}}
-{{-   writeToStdout "  debian-dev         Debian/Ubuntu dev — CLI + dev tools via apt\n" -}}
+{{-   writeToStdout "  arch-desktop       Arch Linux desktop — paru + flatpak\n" -}}
+{{-   writeToStdout "  debian-devpod      Debian/Ubuntu dev — CLI + dev tools via apt\n" -}}
 {{-   writeToStdout "  debian-server      Debian/Ubuntu server — CLI tools only\n" -}}
-{{-   writeToStdout "  devpod             Work devpod — dev tools via Homebrew\n" -}}
-{{-   writeToStdout "  fedora             Fedora Workstation — dnf + flatpak\n" -}}
-{{-   writeToStdout "  macos-personal     Personal Mac — full dev + GUI\n" -}}
 {{-   writeToStdout "  macos-work         Work Mac — corporate dev + GUI\n" -}}
 {{-   writeToStdout "  silverblue         Silverblue/Bazzite — immutable desktop\n" -}}
 {{-   writeToStdout "\n" -}}
@@ -62,8 +56,8 @@
 
   If you add a new profile to profiles.yaml, update the lists below too.
 */ -}}
-{{- $tier5 := list "arch" "fedora" "macos-personal" "macos-work" -}}
-{{- $tier4 := list "silverblue" -}}
+{{- $tier5 := list "arch-desktop" "macos-work" "silverblue" -}}
+{{- $tier4 := list -}}
 {{- $tier1 := list "debian-server" -}}
 {{- $tier := 2 -}}
 {{- if has $profile $tier5 -}}{{- $tier = 5 -}}
@@ -71,8 +65,8 @@
 {{- else if has $profile $tier1 -}}{{- $tier = 1 -}}
 {{- end -}}
 
-{{- $wantsDecrypt := has $profile (list "arch" "debian-brew" "debian-dev" "fedora" "macos-personal" "macos-work" "silverblue") -}}
-{{- $isWork := has $profile (list "devpod" "macos-work") -}}
+{{- $wantsDecrypt := has $profile (list "arch-desktop" "debian-devpod" "macos-work" "silverblue") -}}
+{{- $isWork := has $profile (list "macos-work") -}}
 
 {{- /* Enable encryption only when the key file exists. The decrypt data flag
      reflects whether the profile WANTS decryption (so run_before scripts can
@@ -89,7 +83,7 @@ encryption = "age"
     distro = "{{ $distro }}"
     profile = "{{ $profile }}"
     tier = {{ $tier }}
-    is_work = {{ $isWork }}
+    work = {{ $isWork }}
     decrypt = {{ $wantsDecrypt }}
     decrypt_active = {{ not (not (and $wantsDecrypt $hasKey)) }}
 {{ if and $wantsDecrypt $hasKey }}

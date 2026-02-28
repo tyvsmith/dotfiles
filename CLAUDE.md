@@ -47,7 +47,7 @@ DOTFILES_PROFILE=arch chezmoi init
 Each profile (defined in `.chezmoidata/profiles.yaml`) fully specifies:
 - **`tier`**: 1 = core CLI, 2 = dev tools, 3 = (reserved), 4 = basic UI, 5 = extended UI
 - **Package managers**: `brew`, `pacman`, `apt`, `dnf`, `flatpak`
-- **`is_work`**: work machine (system SSH agent, corporate configs)
+- **`work`**: work machine (system SSH agent, corporate configs)
 - **`decrypt`**: enable age decryption of private configs
 
 If no profile is specified, auto-detects from distro (macOS → `macos-personal`, Arch → `arch`, etc.).
@@ -103,7 +103,7 @@ The apt install script uses runtime `apt-cache` checks to determine package avai
 
 ### Key Files
 - `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
-- `.chezmoidata/profiles.yaml` - Machine profile definitions (tier, pkg managers, is_work, decrypt)
+- `.chezmoidata/profiles.yaml` - Machine profile definitions (tier, pkg managers, work, decrypt)
 - `.chezmoitemplates/cascade-filter` - Shared cascade logic for package manager selection
 - `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
 - `dot_config/git/config.tmpl` - Git config with delta pager, useful aliases
