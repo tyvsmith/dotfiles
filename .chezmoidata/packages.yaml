@@ -229,6 +229,34 @@ packages:
     desc: "Directory tree listing"
 
   # ===========================================================================
+  # Tier 1: macOS GNU Tools
+  # ===========================================================================
+  coreutils:
+    tier: 1
+    os: darwin
+    desc: "GNU coreutils"
+
+  findutils:
+    tier: 1
+    os: darwin
+    desc: "GNU findutils"
+
+  gnu-sed:
+    tier: 1
+    os: darwin
+    desc: "GNU sed"
+
+  grep:
+    tier: 1
+    os: darwin
+    desc: "GNU grep"
+
+  moreutils:
+    tier: 1
+    os: darwin
+    desc: "Additional Unix utilities"
+
+  # ===========================================================================
   # Tier 2: Containers
   # ===========================================================================
   docker:
@@ -344,33 +372,6 @@ packages:
     brew_cask: true
     pacman: openai-codex
 
-  # ===========================================================================
-  # Tier 3: macOS GNU Tools
-  # ===========================================================================
-  coreutils:
-    tier: 3
-    os: darwin
-    desc: "GNU coreutils"
-
-  findutils:
-    tier: 3
-    os: darwin
-    desc: "GNU findutils"
-
-  gnu-sed:
-    tier: 3
-    os: darwin
-    desc: "GNU sed"
-
-  grep:
-    tier: 3
-    os: darwin
-    desc: "GNU grep"
-
-  moreutils:
-    tier: 3
-    os: darwin
-    desc: "Additional Unix utilities"
 
   # ===========================================================================
   # Tier 4: Hardware
@@ -398,6 +399,7 @@ packages:
     desc: "Code editor (Insiders)"
     brew_cask: true
     pacman: visual-studio-code-insiders-bin
+
 
   # ===========================================================================
   # Tier 5: Basic UI — Terminal
@@ -525,15 +527,6 @@ packages:
     flatpak: com.spotify.Client
 
   # ===========================================================================
-  # Tier 7: Gaming
-  # ===========================================================================
-  steam:
-    tier: 7
-    desc: "Gaming platform"
-    brew_cask: true
-    flatpak: com.valvesoftware.Steam
-
-  # ===========================================================================
   # Tier 6: Extended UI — macOS Apps (cask + Mac App Store)
   # ===========================================================================
   iterm2:
@@ -585,3 +578,13 @@ packages:
     desc: "Browser/app picker"
     brew: false
     mas: 1607635845
+
+ # ===========================================================================
+  # Tier 7: Gaming
+  # ===========================================================================
+  steam:
+    tier: 7
+    desc: "Gaming platform"
+    brew_cask: true
+    flatpak: com.valvesoftware.Steam
+    rpm_ostree: true

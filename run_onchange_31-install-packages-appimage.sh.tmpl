@@ -8,8 +8,9 @@
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 # profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
 
-{{ if eq .chezmoi.os "darwin" -}}
-# AppImages are Linux-only — nothing to do on macOS.
+{{ $p := index .profiles .profile -}}
+{{ if not (and (hasKey $p "appimage") $p.appimage) -}}
+# Profile '{{ .profile }}' does not use AppImage — nothing to do.
 exit 0
 {{ else -}}
 set -euo pipefail

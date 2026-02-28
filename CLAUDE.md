@@ -57,10 +57,10 @@ If no profile is specified, auto-detects from distro (macOS → `macos-work`, Ar
 | Profile | Tier | Pkg Managers | Work | Decrypt | Description |
 |---|---|---|---|---|---|
 | `macos-work` | 7 | brew | yes | yes | Work Mac — corporate dev + GUI |
-| `arch-desktop` | 7 | pacman, flatpak | | yes | Arch Linux desktop |
+| `arch-desktop` | 7 | pacman, flatpak, appimage | | yes | Arch Linux desktop |
 | `debian-server` | 1 | apt | | | Debian/Ubuntu server — CLI only |
 | `debian-devpod` | 3 | apt | | yes | Debian/Ubuntu dev |
-| `silverblue` | 7 | brew, rpm_ostree, flatpak | | yes | Silverblue/Bazzite immutable |
+| `silverblue` | 7 | brew, rpm_ostree, flatpak, appimage | | yes | Silverblue/Bazzite immutable |
 
 **Package tiers:**
 - **Tier 1 (ALL machines):** Core CLIs — shell (fish, atuin, zoxide), modern CLI tools (eza, bat, fd, ripgrep, etc.), git, neovim, tmux, essential utils
