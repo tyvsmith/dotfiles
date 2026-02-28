@@ -303,6 +303,11 @@ packages:
     tier: 2
     desc: "Terminal UI for Docker/Podman"
 
+  meld:
+    tier: 2
+    desc: "Visual diff/merge tool"
+    brew_cask: true
+
   # ===========================================================================
   # Tier 2: AI Tools
   # ===========================================================================
@@ -329,6 +334,33 @@ packages:
     desc: "OpenAI Codex"
     brew_cask: true
     arch: openai-codex
+
+  # ===========================================================================
+  # Tier 2: Containers
+  # ===========================================================================
+  docker:
+    tier: 2
+    desc: "Container platform"
+    brew_cask: true
+
+  docker-compose:
+    tier: 2
+    desc: "Multi-container orchestration"
+    os: linux
+
+  docker-buildx:
+    tier: 2
+    desc: "Extended Docker builds"
+    os: linux
+
+  podman:
+    tier: 2
+    desc: "Daemonless container engine"
+
+  distrobox:
+    tier: 2
+    desc: "Container dev environments"
+    os: linux
 
   # ===========================================================================
   # Tier 2: macOS GNU Tools
@@ -370,12 +402,19 @@ packages:
   # ===========================================================================
   # Tier 4: Basic UI — Editor
   # ===========================================================================
-  visual-studio-code:
+  visual-studio-code-insiders:
     tier: 4
-    desc: "Code editor"
+    desc: "Code editor (Insiders)"
     brew_cask: true
-    arch: visual-studio-code-bin
-    flatpak: com.visualstudio.code
+    arch: visual-studio-code-insiders-bin
+
+  # ===========================================================================
+  # Tier 4: Basic UI — Terminal
+  # ===========================================================================
+  ghostty:
+    tier: 4
+    desc: "Modern terminal emulator"
+    brew_cask: true
 
   # ===========================================================================
   # Tier 4: Basic UI — Productivity
@@ -394,12 +433,32 @@ packages:
     arch: brave-bin
     flatpak: com.brave.Browser
 
+  obsidian:
+    tier: 4
+    desc: "Knowledge base / note-taking"
+    brew_cask: true
+    flatpak: md.obsidian.Obsidian
+
   # ===========================================================================
   # Tier 5: Extended UI — Development
   # ===========================================================================
   jetbrains-toolbox:
     tier: 5
     desc: "JetBrains IDE manager"
+    brew_cask: true
+
+  # ===========================================================================
+  # Tier 5: Extended UI — Terminals
+  # ===========================================================================
+  alacritty:
+    tier: 5
+    desc: "GPU-accelerated terminal"
+    brew_cask: true
+
+  warp-terminal:
+    tier: 5
+    desc: "AI-powered terminal"
+    brew: warp
     brew_cask: true
 
   # ===========================================================================
@@ -410,6 +469,11 @@ packages:
     desc: "Voice & text chat"
     brew_cask: true
     flatpak: com.discordapp.Discord
+
+  vesktop:
+    tier: 5
+    desc: "Enhanced Discord client"
+    flatpak: dev.vencord.Vesktop
 
   beeper:
     tier: 5
@@ -425,13 +489,49 @@ packages:
     tier: 5
     desc: "Media player"
     brew_cask: true
+    arch: vlc-plugins-all
     flatpak: org.videolan.VLC
+
+  mpv:
+    tier: 5
+    desc: "Media player"
 
   deskflow:
     tier: 5
     desc: "Software KVM"
     brew_cask: true
     flatpak: org.deskflow.deskflow
+
+  localsend:
+    tier: 5
+    desc: "Cross-device file sharing"
+    brew_cask: true
+    flatpak: org.localsend.localsend_app
+
+  spotify:
+    tier: 5
+    desc: "Music streaming"
+    brew_cask: true
+    arch: false
+    flatpak: com.spotify.Client
+
+  # ===========================================================================
+  # Tier 5: Extended UI — Gaming
+  # ===========================================================================
+  steam:
+    tier: 5
+    desc: "Gaming platform"
+    brew_cask: true
+    flatpak: com.valvesoftware.Steam
+
+  # ===========================================================================
+  # Tier 5: Extended UI — Browsers
+  # ===========================================================================
+  zen-browser:
+    tier: 5
+    desc: "Firefox-based privacy browser"
+    brew: false
+    arch: zen-browser-bin
 
   # ===========================================================================
   # Tier 5: Extended UI — macOS Apps (cask + Mac App Store)
