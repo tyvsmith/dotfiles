@@ -4,7 +4,7 @@
 #
 # Each profile fully defines a machine setup:
 #   desc:     human-readable description (shown during profile selection)
-#   tier:     1 = core CLI, 2 = dev tools, 3 = (reserved), 4 = basic UI, 5 = extended UI
+#   tier:     1 = core CLI, 2 = containers, 3 = dev SDKs, 4 = hardware, 5 = basic UI, 6 = extended UI, 7 = gaming
 #   brew/pacman/apt/dnf/flatpak: which package managers to enable
 #   work:     work machine (system SSH agent, corporate configs)
 #   decrypt:  enable age decryption of private configs
@@ -24,7 +24,7 @@ profiles:
   # --- macOS ---
   macos-work:
     desc: "Work Mac — full dev setup with corporate config"
-    tier: 5
+    tier: 7
     brew: true
     work: true
     decrypt: true
@@ -32,7 +32,7 @@ profiles:
   # --- Arch Linux ---
   arch-desktop:
     desc: "Arch Linux desktop — full setup with paru + flatpak"
-    tier: 5
+    tier: 7
     pacman: true
     flatpak: true
     decrypt: true
@@ -45,14 +45,14 @@ profiles:
 
   debian-devpod:
     desc: "Debian/Ubuntu dev — CLI + dev tools via apt"
-    tier: 2
+    tier: 3
     apt: true
     decrypt: true
 
   # --- Immutable Fedora ---
   silverblue:
     desc: "Fedora Silverblue/Bazzite — immutable desktop"
-    tier: 5
+    tier: 7
     brew: true
     flatpak: true
     decrypt: true
