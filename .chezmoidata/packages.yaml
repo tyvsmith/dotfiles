@@ -188,14 +188,6 @@ packages:
     desc: "Terminal UI for git"
 
   # ===========================================================================
-  # Tier 1: Security & Encryption
-  # ===========================================================================
-  1password-cli:
-    tier: 1
-    desc: "1Password CLI (op)"
-    brew_cask: true
-
-  # ===========================================================================
   # Tier 1: Essential Utilities
   # ===========================================================================
   chezmoi:
@@ -424,6 +416,11 @@ packages:
     flatpak: com.onepassword.OnePassword
     arch: 1password-beta
 
+  1password-cli:
+    tier: 5
+    desc: "1Password CLI (op)"
+    brew_cask: true
+
   brave-browser:
     tier: 5
     desc: "Privacy-focused browser"
@@ -436,6 +433,12 @@ packages:
     desc: "Knowledge base / note-taking"
     brew_cask: true
     flatpak: md.obsidian.Obsidian
+
+  zen-browser:
+    tier: 5
+    desc: "Firefox-based privacy browser"
+    brew: false
+    arch: zen-browser-bin
 
   meld:
     tier: 5
@@ -526,15 +529,6 @@ packages:
     desc: "Gaming platform"
     brew_cask: true
     flatpak: com.valvesoftware.Steam
-
-  # ===========================================================================
-  # Tier 6: Extended UI — Browsers
-  # ===========================================================================
-  zen-browser:
-    tier: 6
-    desc: "Firefox-based privacy browser"
-    brew: false
-    arch: zen-browser-bin
 
   # ===========================================================================
   # Tier 6: Extended UI — macOS Apps (cask + Mac App Store)
