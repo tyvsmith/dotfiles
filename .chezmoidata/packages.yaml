@@ -8,7 +8,7 @@
 #
 # Fields:
 #   name:       YAML key          # override for display (e.g., 7zip)
-#   tier:       (required)        # 1=core CLI, 2=dev, 3=(reserved), 4=basic UI, 5=extended UI
+#   tier:       (required)        # 1=core CLI, 2=containers, 3=dev SDKs, 4=hardware, 5=basic UI, 6=extended UI, 7=gaming
 #   desc:       (required)        # short description
 #   os:         null              # restrict to: darwin | linux
 #   work:       null              # absent=all, true=work only, false=personal only
@@ -167,12 +167,6 @@ packages:
     tier: 1
     desc: "Pipe viewer / progress monitor"
 
-  bluetui:
-    tier: 1
-    desc: "Bluetooth manager TUI"
-    os: linux
-    brew: false
-
   # ===========================================================================
   # Tier 1: Git Tools
   # ===========================================================================
@@ -242,100 +236,6 @@ packages:
     desc: "Directory tree listing"
 
   # ===========================================================================
-  # Tier 2: Development SDKs & Package Managers
-  # ===========================================================================
-  mise:
-    tier: 2
-    desc: "Polyglot runtime version manager"
-
-  uv:
-    tier: 2
-    desc: "Python package manager"
-
-  # ===========================================================================
-  # Tier 2: Build & Image Tools
-  # ===========================================================================
-  imagemagick:
-    tier: 2
-    desc: "Image manipulation"
-    dnf: ImageMagick
-
-  7zip:
-    tier: 2
-    desc: "Archive tool"
-    brew: p7zip
-    apt: p7zip-full
-    dnf: p7zip
-
-  # ===========================================================================
-  # Tier 2: Development Utilities
-  # ===========================================================================
-  shellcheck:
-    tier: 2
-    desc: "Shell script linter"
-    dnf: ShellCheck
-
-  tokei:
-    tier: 2
-    desc: "Code statistics"
-
-  hyperfine:
-    tier: 2
-    desc: "Command benchmarking"
-
-  grex:
-    tier: 2
-    desc: "Regex generator"
-
-  gum:
-    tier: 2
-    desc: "TUI toolkit for shell scripts"
-
-  tree-sitter-cli:
-    tier: 2
-    desc: "Parser generator for editors"
-
-  usage:
-    tier: 2
-    desc: "CLI spec and completions tool"
-
-  lazydocker:
-    tier: 2
-    desc: "Terminal UI for Docker/Podman"
-
-  meld:
-    tier: 2
-    desc: "Visual diff/merge tool"
-    brew_cask: true
-
-  # ===========================================================================
-  # Tier 2: AI Tools
-  # ===========================================================================
-  llm:
-    tier: 2
-    desc: "LLM CLI tool"
-    arch: python-llm
-
-  gemini-cli:
-    tier: 2
-    desc: "Google Gemini CLI"
-
-  opencode:
-    tier: 2
-    desc: "AI coding agent"
-
-  claude-code:
-    tier: 2
-    desc: "Anthropic Claude Code"
-    brew_cask: true
-
-  codex:
-    tier: 2
-    desc: "OpenAI Codex"
-    brew_cask: true
-    arch: openai-codex
-
-  # ===========================================================================
   # Tier 2: Containers
   # ===========================================================================
   docker:
@@ -362,225 +262,328 @@ packages:
     desc: "Container dev environments"
     os: linux
 
+  lazydocker:
+    tier: 2
+    desc: "Terminal UI for Docker/Podman"
+
   # ===========================================================================
-  # Tier 2: macOS GNU Tools
+  # Tier 3: Development SDKs & Package Managers
+  # ===========================================================================
+  mise:
+    tier: 3
+    desc: "Polyglot runtime version manager"
+
+  uv:
+    tier: 3
+    desc: "Python package manager"
+
+  # ===========================================================================
+  # Tier 3: Build & Image Tools
+  # ===========================================================================
+  imagemagick:
+    tier: 3
+    desc: "Image manipulation"
+    dnf: ImageMagick
+
+  7zip:
+    tier: 3
+    desc: "Archive tool"
+    brew: p7zip
+    apt: p7zip-full
+    dnf: p7zip
+
+  # ===========================================================================
+  # Tier 3: Development Utilities
+  # ===========================================================================
+  shellcheck:
+    tier: 3
+    desc: "Shell script linter"
+    dnf: ShellCheck
+
+  tokei:
+    tier: 3
+    desc: "Code statistics"
+
+  hyperfine:
+    tier: 3
+    desc: "Command benchmarking"
+
+  grex:
+    tier: 3
+    desc: "Regex generator"
+
+  gum:
+    tier: 3
+    desc: "TUI toolkit for shell scripts"
+
+  tree-sitter-cli:
+    tier: 3
+    desc: "Parser generator for editors"
+
+  usage:
+    tier: 3
+    desc: "CLI spec and completions tool"
+
+  # ===========================================================================
+  # Tier 3: AI Tools
+  # ===========================================================================
+  llm:
+    tier: 3
+    desc: "LLM CLI tool"
+    arch: python-llm
+
+  gemini-cli:
+    tier: 3
+    desc: "Google Gemini CLI"
+
+  opencode:
+    tier: 3
+    desc: "AI coding agent"
+
+  claude-code:
+    tier: 3
+    desc: "Anthropic Claude Code"
+    brew_cask: true
+
+  codex:
+    tier: 3
+    desc: "OpenAI Codex"
+    brew_cask: true
+    arch: openai-codex
+
+  # ===========================================================================
+  # Tier 3: macOS GNU Tools
   # ===========================================================================
   coreutils:
-    tier: 2
+    tier: 3
     os: darwin
     desc: "GNU coreutils"
 
   findutils:
-    tier: 2
+    tier: 3
     os: darwin
     desc: "GNU findutils"
 
   gnu-sed:
-    tier: 2
+    tier: 3
     os: darwin
     desc: "GNU sed"
 
   grep:
-    tier: 2
+    tier: 3
     os: darwin
     desc: "GNU grep"
 
   moreutils:
-    tier: 2
+    tier: 3
     os: darwin
     desc: "Additional Unix utilities"
 
   # ===========================================================================
-  # Tier 4: Basic UI — Fonts
+  # Tier 4: Hardware
+  # ===========================================================================
+  bluetui:
+    tier: 4
+    desc: "Bluetooth manager TUI"
+    os: linux
+    brew: false
+
+  # ===========================================================================
+  # Tier 5: Basic UI — Fonts
   # ===========================================================================
   font-hack-nerd-font:
-    tier: 4
+    tier: 5
     desc: "Hack Nerd Font"
     brew_cask: true
     arch: ttf-hack-nerd
 
   # ===========================================================================
-  # Tier 4: Basic UI — Editor
+  # Tier 5: Basic UI — Editor
   # ===========================================================================
   visual-studio-code-insiders:
-    tier: 4
+    tier: 5
     desc: "Code editor (Insiders)"
     brew_cask: true
     arch: visual-studio-code-insiders-bin
 
   # ===========================================================================
-  # Tier 4: Basic UI — Terminal
+  # Tier 5: Basic UI — Terminal
   # ===========================================================================
   ghostty:
-    tier: 4
+    tier: 5
     desc: "Modern terminal emulator"
     brew_cask: true
 
   # ===========================================================================
-  # Tier 4: Basic UI — Productivity
+  # Tier 5: Basic UI — Productivity
   # ===========================================================================
   1password:
-    tier: 4
+    tier: 5
     desc: "Password manager"
     brew_cask: true
     flatpak: com.onepassword.OnePassword
     arch: 1password-beta
 
   brave-browser:
-    tier: 4
+    tier: 5
     desc: "Privacy-focused browser"
     brew_cask: true
     arch: brave-bin
     flatpak: com.brave.Browser
 
   obsidian:
-    tier: 4
+    tier: 5
     desc: "Knowledge base / note-taking"
     brew_cask: true
     flatpak: md.obsidian.Obsidian
 
+  meld:
+    tier: 5
+    desc: "Visual diff/merge tool"
+    brew_cask: true
+
   # ===========================================================================
-  # Tier 5: Extended UI — Development
+  # Tier 6: Extended UI — Development
   # ===========================================================================
   jetbrains-toolbox:
-    tier: 5
+    tier: 6
     desc: "JetBrains IDE manager"
     brew_cask: true
 
   # ===========================================================================
-  # Tier 5: Extended UI — Terminals
+  # Tier 6: Extended UI — Terminals
   # ===========================================================================
   alacritty:
-    tier: 5
+    tier: 6
     desc: "GPU-accelerated terminal"
     brew_cask: true
 
   warp-terminal:
-    tier: 5
+    tier: 6
     desc: "AI-powered terminal"
     brew: warp
     brew_cask: true
 
   # ===========================================================================
-  # Tier 5: Extended UI — Communication
+  # Tier 6: Extended UI — Communication
   # ===========================================================================
   discord:
-    tier: 5
+    tier: 6
     desc: "Voice & text chat"
     brew_cask: true
     flatpak: com.discordapp.Discord
 
   vesktop:
-    tier: 5
+    tier: 6
     desc: "Enhanced Discord client"
     flatpak: dev.vencord.Vesktop
 
   beeper:
-    tier: 5
+    tier: 6
     desc: "Unified messaging"
     brew_cask: true
     arch: beeper-v4-bin
     appimage: nickvdp/beeper
 
   # ===========================================================================
-  # Tier 5: Extended UI — Media & Utilities
+  # Tier 6: Extended UI — Media & Utilities
   # ===========================================================================
   vlc:
-    tier: 5
+    tier: 6
     desc: "Media player"
     brew_cask: true
     arch: vlc-plugins-all
     flatpak: org.videolan.VLC
 
   mpv:
-    tier: 5
+    tier: 6
     desc: "Media player"
 
   deskflow:
-    tier: 5
+    tier: 6
     desc: "Software KVM"
     brew_cask: true
     flatpak: org.deskflow.deskflow
 
   localsend:
-    tier: 5
+    tier: 6
     desc: "Cross-device file sharing"
     brew_cask: true
     flatpak: org.localsend.localsend_app
 
   spotify:
-    tier: 5
+    tier: 6
     desc: "Music streaming"
     brew_cask: true
     arch: false
     flatpak: com.spotify.Client
 
   # ===========================================================================
-  # Tier 5: Extended UI — Gaming
+  # Tier 7: Gaming
   # ===========================================================================
   steam:
-    tier: 5
+    tier: 7
     desc: "Gaming platform"
     brew_cask: true
     flatpak: com.valvesoftware.Steam
 
   # ===========================================================================
-  # Tier 5: Extended UI — Browsers
+  # Tier 6: Extended UI — Browsers
   # ===========================================================================
   zen-browser:
-    tier: 5
+    tier: 6
     desc: "Firefox-based privacy browser"
     brew: false
     arch: zen-browser-bin
 
   # ===========================================================================
-  # Tier 5: Extended UI — macOS Apps (cask + Mac App Store)
+  # Tier 6: Extended UI — macOS Apps (cask + Mac App Store)
   # ===========================================================================
   iterm2:
-    tier: 5
+    tier: 6
     os: darwin
     desc: "macOS terminal"
     brew_cask: true
 
   alfred:
-    tier: 5
+    tier: 6
     os: darwin
     desc: "Launcher/automation"
     brew_cask: true
 
   moom:
-    tier: 5
+    tier: 6
     os: darwin
     desc: "Window manager"
     brew_cask: true
 
   soundsource:
-    tier: 5
+    tier: 6
     os: darwin
     desc: "Audio control"
     brew_cask: true
 
   the-unarchiver:
-    tier: 5
+    tier: 6
     os: darwin
     desc: "Archive extraction"
     brew_cask: true
 
   app-cleaner:
-    tier: 5
+    tier: 6
     os: darwin
     desc: "App uninstaller"
     brew_cask: true
 
   amphetamine:
-    tier: 5
+    tier: 6
     os: darwin
     desc: "Keep Mac awake"
     brew: false
     mas: 937984704
 
   velja:
-    tier: 5
+    tier: 6
     os: darwin
     desc: "Browser/app picker"
     brew: false
