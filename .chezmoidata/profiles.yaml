@@ -54,5 +54,6 @@ profiles:
     desc: "Fedora Silverblue/Bazzite — immutable desktop"
     tier: 7
     brew: true
+    rpm_ostree: true
     flatpak: true
     decrypt: true
