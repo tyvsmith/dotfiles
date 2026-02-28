@@ -381,6 +381,7 @@ packages:
     desc: "Password manager"
     cask: true
     flatpak: com.onepassword.OnePassword
+    arch: 1password-beta
 
   # ===========================================================================
   # Tier 5: Communication
