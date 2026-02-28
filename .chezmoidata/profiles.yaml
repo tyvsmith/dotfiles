@@ -5,7 +5,7 @@
 # Each profile fully defines a machine setup:
 #   desc:     human-readable description (shown during profile selection)
 #   tier:     1 = core CLI, 2 = containers, 3 = dev SDKs, 4 = hardware, 5 = basic UI, 6 = extended UI, 7 = gaming
-#   brew/pacman/apt/dnf/flatpak: which package managers to enable
+#   brew/pacman/apt/dnf/rpm_ostree/flatpak/appimage: which package managers to enable
 #   work:     work machine (system SSH agent, corporate configs)
 #   decrypt:  enable age decryption of private configs
 #
@@ -35,6 +35,7 @@ profiles:
     tier: 7
     pacman: true
     flatpak: true
+    appimage: true
     decrypt: true
 
   # --- Debian/Ubuntu ---
@@ -56,4 +57,5 @@ profiles:
     brew: true
     rpm_ostree: true
     flatpak: true
+    appimage: true
     decrypt: true
