@@ -81,18 +81,20 @@ Packages are defined once in `.chezmoidata/packages.yaml` and installed via plat
 - **Fedora**: dnf
 - **Linux GUI**: Flatpak (Flathub) or AppImage (GitHub releases)
 
-The YAML key is the default package name for all package managers. Manager fields are **tri-state**:
+The YAML key is the default package name for all package managers. Native manager fields (`brew`, `arch`, `apt`, `dnf`) are **tri-state**:
 - absent → available, use YAML key as package name
 - string → available, use string as package name (e.g., `arch: python-llm`)
 - `false` → excluded from this manager (e.g., `brew: false`)
 
-Other package fields:
-- `cask: true` — Homebrew cask (macOS-only, cascades to next manager on Linux)
-- `tap:` — Homebrew tap required before install
+Brew modifier fields:
+- `brew_cask: true` — marks as Homebrew cask (macOS-only); name from `brew:` or YAML key; cascades to next manager on Linux
+- `brew_tap:` — Homebrew tap required before install
+
+Opt-in manager fields are present when available:
 - `flatpak:` — Flatpak app ID
 - `appimage:` — GitHub repo (`owner/name`) for AppImage download
 
-Cascade order: `brew → cask → pacman → apt → dnf → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
+Cascade order: `brew → brew_cask → pacman → apt → dnf → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
 
 **Debian/Ubuntu apt availability:**
 The apt install script uses runtime `apt-cache` checks to determine package availability, so it works correctly across different Debian/Ubuntu versions without static exclusion lists. Packages available in Ubuntu 24.04 but missing in Debian Bookworm (e.g., eza, sd, git-delta, gping, yq, hyperfine) will be installed where available and skipped with warnings where not.
