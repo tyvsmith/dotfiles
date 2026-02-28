@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install Homebrew casks (macOS only)
 #
-# Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
+# Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
 # Cask packages on non-macOS cascade to the next available manager.
 #
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
@@ -28,7 +28,7 @@ require_cmd brew
 log "Running brew bundle (casks)..."
 brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
 {{- range $key, $pkg := .packages }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "cask" "fmt" "cask \"%s\"") }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "brew_cask" "fmt" "cask \"%s\"") }}
 {{- end }}
 BREWFILE
 

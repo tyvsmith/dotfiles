@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install Homebrew formulas
 #
-# Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
-# Only includes non-cask packages assigned to brew by the cascade.
+# Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
+# Only includes formula (non-cask) packages assigned to brew by the cascade.
 #
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 # profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
@@ -50,9 +50,9 @@ require_cmd brew
 log "Running brew bundle (formulas)..."
 brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
 {{- range $key, $pkg := .packages }}
-{{-   if hasKey $pkg "tap" }}
+{{-   if hasKey $pkg "brew_tap" }}
 {{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $.chezmoi.os) }}
-tap "{{ $pkg.tap }}"
+tap "{{ $pkg.brew_tap }}"
 {{-     end }}
 {{-   end }}
 {{- end }}

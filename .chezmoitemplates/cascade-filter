@@ -2,15 +2,18 @@
   cascade-filter: Outputs a formatted line if the package belongs to the
   specified manager, with the manager-specific package name resolved.
 
-  Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
+  Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
   A package goes to the first enabled manager that can handle it.
 
-  Manager fields are tri-state:
+  Native manager fields are tri-state:
     absent  = available, use YAML key as package name
     string  = available, use string as package name override
     false   = excluded from this manager
 
-  Cask requires cask: true and is macOS-only.
+  brew_cask is a boolean modifier on brew (default false):
+    absent/false = brew formula (or not a brew package)
+    true         = brew cask (macOS only); name comes from brew: or YAML key
+
   Flatpak/appimage require their respective field to be present.
 
   work/decrypt fields are tri-state:
@@ -38,37 +41,37 @@
 {{- $work_ok := or (not (hasKey $pkg "work")) (eq $pkg.work .root.work) -}}
 {{- $decrypt_ok := or (not (hasKey $pkg "decrypt")) (eq $pkg.decrypt .root.decrypt) -}}
 
-{{- /* Cask/flatpak/appimage require their field to exist */ -}}
+{{- /* Opt-in managers: require their field to exist and be truthy */ -}}
 {{- $field_ok := true -}}
-{{- if eq $mgr "cask" -}}{{- $field_ok = and (hasKey $pkg "cask") $pkg.cask -}}{{- end -}}
-{{- if eq $mgr "flatpak" -}}{{- $field_ok = hasKey $pkg "flatpak" -}}{{- end -}}
-{{- if eq $mgr "appimage" -}}{{- $field_ok = hasKey $pkg "appimage" -}}{{- end -}}
+{{- if eq $mgr "brew_cask" -}}{{- $field_ok = and (hasKey $pkg "brew_cask") $pkg.brew_cask -}}{{- end -}}
+{{- if eq $mgr "flatpak" -}}{{- $field_ok = and (hasKey $pkg "flatpak") $pkg.flatpak -}}{{- end -}}
+{{- if eq $mgr "appimage" -}}{{- $field_ok = and (hasKey $pkg "appimage") $pkg.appimage -}}{{- end -}}
 
 {{- /* Tri-state availability: profile enables manager AND field is not false
      absent = available (default name), string = available (override), false = excluded */ -}}
-{{- $avail_brew := and (and (hasKey $p "brew") $p.brew) (or (not (hasKey $pkg "brew")) $pkg.brew) (not (and (hasKey $pkg "cask") $pkg.cask)) -}}
-{{- $avail_cask := and (and (hasKey $p "brew") $p.brew) (eq $os "darwin") (and (hasKey $pkg "cask") $pkg.cask) (or (not (hasKey $pkg "brew")) $pkg.brew) -}}
+{{- $avail_brew := and (and (hasKey $p "brew") $p.brew) (or (not (hasKey $pkg "brew")) $pkg.brew) (not (and (hasKey $pkg "brew_cask") $pkg.brew_cask)) -}}
+{{- $avail_brew_cask := and (and (hasKey $p "brew") $p.brew) (eq $os "darwin") (and (hasKey $pkg "brew_cask") $pkg.brew_cask) (or (not (hasKey $pkg "brew")) $pkg.brew) -}}
 {{- $avail_pacman := and (and (hasKey $p "pacman") $p.pacman) (or (not (hasKey $pkg "arch")) $pkg.arch) -}}
 {{- $avail_apt := and (and (hasKey $p "apt") $p.apt) (or (not (hasKey $pkg "apt")) $pkg.apt) -}}
 {{- $avail_dnf := and (and (hasKey $p "dnf") $p.dnf) (or (not (hasKey $pkg "dnf")) $pkg.dnf) -}}
-{{- $avail_flatpak := and (and (hasKey $p "flatpak") $p.flatpak) (hasKey $pkg "flatpak") -}}
+{{- $avail_flatpak := and (and (hasKey $p "flatpak") $p.flatpak) (and (hasKey $pkg "flatpak") $pkg.flatpak) -}}
 
 {{- /* First enabled manager wins */ -}}
 {{- $winner := "none" -}}
 {{- if $avail_brew -}}{{- $winner = "brew" -}}
-{{- else if $avail_cask -}}{{- $winner = "cask" -}}
+{{- else if $avail_brew_cask -}}{{- $winner = "brew_cask" -}}
 {{- else if $avail_pacman -}}{{- $winner = "pacman" -}}
 {{- else if $avail_apt -}}{{- $winner = "apt" -}}
 {{- else if $avail_dnf -}}{{- $winner = "dnf" -}}
 {{- else if $avail_flatpak -}}{{- $winner = "flatpak" -}}
-{{- else if (hasKey $pkg "appimage") -}}{{- $winner = "appimage" -}}
+{{- else if (and (hasKey $pkg "appimage") $pkg.appimage) -}}{{- $winner = "appimage" -}}
 {{- end -}}
 
 {{- if and $tier_ok $os_ok $work_ok $decrypt_ok $field_ok (eq $winner $mgr) -}}
 {{-   $resolved := $display -}}
 {{-   if and (eq $mgr "brew") (hasKey $pkg "brew") -}}
 {{-     $resolved = index $pkg "brew" -}}
-{{-   else if and (eq $mgr "cask") (hasKey $pkg "brew") -}}
+{{-   else if and (eq $mgr "brew_cask") (hasKey $pkg "brew") -}}
 {{-     $resolved = index $pkg "brew" -}}
 {{-   else if and (eq $mgr "pacman") (hasKey $pkg "arch") -}}
 {{-     $resolved = index $pkg "arch" -}}

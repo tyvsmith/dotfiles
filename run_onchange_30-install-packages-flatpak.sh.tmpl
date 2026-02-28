@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install packages via Flatpak
 #
-# Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
+# Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
 # Only includes packages with a flatpak: field that aren't handled by any
 # earlier native manager.
 #

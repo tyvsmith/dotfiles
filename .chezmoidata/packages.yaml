@@ -2,7 +2,7 @@
 # Package definitions — single source of truth for all platforms
 # =============================================================================
 #
-# Cascade order: brew → cask → pacman → apt → dnf → flatpak → appimage
+# Cascade order: brew → brew_cask → pacman → apt → dnf → flatpak → appimage
 # Each package goes to the first enabled manager that can handle it.
 # Cascade logic lives in .chezmoitemplates/cascade-filter.
 #
@@ -10,26 +10,28 @@
 #   name:       YAML key          # override for display (e.g., 7zip)
 #   tier:       (required)        # 1=core CLI, 2=dev, 3=(reserved), 4=basic UI, 5=extended UI
 #   desc:       (required)        # short description
-#   cask:       false             # Homebrew cask (macOS only)
 #   os:         null              # restrict to: darwin | linux
 #   work:       null              # absent=all, true=work only, false=personal only
 #   decrypt:    null              # absent=all, true=decrypt only, false=no-decrypt only
 #
-# Manager fields (tri-state):
+# Native manager fields (tri-state):
 #   absent  = available, use YAML key as package name
 #   string  = available, use string as override name
 #   false   = excluded from this manager
 #
 #   brew:       (absent)          # Homebrew formula name or false
-#   tap:        null              # Homebrew tap required before install
 #   arch:       (absent)          # Arch/AUR package name or false (named for ecosystem, not pacman)
 #   apt:        (absent)          # apt package name or false
 #   dnf:        (absent)          # dnf package name or false
 #
-# Resource locator fields (present = available):
-#   flatpak:    null              # Flatpak app ID (Linux GUI)
+# Brew modifier fields:
+#   brew_cask:  false             # true = Homebrew cask (macOS only); name from brew: or YAML key
+#   brew_tap:   null              # Homebrew tap required before install
+#
+# Opt-in manager fields (present = available, absent = N/A):
+#   flatpak:    null              # Flatpak app ID (Linux GUI), or false
 #   mas:        null              # Mac App Store ID
-#   appimage:   null              # GitHub repo (owner/name) for AppImage
+#   appimage:   null              # GitHub repo (owner/name) for AppImage, or false
 #
 # Only specify fields that differ from defaults.
 
@@ -197,7 +199,7 @@ packages:
   1password-cli:
     tier: 1
     desc: "1Password CLI (op)"
-    cask: true
+    brew_cask: true
 
   # ===========================================================================
   # Tier 1: Essential Utilities
@@ -320,12 +322,12 @@ packages:
   claude-code:
     tier: 2
     desc: "Anthropic Claude Code"
-    cask: true
+    brew_cask: true
 
   codex:
     tier: 2
     desc: "OpenAI Codex"
-    cask: true
+    brew_cask: true
     arch: openai-codex
 
   # ===========================================================================
@@ -362,7 +364,7 @@ packages:
   font-hack-nerd-font:
     tier: 4
     desc: "Hack Nerd Font"
-    cask: true
+    brew_cask: true
     arch: ttf-hack-nerd
 
   # ===========================================================================
@@ -371,7 +373,7 @@ packages:
   visual-studio-code:
     tier: 4
     desc: "Code editor"
-    cask: true
+    brew_cask: true
     arch: visual-studio-code-bin
     flatpak: com.visualstudio.code
 
@@ -381,14 +383,14 @@ packages:
   1password:
     tier: 4
     desc: "Password manager"
-    cask: true
+    brew_cask: true
     flatpak: com.onepassword.OnePassword
     arch: 1password-beta
 
   brave-browser:
     tier: 4
     desc: "Privacy-focused browser"
-    cask: true
+    brew_cask: true
     arch: brave-bin
     flatpak: com.brave.Browser
 
@@ -398,7 +400,7 @@ packages:
   jetbrains-toolbox:
     tier: 5
     desc: "JetBrains IDE manager"
-    cask: true
+    brew_cask: true
 
   # ===========================================================================
   # Tier 5: Extended UI — Communication
@@ -406,13 +408,13 @@ packages:
   discord:
     tier: 5
     desc: "Voice & text chat"
-    cask: true
+    brew_cask: true
     flatpak: com.discordapp.Discord
 
   beeper:
     tier: 5
     desc: "Unified messaging"
-    cask: true
+    brew_cask: true
     arch: beeper-v4-bin
     appimage: nickvdp/beeper
 
@@ -422,13 +424,13 @@ packages:
   vlc:
     tier: 5
     desc: "Media player"
-    cask: true
+    brew_cask: true
     flatpak: org.videolan.VLC
 
   deskflow:
     tier: 5
     desc: "Software KVM"
-    cask: true
+    brew_cask: true
     flatpak: org.deskflow.deskflow
 
   # ===========================================================================
@@ -438,37 +440,37 @@ packages:
     tier: 5
     os: darwin
     desc: "macOS terminal"
-    cask: true
+    brew_cask: true
 
   alfred:
     tier: 5
     os: darwin
     desc: "Launcher/automation"
-    cask: true
+    brew_cask: true
 
   moom:
     tier: 5
     os: darwin
     desc: "Window manager"
-    cask: true
+    brew_cask: true
 
   soundsource:
     tier: 5
     os: darwin
     desc: "Audio control"
-    cask: true
+    brew_cask: true
 
   the-unarchiver:
     tier: 5
     os: darwin
     desc: "Archive extraction"
-    cask: true
+    brew_cask: true
 
   app-cleaner:
     tier: 5
     os: darwin
     desc: "App uninstaller"
-    cask: true
+    brew_cask: true
 
   amphetamine:
     tier: 5
