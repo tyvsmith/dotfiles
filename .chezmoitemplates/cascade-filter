@@ -52,7 +52,7 @@
      absent = available (default name), string = available (override), false = excluded */ -}}
 {{- $avail_brew := and (and (hasKey $p "brew") $p.brew) (or (not (hasKey $pkg "brew")) $pkg.brew) (not (and (hasKey $pkg "brew_cask") $pkg.brew_cask)) -}}
 {{- $avail_brew_cask := and (and (hasKey $p "brew") $p.brew) (eq $os "darwin") (and (hasKey $pkg "brew_cask") $pkg.brew_cask) (or (not (hasKey $pkg "brew")) $pkg.brew) -}}
-{{- $avail_pacman := and (and (hasKey $p "pacman") $p.pacman) (or (not (hasKey $pkg "arch")) $pkg.arch) -}}
+{{- $avail_pacman := and (and (hasKey $p "pacman") $p.pacman) (or (not (hasKey $pkg "pacman")) $pkg.pacman) -}}
 {{- $avail_apt := and (and (hasKey $p "apt") $p.apt) (or (not (hasKey $pkg "apt")) $pkg.apt) -}}
 {{- $avail_dnf := and (and (hasKey $p "dnf") $p.dnf) (or (not (hasKey $pkg "dnf")) $pkg.dnf) -}}
 {{- $avail_rpm_ostree := and (and (hasKey $p "rpm_ostree") $p.rpm_ostree) (and (hasKey $pkg "rpm_ostree") $pkg.rpm_ostree) -}}
@@ -76,8 +76,8 @@
 {{-     $resolved = index $pkg "brew" -}}
 {{-   else if and (eq $mgr "brew_cask") (hasKey $pkg "brew") -}}
 {{-     $resolved = index $pkg "brew" -}}
-{{-   else if and (eq $mgr "pacman") (hasKey $pkg "arch") -}}
-{{-     $resolved = index $pkg "arch" -}}
+{{-   else if and (eq $mgr "pacman") (hasKey $pkg "pacman") -}}
+{{-     $resolved = index $pkg "pacman" -}}
 {{-   else if and (eq $mgr "apt") (hasKey $pkg "apt") -}}
 {{-     $resolved = index $pkg "apt" -}}
 {{-   else if and (eq $mgr "dnf") (hasKey $pkg "dnf") -}}
