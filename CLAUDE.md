@@ -50,21 +50,17 @@ Each profile (defined in `.chezmoidata/profiles.yaml`) fully specifies:
 - **`work`**: work machine (system SSH agent, corporate configs)
 - **`decrypt`**: enable age decryption of private configs
 
-If no profile is specified, auto-detects from distro (macOS → `macos-personal`, Arch → `arch`, etc.).
+If no profile is specified, auto-detects from distro (macOS → `macos-work`, Arch → `arch-desktop`, etc.).
 
 **Available profiles:**
 
 | Profile | Tier | Pkg Managers | Work | Decrypt | Description |
 |---|---|---|---|---|---|
-| `macos-personal` | 5 | brew | | yes | Personal Mac — full dev + GUI |
 | `macos-work` | 5 | brew | yes | yes | Work Mac — corporate dev + GUI |
-| `arch` | 5 | pacman, flatpak | | yes | Arch Linux desktop |
+| `arch-desktop` | 5 | pacman, flatpak | | yes | Arch Linux desktop |
 | `debian-server` | 1 | apt | | | Debian/Ubuntu server — CLI only |
-| `debian-dev` | 2 | apt | | yes | Debian/Ubuntu dev |
-| `debian-brew` | 2 | brew, flatpak | | yes | Debian/Ubuntu dev + Homebrew |
-| `devpod` | 2 | brew | yes | | Work devpod |
-| `fedora` | 5 | dnf, flatpak | | yes | Fedora Workstation |
-| `silverblue` | 4 | brew, flatpak | | yes | Silverblue/Bazzite immutable |
+| `debian-devpod` | 2 | apt | | yes | Debian/Ubuntu dev |
+| `silverblue` | 5 | brew, flatpak | | yes | Silverblue/Bazzite immutable |
 
 **Package tiers:**
 - **Tier 1 (ALL machines):** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux, essential utils
@@ -132,7 +128,7 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_12-install-packages-pacman.sh.tmpl` | Arch Linux packages via paru |
 | `run_onchange_13-install-packages-apt.sh.tmpl` | Debian/Ubuntu packages via apt |
 | `run_onchange_14-install-packages-dnf.sh.tmpl` | Fedora packages via dnf |
-| `run_onchange_30-install-packages-flatpak.sh.tmpl` | Flatpak GUI apps (Linux, tier 3) |
+| `run_onchange_30-install-packages-flatpak.sh.tmpl` | Flatpak GUI apps (Linux, tier 4+) |
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_61-configure-tide.sh.tmpl` | Configures Tide prompt |

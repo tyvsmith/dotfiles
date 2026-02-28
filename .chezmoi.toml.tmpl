@@ -5,26 +5,21 @@
      Auto-detects from distro if non-interactive.
 */ -}}
 
-{{- /* Detect distribution */ -}}
+{{- /* Detect distribution and map to default profile */ -}}
 {{- $distro := "unknown" -}}
+{{- $defaultProfile := "" -}}
 {{- if eq .chezmoi.os "darwin" -}}
 {{-   $distro = "macos" -}}
+{{-   $defaultProfile = "macos-work" -}}
 {{- else if stat "/run/ostree-booted" -}}
 {{-   $distro = "silverblue" -}}
+{{-   $defaultProfile = "silverblue" -}}
 {{- else if stat "/etc/arch-release" -}}
 {{-   $distro = "arch" -}}
-{{- else if stat "/etc/fedora-release" -}}
-{{-   $distro = "fedora" -}}
+{{-   $defaultProfile = "arch-desktop" -}}
 {{- else if stat "/etc/debian_version" -}}
 {{-   $distro = "debian" -}}
-{{- end -}}
-
-{{- /* Auto-detect default profile from distro */ -}}
-{{- $defaultProfile := $distro -}}
-{{- if eq $distro "macos" -}}
-{{-   $defaultProfile = "macos-work" -}}
-{{- else if eq $distro "arch" -}}
-{{-   $defaultProfile = "arch-desktop" -}}
+{{-   $defaultProfile = "debian-server" -}}
 {{- end -}}
 
 {{- /* Resolve profile: env var > interactive prompt > auto-detect */ -}}
@@ -57,16 +52,14 @@
   If you add a new profile to profiles.yaml, update the lists below too.
 */ -}}
 {{- $tier5 := list "arch-desktop" "macos-work" "silverblue" -}}
-{{- $tier4 := list -}}
 {{- $tier1 := list "debian-server" -}}
 {{- $tier := 2 -}}
 {{- if has $profile $tier5 -}}{{- $tier = 5 -}}
-{{- else if has $profile $tier4 -}}{{- $tier = 4 -}}
 {{- else if has $profile $tier1 -}}{{- $tier = 1 -}}
 {{- end -}}
 
 {{- $wantsDecrypt := has $profile (list "arch-desktop" "debian-devpod" "macos-work" "silverblue") -}}
-{{- $isWork := has $profile (list "macos-work") -}}
+{{- $work := has $profile (list "macos-work") -}}
 
 {{- /* Enable encryption only when the key file exists. The decrypt data flag
      reflects whether the profile WANTS decryption (so run_before scripts can
@@ -83,7 +76,7 @@ encryption = "age"
     distro = "{{ $distro }}"
     profile = "{{ $profile }}"
     tier = {{ $tier }}
-    work = {{ $isWork }}
+    work = {{ $work }}
     decrypt = {{ $wantsDecrypt }}
     decrypt_active = {{ not (not (and $wantsDecrypt $hasKey)) }}
 {{ if and $wantsDecrypt $hasKey }}

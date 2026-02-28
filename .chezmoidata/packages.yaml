@@ -22,7 +22,7 @@
 #
 #   brew:       (absent)          # Homebrew formula name or false
 #   tap:        null              # Homebrew tap required before install
-#   arch:       (absent)          # Arch/AUR package name or false
+#   arch:       (absent)          # Arch/AUR package name or false (named for ecosystem, not pacman)
 #   apt:        (absent)          # apt package name or false
 #   dnf:        (absent)          # dnf package name or false
 #
@@ -192,6 +192,14 @@ packages:
     desc: "Terminal UI for git"
 
   # ===========================================================================
+  # Tier 1: Security & Encryption
+  # ===========================================================================
+  1password-cli:
+    tier: 1
+    desc: "1Password CLI (op)"
+    cask: true
+
+  # ===========================================================================
   # Tier 1: Essential Utilities
   # ===========================================================================
   chezmoi:
@@ -349,7 +357,7 @@ packages:
     desc: "Additional Unix utilities"
 
   # ===========================================================================
-  # Tier 4: Fonts
+  # Tier 4: Basic UI — Fonts
   # ===========================================================================
   font-hack-nerd-font:
     tier: 4
@@ -358,7 +366,7 @@ packages:
     arch: ttf-hack-nerd
 
   # ===========================================================================
-  # Tier 4: Development Tools (GUI)
+  # Tier 4: Basic UI — Editor
   # ===========================================================================
   visual-studio-code:
     tier: 4
@@ -368,15 +376,7 @@ packages:
     flatpak: com.visualstudio.code
 
   # ===========================================================================
-  # Tier 5: Development Tools (Extended)
-  # ===========================================================================
-  jetbrains-toolbox:
-    tier: 5
-    desc: "JetBrains IDE manager"
-    cask: true
-
-  # ===========================================================================
-  # Tier 4: Productivity & Utilities
+  # Tier 4: Basic UI — Productivity
   # ===========================================================================
   1password:
     tier: 4
@@ -385,8 +385,23 @@ packages:
     flatpak: com.onepassword.OnePassword
     arch: 1password-beta
 
+  brave-browser:
+    tier: 4
+    desc: "Privacy-focused browser"
+    cask: true
+    arch: brave-bin
+    flatpak: com.brave.Browser
+
   # ===========================================================================
-  # Tier 5: Communication
+  # Tier 5: Extended UI — Development
+  # ===========================================================================
+  jetbrains-toolbox:
+    tier: 5
+    desc: "JetBrains IDE manager"
+    cask: true
+
+  # ===========================================================================
+  # Tier 5: Extended UI — Communication
   # ===========================================================================
   discord:
     tier: 5
@@ -402,17 +417,7 @@ packages:
     appimage: nickvdp/beeper
 
   # ===========================================================================
-  # Tier 4: Browsers
-  # ===========================================================================
-  brave-browser:
-    tier: 4
-    desc: "Privacy-focused browser"
-    cask: true
-    arch: brave-bin
-    flatpak: com.brave.Browser
-
-  # ===========================================================================
-  # Tier 5: Media
+  # Tier 5: Extended UI — Media & Utilities
   # ===========================================================================
   vlc:
     tier: 5
@@ -420,9 +425,6 @@ packages:
     cask: true
     flatpak: org.videolan.VLC
 
-  # ===========================================================================
-  # Tier 5: Other Utilities
-  # ===========================================================================
   deskflow:
     tier: 5
     desc: "Software KVM"
@@ -430,7 +432,7 @@ packages:
     flatpak: org.deskflow.deskflow
 
   # ===========================================================================
-  # Tier 5: macOS Apps (cask + Mac App Store)
+  # Tier 5: Extended UI — macOS Apps (cask + Mac App Store)
   # ===========================================================================
   iterm2:
     tier: 5
