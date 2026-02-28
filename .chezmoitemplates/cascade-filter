@@ -13,6 +13,11 @@
   Cask requires cask: true and is macOS-only.
   Flatpak/appimage require their respective field to be present.
 
+  work/decrypt fields are tri-state:
+    absent  = no restriction (installs on all profiles)
+    true    = only on profiles where work/decrypt is true
+    false   = only on profiles where work/decrypt is false
+
   Parameters (via dict):
     .root      - root template context ($)
     .pkg       - package data from .packages range
@@ -27,9 +32,11 @@
 {{- $os := .root.chezmoi.os -}}
 {{- $display := default $key (index $pkg "name") -}}
 
-{{- /* Tier and OS gate */ -}}
+{{- /* Tier, OS, work, and decrypt gates */ -}}
 {{- $tier_ok := le (int $pkg.tier) (int .root.tier) -}}
 {{- $os_ok := or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $os) -}}
+{{- $work_ok := or (not (hasKey $pkg "work")) (eq $pkg.work .root.work) -}}
+{{- $decrypt_ok := or (not (hasKey $pkg "decrypt")) (eq $pkg.decrypt .root.decrypt) -}}
 
 {{- /* Cask/flatpak/appimage require their field to exist */ -}}
 {{- $field_ok := true -}}
@@ -57,7 +64,7 @@
 {{- else if (hasKey $pkg "appimage") -}}{{- $winner = "appimage" -}}
 {{- end -}}
 
-{{- if and $tier_ok $os_ok $field_ok (eq $winner $mgr) -}}
+{{- if and $tier_ok $os_ok $work_ok $decrypt_ok $field_ok (eq $winner $mgr) -}}
 {{-   $resolved := $display -}}
 {{-   if and (eq $mgr "brew") (hasKey $pkg "brew") -}}
 {{-     $resolved = index $pkg "brew" -}}

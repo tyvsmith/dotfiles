@@ -12,6 +12,8 @@
 #   desc:       (required)        # short description
 #   cask:       false             # Homebrew cask (macOS only)
 #   os:         null              # restrict to: darwin | linux
+#   work:       null              # absent=all, true=work only, false=personal only
+#   decrypt:    null              # absent=all, true=decrypt only, false=no-decrypt only
 #
 # Manager fields (tri-state):
 #   absent  = available, use YAML key as package name
