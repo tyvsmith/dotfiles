@@ -171,10 +171,20 @@ set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
 # [omarchy override] Uncomment this block to replace the omarchy inline theme
 set -g @plugin 'catppuccin/tmux'
 set -g @catppuccin_flavor "mocha"
-set -g @catppuccin_window_status_style "rounded"
+
+set -g @catppuccin_status_background "none"
+set -g @catppuccin_window_status_style "custom"
+set -g @catppuccin_window_left_separator "#[fg=##{?window_activity_flag,##{@thm_lavender},##{@thm_overlay_2}},bg=default]#[fg=#{@thm_crust},bg=##{?window_activity_flag,##{@thm_lavender},##{@thm_overlay_2}}]"
+set -g @catppuccin_window_middle_separator " "
+set -g @catppuccin_window_right_separator "#[fg=#{@thm_surface_0},bg=default]"
+set -g @catppuccin_window_current_left_separator "#[fg=#{@thm_mauve},bg=default]#[fg=#{@thm_crust},bg=#{@thm_mauve}]"
+set -g @catppuccin_window_current_middle_separator " "
+set -g @catppuccin_window_current_right_separator "#[fg=#{@thm_surface_1},bg=default]"
 set -g @catppuccin_status_connect_separator "no"
+
 set -g @catppuccin_status_right_separator " "
-set -g @catppuccin_window_text " #T (#{window_panes})"
+set -g @catppuccin_window_flags "icon"
+set -g @catppuccin_window_text "#{?window_activity_flag,#[bold fg=#{@thm_lavender}],} #T (#{window_panes})"
 set -g @catppuccin_window_current_text " #T (#{window_panes})"
 set -g status-right-length 200
 set -g status-left-length 100
@@ -190,3 +200,8 @@ run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/dis
 
 # Initialize TMUX plugin manager (cloned by chezmoi to ~/.config/tmux/plugins/tpm)
 run '~/.config/tmux/plugins/tpm/tpm'
+
+# Override catppuccin's activity/bell styles (must be after TPM loads the plugin,
+# otherwise the plugin's set -gF overwrites them). Solid bg breaks custom separators.
+set -g window-status-activity-style "bold"
+set -g window-status-bell-style "bold"
