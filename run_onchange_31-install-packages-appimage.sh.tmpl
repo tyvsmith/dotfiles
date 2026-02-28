@@ -21,7 +21,12 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 log "Installing AppImages..."
 
 APPIMAGE_DIR="${HOME}/Applications"
-mkdir -p "$APPIMAGE_DIR"
+DESKTOP_DIR="${HOME}/.local/share/applications"
+ICON_DIR="${HOME}/.local/share/icons"
+mkdir -p "$APPIMAGE_DIR" "$DESKTOP_DIR" "$ICON_DIR"
+
+require_cmd curl
+require_cmd jq
 
 declare -A APPIMAGE_CANDIDATES=()  # display_name -> github_repo
 {{- range $key, $pkg := .packages }}
@@ -32,6 +37,85 @@ if [[ ${#APPIMAGE_CANDIDATES[@]} -eq 0 ]]; then
     log "No AppImages to install."
     exit 0
 fi
+
+# =============================================================================
+# install_appimage: Download an AppImage and integrate its .desktop + icon
+#
+# 1. Download the AppImage from the latest GitHub release
+# 2. Extract the embedded .desktop file and icon via --appimage-extract
+# 3. Patch the .desktop Exec= and Icon= to point to installed paths
+# 4. Install .desktop to ~/.local/share/applications/
+# 5. Install icon to ~/.local/share/icons/
+# =============================================================================
+install_appimage() {
+    local key="$1"
+    local repo="$2"
+    local appimage_path="$APPIMAGE_DIR/${key}.AppImage"
+
+    # --- Download ---
+    log "  Fetching $key from GitHub ($repo)..."
+    local appimage_url
+    appimage_url=$(curl -sL "https://api.github.com/repos/${repo}/releases/latest" \
+        | jq -r '.assets[] | select(.name | test("AppImage$")) | .browser_download_url' \
+        | head -1)
+
+    if [[ -z "$appimage_url" || "$appimage_url" == "null" ]]; then
+        warn "  Failed: $key — no AppImage asset found in $repo"
+        return 1
+    fi
+
+    curl -sL "$appimage_url" -o "$appimage_path"
+    chmod +x "$appimage_path"
+
+    # --- Extract .desktop and icon ---
+    local extract_dir
+    extract_dir=$(mktemp -d)
+
+    # --appimage-extract dumps to squashfs-root/ in the current directory
+    (cd "$extract_dir" && "$appimage_path" --appimage-extract >/dev/null 2>&1) || {
+        warn "  Failed: $key — could not extract AppImage contents"
+        rm -rf "$extract_dir"
+        return 0  # AppImage itself is installed, just no desktop integration
+    }
+
+    local sqfs="$extract_dir/squashfs-root"
+
+    # Find the primary .desktop file (skip -url-handler variants)
+    local desktop_file
+    desktop_file=$(find "$sqfs" -maxdepth 1 -name "*.desktop" ! -name "*url-handler*" | head -1)
+
+    if [[ -n "$desktop_file" ]]; then
+        local desktop_name
+        desktop_name=$(basename "$desktop_file")
+
+        # Find and install icon
+        local icon_file icon_dest=""
+        icon_file=$(find "$sqfs" -maxdepth 1 \( -name "*.png" -o -name "*.svg" \) | head -1)
+        if [[ -n "$icon_file" ]]; then
+            local icon_name
+            icon_name=$(basename "$icon_file")
+            icon_dest="$ICON_DIR/$icon_name"
+            cp "$icon_file" "$icon_dest"
+        fi
+
+        # Patch Exec= and Icon= lines to use absolute paths.
+        # Rewrites all Exec= lines so desktop actions (e.g. "New Window")
+        # also launch via the AppImage, preserving any extra flags after
+        # the original binary name.
+        local orig_bin
+        orig_bin=$(grep -m1 '^Exec=' "$desktop_file" | sed 's/^Exec=\([^ ]*\).*/\1/')
+        sed -i "s|^Exec=$orig_bin|Exec=\"$appimage_path\"|" "$desktop_file"
+        if [[ -n "$icon_dest" ]]; then
+            sed -i "s|^Icon=.*|Icon=$icon_dest|" "$desktop_file"
+        fi
+
+        cp "$desktop_file" "$DESKTOP_DIR/$desktop_name"
+        log "  Desktop: $desktop_name"
+    fi
+
+    rm -rf "$extract_dir"
+    return 0
+}
 
 # =============================================================================
 # Install AppImages from GitHub releases
@@ -50,18 +134,10 @@ for key in "${!APPIMAGE_CANDIDATES[@]}"; do
         continue
     fi
 
-    log "  Fetching $key from GitHub ($repo)..."
-    APPIMAGE_URL=$(curl -sL "https://api.github.com/repos/${repo}/releases/latest" \
-        | jq -r '.assets[] | select(.name | test("AppImage$")) | .browser_download_url' \
-        | head -1)
-
-    if [[ -n "$APPIMAGE_URL" && "$APPIMAGE_URL" != "null" ]]; then
-        curl -sL "$APPIMAGE_URL" -o "$APPIMAGE_DIR/${key}.AppImage"
-        chmod +x "$APPIMAGE_DIR/${key}.AppImage"
+    if install_appimage "$key" "$repo"; then
         log "  Installed: $key"
         INSTALLED=$((INSTALLED + 1))
     else
-        warn "  Failed: $key — no AppImage asset found in $repo"
         FAILED=$((FAILED + 1))
     fi
 done
