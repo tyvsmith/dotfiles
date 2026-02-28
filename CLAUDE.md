@@ -84,9 +84,9 @@ Packages are defined once in `.chezmoidata/packages.yaml` and installed via plat
 - **Immutable Fedora (Silverblue/Bazzite)**: rpm-ostree (for OS-integrated packages only)
 - **Linux GUI**: Flatpak (Flathub) or AppImage (GitHub releases)
 
-The YAML key is the default package name for all package managers. Native manager fields (`brew`, `arch`, `apt`, `dnf`) are **tri-state**:
+The YAML key is the default package name for all package managers. Native manager fields (`brew`, `pacman`, `apt`, `dnf`) are **tri-state**:
 - absent → available, use YAML key as package name
-- string → available, use string as package name (e.g., `arch: python-llm`)
+- string → available, use string as package name (e.g., `pacman: python-llm`)
 - `false` → excluded from this manager (e.g., `brew: false`)
 
 Brew modifier fields:

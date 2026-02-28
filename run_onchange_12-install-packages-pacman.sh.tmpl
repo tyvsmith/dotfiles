@@ -29,27 +29,27 @@ declare -A CANDIDATE_PACKAGES=()  # pkg_name -> display_name
 # =============================================================================
 # Check availability and split into installable vs missing
 # =============================================================================
-ARCH_PACKAGES=()
+PACMAN_PACKAGES=()
 MISSING_PACKAGES=()
 
-for arch_name in "${!CANDIDATE_PACKAGES[@]}"; do
-    if paru -Si "$arch_name" &>/dev/null; then
-        ARCH_PACKAGES+=("$arch_name")
+for pkg_name in "${!CANDIDATE_PACKAGES[@]}"; do
+    if paru -Si "$pkg_name" &>/dev/null; then
+        PACMAN_PACKAGES+=("$pkg_name")
     else
-        MISSING_PACKAGES+=("${CANDIDATE_PACKAGES[$arch_name]}")
+        MISSING_PACKAGES+=("${CANDIDATE_PACKAGES[$pkg_name]}")
     fi
 done
 
 # Sort for deterministic output
-IFS=$'\n' ARCH_PACKAGES=($(sort <<<"${ARCH_PACKAGES[*]}")); unset IFS
+IFS=$'\n' PACMAN_PACKAGES=($(sort <<<"${PACMAN_PACKAGES[*]}")); unset IFS
 IFS=$'\n' MISSING_PACKAGES=($(sort <<<"${MISSING_PACKAGES[*]}")); unset IFS
 
 # =============================================================================
 # Install available packages
 # =============================================================================
-log "Installing ${#ARCH_PACKAGES[@]} packages via paru..."
-if [[ ${#ARCH_PACKAGES[@]} -gt 0 ]]; then
-    paru -S --needed --noconfirm "${ARCH_PACKAGES[@]}"
+log "Installing ${#PACMAN_PACKAGES[@]} packages via paru..."
+if [[ ${#PACMAN_PACKAGES[@]} -gt 0 ]]; then
+    paru -S --needed --noconfirm "${PACMAN_PACKAGES[@]}"
 fi
 
 # =============================================================================

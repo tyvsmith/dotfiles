@@ -20,7 +20,7 @@
 #   false   = excluded from this manager
 #
 #   brew:       (absent)          # Homebrew formula name or false
-#   arch:       (absent)          # Arch/AUR package name or false (named for ecosystem, not pacman)
+#   pacman:     (absent)          # Arch/AUR package name or false (paru handles both repos and AUR)
 #   apt:        (absent)          # apt package name or false
 #   dnf:        (absent)          # dnf package name or false
 #
@@ -182,7 +182,7 @@ packages:
   gh:
     tier: 1
     desc: "GitHub CLI"
-    arch: github-cli
+    pacman: github-cli
 
   lazygit:
     tier: 1
@@ -323,7 +323,7 @@ packages:
   llm:
     tier: 3
     desc: "LLM CLI tool"
-    arch: python-llm
+    pacman: python-llm
 
   gemini-cli:
     tier: 3
@@ -342,7 +342,7 @@ packages:
     tier: 3
     desc: "OpenAI Codex"
     brew_cask: true
-    arch: openai-codex
+    pacman: openai-codex
 
   # ===========================================================================
   # Tier 3: macOS GNU Tools
@@ -388,7 +388,7 @@ packages:
     tier: 5
     desc: "Hack Nerd Font"
     brew_cask: true
-    arch: ttf-hack-nerd
+    pacman: ttf-hack-nerd
 
   # ===========================================================================
   # Tier 5: Basic UI — Editor
@@ -397,7 +397,7 @@ packages:
     tier: 5
     desc: "Code editor (Insiders)"
     brew_cask: true
-    arch: visual-studio-code-insiders-bin
+    pacman: visual-studio-code-insiders-bin
 
   # ===========================================================================
   # Tier 5: Basic UI — Terminal
@@ -414,7 +414,7 @@ packages:
     tier: 5
     desc: "Password manager"
     brew_cask: true
-    arch: 1password-beta
+    pacman: 1password-beta
     rpm_ostree: true
     flatpak: com.onepassword.OnePassword
 
@@ -428,7 +428,7 @@ packages:
     tier: 5
     desc: "Privacy-focused browser"
     brew_cask: true
-    arch: brave-bin
+    pacman: brave-bin
     flatpak: com.brave.Browser
 
   obsidian:
@@ -441,7 +441,7 @@ packages:
     tier: 5
     desc: "Firefox-based privacy browser"
     brew: false
-    arch: zen-browser-bin
+    pacman: zen-browser-bin
 
   meld:
     tier: 5
@@ -488,7 +488,7 @@ packages:
     tier: 6
     desc: "Unified messaging"
     brew_cask: true
-    arch: beeper-v4-bin
+    pacman: beeper-v4-bin
     appimage: nickvdp/beeper
 
   # ===========================================================================
@@ -498,7 +498,7 @@ packages:
     tier: 6
     desc: "Media player"
     brew_cask: true
-    arch: vlc-plugins-all
+    pacman: vlc-plugins-all
     flatpak: org.videolan.VLC
 
   mpv:
@@ -521,7 +521,7 @@ packages:
     tier: 6
     desc: "Music streaming"
     brew_cask: true
-    arch: false
+    pacman: false
     flatpak: com.spotify.Client
 
   # ===========================================================================
