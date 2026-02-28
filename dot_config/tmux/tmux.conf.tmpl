@@ -72,23 +72,23 @@ set -g detach-on-destroy off
 
 # Status bar
 set -g status-position top
-set -g status-interval 5
-set -g status-left-length 30
-set -g status-right-length 50
-set -g window-status-separator ""
+# set -g status-interval 5
+# set -g status-left-length 30
+# set -g status-right-length 50
+# set -g window-status-separator ""
 
 # Theme
-set -g status-style "bg=default,fg=default"
-set -g status-left "#[fg=black,bg=blue,bold] #S #[bg=default] "
-set -g status-right "#[fg=blue]#{?client_prefix,PREFIX ,}#[fg=brightblack]#h "
-set -g window-status-format "#[fg=brightblack] #I:#W "
-set -g window-status-current-format "#[fg=blue,bold] #I:#W "
-set -g pane-border-style "fg=brightblack"
-set -g pane-active-border-style "fg=blue"
-set -g message-style "bg=default,fg=blue"
-set -g message-command-style "bg=default,fg=blue"
-set -g mode-style "bg=blue,fg=black"
-setw -g clock-mode-colour blue
+# set -g status-style "bg=default,fg=default"
+# set -g status-left "#[fg=black,bg=blue,bold] #S #[bg=default] "
+# set -g status-right "#[fg=blue]#{?client_prefix,PREFIX ,}#[fg=brightblack]#h "
+# set -g window-status-format "#[fg=brightblack] #I:#W "
+# set -g window-status-current-format "#[fg=blue,bold] #I:#W "
+# set -g pane-border-style "fg=brightblack"
+# set -g pane-active-border-style "fg=blue"
+# set -g message-style "bg=default,fg=blue"
+# set -g message-command-style "bg=default,fg=blue"
+# set -g mode-style "bg=blue,fg=black"
+# setw -g clock-mode-colour blue
 
 
 # ╔══════════════════════════════════════════════════════════════════════╗
@@ -102,6 +102,12 @@ setw -g clock-mode-colour blue
 # ── Terminal & Shell ─────────────────────────────────────────────────
 set-option -g default-shell ${SHELL}
 set -g allow-passthrough on
+
+# Propagate terminal identity so tools (yazi, superfile, etc.) can detect
+# graphics protocol support from the outer terminal (Ghostty/Kitty).
+# Without this, TERM_PROGRAM is unset inside tmux and image preview fails.
+set -ga update-environment "TERM_PROGRAM"
+set -ga update-environment "TERM_PROGRAM_VERSION"
 
 # [omarchy override] More precise terminal features (replaces terminal-overrides ",*:RGB")
 # set -as terminal-features ",xterm-256color:RGB:clipboard"
@@ -120,7 +126,7 @@ set -g visual-activity off
 set -g status-keys emacs
 
 # ── Pane Scrollbars ──────────────────────────────────────────────────
-set -g pane-scrollbars off
+set -g pane-scrollbars modal
 
 # ── Copy Mode (additional triggers) ───────────────────────────────────
 # Clipboard works via OSC 52 (set-clipboard on) — no wl-copy/pbcopy pipe needed.
@@ -163,20 +169,20 @@ set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
 
 # ── Catppuccin Theme ─────────────────────────────────────────────────
 # [omarchy override] Uncomment this block to replace the omarchy inline theme
-# set -g @plugin 'catppuccin/tmux'
-# set -g @catppuccin_flavor "mocha"
-# set -g @catppuccin_window_status_style "rounded"
-# set -g @catppuccin_window_text " #T (#{window_panes})"
-# set -g @catppuccin_window_current_text " #T (#{window_panes})"
-# set -g status-right-length 200
-# set -g status-left-length 100
-# set -g status-left ""
-# set -g status-right "#{E:@catppuccin_status_application}"
-# set -agF status-right "#{E:@catppuccin_status_cpu}"
-# set -ag status-right "#{E:@catppuccin_status_host}"
-# set -ag status-right "#{E:@catppuccin_status_session}"
-# set -g pane-scrollbars-style "bg=#1e1e2e,fg=#585b70"
-# set -g pane-active-border-style 'fg=magenta,bg=default'
+set -g @plugin 'catppuccin/tmux'
+set -g @catppuccin_flavor "mocha"
+set -g @catppuccin_window_status_style "rounded"
+set -g @catppuccin_status_connect_separator "no"
+set -g @catppuccin_status_right_separator " "
+set -g @catppuccin_window_text " #T (#{window_panes})"
+set -g @catppuccin_window_current_text " #T (#{window_panes})"
+set -g status-right-length 200
+set -g status-left-length 100
+set -g status-left ""
+set -g status-right "#{E:@catppuccin_status_application}"
+set -agF status-right "#{E:@catppuccin_status_cpu}"
+set -ag status-right "#{E:@catppuccin_status_host}"
+set -ag status-right "#{E:@catppuccin_status_session}"
 
 # ── Right-click Menu Fix ─────────────────────────────────────────────
 # Patch right-click menus: add -O flag so menus stay open after release

@@ -469,3 +469,121 @@ obsidian (vault CSS), chromium/brave (titlebar RGB)
 
 neovim (colorscheme lua), vscode/codium/cursor (extension + setting), GNOME
 (dark/light mode + icon theme)
+
+---
+
+## Appendix B: Terminal Image Preview in Multiplexers
+
+> Investigated 2026-02-28. Analysis of why image preview works in some
+> multiplexer/app combinations but not others.
+
+### Environment
+
+| Component | Version |
+|---|---|
+| Outer terminal | Ghostty 1.2.3 (`TERM_PROGRAM=ghostty`) |
+| tmux | 3.6a |
+| zellij | 0.43.1 |
+| yazi | 26.1.22 |
+| superfile (spf) | 1.5.0 |
+
+### Compatibility Matrix
+
+| | Direct terminal | tmux | zellij |
+|---|---|---|---|
+| **yazi** | Works | Works | Broken |
+| **superfile** | Works | Broken | Broken |
+
+### How Each Tool Detects Kitty Graphics Protocol
+
+**yazi** (Rust): Auto-detects via multiple methods:
+1. Checks `$TERM`, `$TERM_PROGRAM` for known terminals
+2. Detects `$TMUX` and `$ZELLIJ_SESSION_NAME` multiplexer env vars
+3. Sends KGP query (`\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\`) and
+   checks response
+4. Under tmux: wraps all KGP sequences in DCS passthrough
+   (`\ePtmux;\e_G...\e\\\e\\`)
+5. Under zellij: sends raw KGP sequences (zellij handles natively)
+
+**superfile** (Go, `github.com/BourgeoisBear/rasterm` library): Env-only
+detection at `rasterm/kitty.go`:
+```go
+func IsKittyCapable() bool {
+    V := GetEnvIdentifiers()
+    return (len(V["KITTY_WINDOW_ID"]) > 0) ||
+           (V["TERM_PROGRAM"] == "wezterm") ||
+           (V["TERM_PROGRAM"] == "ghostty")
+}
+```
+No multiplexer awareness. No DCS passthrough wrapping. Sends raw APC
+sequences (`\e_G...\e\\`).
+
+### Root Cause Analysis
+
+**tmux + superfile (BROKEN -- upstream limitation)**:
+1. tmux does NOT propagate `TERM_PROGRAM` by default (not in
+   `update-environment`). So `IsKittyCapable()` returns false.
+2. Even if detection succeeded (fixed by adding `TERM_PROGRAM` to
+   `update-environment`), rasterm sends raw APC sequences.
+3. tmux only forwards sequences wrapped in DCS passthrough format
+   (`\ePtmux;...\e\\`), per `man tmux`: "Allow programs in the pane to
+   bypass tmux using a terminal escape sequence (\ePtmux;...\e\\)."
+4. Raw APC sequences are silently absorbed by tmux.
+5. **No config fix.** Requires upstream rasterm library change to implement
+   tmux DCS passthrough wrapping.
+
+**tmux + yazi (WORKS)**: yazi detects `$TMUX`, wraps all KGP sequences
+in DCS passthrough format. `allow-passthrough on` is set in tmux config.
+Outer Ghostty terminal processes the unwrapped KGP commands.
+
+**zellij + superfile (BROKEN -- needs investigation)**:
+1. Zellij preserves parent environment, so `TERM_PROGRAM=ghostty` should
+   be available. `IsKittyCapable()` should return true.
+2. Zellij 0.41+ natively handles KGP sequences (no DCS wrapping needed).
+3. If detection works and KGP is native, the issue is likely:
+   - Cell size detection failure (superfile's `detectTerminalCellSize`
+     uses CSI 16t which zellij may not support)
+   - A rendering path issue in rasterm's chunked image encoding under
+     zellij's PTY handling
+4. **Needs testing:** Run `echo $TERM_PROGRAM` inside zellij to confirm
+   env preservation. If empty, the fix is setting it in fish config.
+
+**zellij + yazi (BROKEN -- likely upstream)**:
+1. Yazi detects `$ZELLIJ_SESSION_NAME` and should attempt KGP through
+   zellij's native support.
+2. Likely cause: zellij's KGP implementation has compatibility issues
+   with yazi's specific usage (e.g., virtual placement, unicode
+   placeholders, or chunked transfer).
+3. Cell size detection via CSI 16t may also fail under zellij.
+4. **Upstream issue in zellij or yazi.** Check
+   [zellij#3789](https://github.com/zellij-org/zellij/issues/3789) and
+   [yazi issues](https://github.com/sxyazi/yazi/issues) for status.
+
+### Fixes Applied
+
+**tmux config** (`tmux.conf.tmpl`):
+```
+# Propagate terminal identity for graphics protocol detection
+set -ga update-environment "TERM_PROGRAM"
+set -ga update-environment "TERM_PROGRAM_VERSION"
+```
+This ensures `TERM_PROGRAM=ghostty` is available inside tmux sessions,
+fixing detection for tools that check it. Note: requires detach/reattach
+for existing sessions. Does NOT fix the DCS wrapping issue in rasterm.
+
+### Upstream Issues to Track
+
+| Tool | Issue | Status |
+|---|---|---|
+| superfile/rasterm | No tmux DCS passthrough wrapping for KGP | Needs upstream PR to `BourgeoisBear/rasterm` |
+| superfile/rasterm | No multiplexer detection (TMUX/ZELLIJ) | Needs upstream PR |
+| zellij | KGP implementation may not support all features | Check zellij issues |
+| yazi | Zellij KGP adapter may have compatibility issues | Check yazi issues |
+
+### Workarounds
+
+- **Under tmux**: Use yazi instead of superfile for image preview.
+- **Under zellij**: No workaround for inline images currently. Use a
+  non-multiplexed terminal for file browsing with images, or use
+  `chafa`/`timg` for individual files (they may have their own
+  multiplexer support).
