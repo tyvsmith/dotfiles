@@ -477,11 +477,6 @@ packages:
   # ===========================================================================
   # Tier 6: Extended UI — Communication
   # ===========================================================================
-  discord:
-    tier: 6
-    desc: "Voice & text chat"
-    brew_cask: true
-    flatpak: com.discordapp.Discord
 
   vesktop:
     tier: 6
