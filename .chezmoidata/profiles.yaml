@@ -22,12 +22,6 @@
 
 profiles:
   # --- macOS ---
-  macos-personal:
-    desc: "Personal Mac — full dev setup with GUI apps"
-    tier: 5
-    brew: true
-    decrypt: true
-
   macos-work:
     desc: "Work Mac — full dev setup with corporate config"
     tier: 5
@@ -36,7 +30,7 @@ profiles:
     decrypt: true
 
   # --- Arch Linux ---
-  arch:
+  arch-desktop:
     desc: "Arch Linux desktop — full setup with paru + flatpak"
     tier: 5
     pacman: true
@@ -49,38 +43,16 @@ profiles:
     tier: 1
     apt: true
 
-  debian-dev:
+  debian-devpod:
     desc: "Debian/Ubuntu dev — CLI + dev tools via apt"
     tier: 2
     apt: true
     decrypt: true
 
-  debian-brew:
-    desc: "Debian/Ubuntu dev — Homebrew + flatpak"
-    tier: 2
-    brew: true
-    flatpak: true
-    decrypt: true
-
-  # --- Devpods ---
-  devpod:
-    desc: "Work devpod — dev tools via Homebrew"
-    tier: 2
-    brew: true
-    is_work: true
-
-  # --- Fedora ---
-  fedora:
-    desc: "Fedora Workstation — full setup with dnf + flatpak"
-    tier: 5
-    dnf: true
-    flatpak: true
-    decrypt: true
-
   # --- Immutable Fedora ---
   silverblue:
     desc: "Fedora Silverblue/Bazzite — immutable desktop"
-    tier: 4
+    tier: 5
     brew: true
     flatpak: true
     decrypt: true
