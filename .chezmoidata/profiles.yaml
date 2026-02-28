@@ -6,7 +6,7 @@
 #   desc:     human-readable description (shown during profile selection)
 #   tier:     1 = core CLI, 2 = dev tools, 3 = (reserved), 4 = basic UI, 5 = extended UI
 #   brew/pacman/apt/dnf/flatpak: which package managers to enable
-#   is_work:  work machine (system SSH agent, corporate configs)
+#   work:     work machine (system SSH agent, corporate configs)
 #   decrypt:  enable age decryption of private configs
 #
 # Profile is selected interactively during `chezmoi init`, or via:
@@ -17,7 +17,7 @@
 #
 # NOTE: Adding a new profile here also requires updating:
 #   - .chezmoi.toml.tmpl (choices list, writeToStdout descriptions,
-#     tier/decrypt/is_work derivation lists)
+#     tier/decrypt/work derivation lists)
 #   - install.sh is NOT involved — profile selection is handled by chezmoi
 
 profiles:
@@ -26,7 +26,7 @@ profiles:
     desc: "Work Mac — full dev setup with corporate config"
     tier: 5
     brew: true
-    is_work: true
+    work: true
     decrypt: true
 
   # --- Arch Linux ---
