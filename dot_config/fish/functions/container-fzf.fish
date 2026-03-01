@@ -128,24 +128,33 @@ function container-fzf --description "Interactive distrobox container picker"
 
     # zellij multi-action mode
     # Picker pane has close_on_exit=true, so it auto-closes when script exits.
-    # For "enter", exec replaces the picker process so the pane stays as container.
+    # Uses --in-place or -- COMMAND to launch distrobox as the pane's process
+    # (no leftover shell command text, clean pane title).
     if set -q _flag_zellij
         switch "$key"
             case "alt-s"
-                # Hide floating picker, create tiled pane (gets focus), write command
+                # Tiled split running distrobox directly
                 zellij action toggle-floating-panes
-                zellij action new-pane -d down --name "$container_name"
-                sleep 0.3
-                zellij action write-chars "distrobox enter $container_name"
-                zellij action write 10
+                zellij action new-pane -d down --name "$container_name" -- distrobox enter $container_name
             case "alt-t"
-                # New tab; write distrobox command into it; picker auto-closes on exit
-                zellij action new-tab --name "$container_name"
-                sleep 0.3
-                zellij action write-chars "distrobox enter $container_name"
-                zellij action write 10
+                # New tab: generate a temp layout with the distrobox command, open as tab
+                set -l layout_file (mktemp /tmp/zellij-container-XXXXXX.kdl)
+                printf 'layout {
+    pane size=1 borderless=true {
+        plugin location="compact-bar"
+    }
+    pane command="distrobox" {
+        args "enter" "%s"
+        name "%s"
+    }
+    pane size=1 borderless=true {
+        plugin location="status-bar"
+    }
+}\n' $container_name $container_name > $layout_file
+                zellij action new-tab --layout "$layout_file" --name "$container_name"
+                rm -f "$layout_file"
             case ""
-                # Enter key: hide picker, write command to the original pane
+                # Current pane: send distrobox command to the original pane
                 zellij action toggle-floating-panes
                 sleep 0.3
                 zellij action write-chars "distrobox enter $container_name"
