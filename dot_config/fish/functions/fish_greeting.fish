@@ -129,6 +129,28 @@ function fish_greeting
         "tv                      fuzzy finder TUI (television)" \
         "tv --preview            fuzzy find with preview"
 
+    # Only show tips once every 6 hours
+    set -l stamp_file ~/.cache/fish_greeting_stamp
+    set -l interval 21600 # 6 hours in seconds
+    set -l now (date +%s)
+    set -l show false
+
+    if not test -f $stamp_file
+        set show true
+    else
+        set -l last (cat $stamp_file)
+        if test (math $now - $last) -ge $interval
+            set show true
+        end
+    end
+
+    if test $show = false
+        return
+    end
+
+    mkdir -p ~/.cache
+    echo $now > $stamp_file
+
     set -l count (count $tips)
     set -l idx1 (random 1 $count)
     set -l idx2 (random 1 $count)
