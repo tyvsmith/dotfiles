@@ -149,7 +149,7 @@ bind n new-session
 
 # ── Container Integration ─────────────────────────────────────────────
 # prefix+e: fzf container picker (enter=new window, alt-h=hsplit, alt-v=vsplit)
-bind e display-popup -E -w 80% -h 60% "~/.config/tmux/scripts/container-pick-send.fish"
+bind e display-popup -E -w 80% -h 60% "~/.config/tmux/scripts/container-pick-send.sh"
 
 # Container-aware splits: if current pane is inside a container, new splits
 # auto-enter the same container. Falls back to normal split on host.
