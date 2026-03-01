@@ -230,6 +230,8 @@ set -g pane-border-lines single
 set -g pane-border-style "fg=#313244"
 set -g pane-active-border-style "fg=#45475a"
 set -g pane-border-indicators off
+set -g pane-border-status top
+set -g pane-border-format ""
 
 # Mode indicator pill appended to end of status-right: PREFIX (mauve), COPY (yellow), NORMAL (dim)
 set -ag status-right "#{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7#,bold] PREFIX #[fg=#cba6f7#,bg=default#,nobold],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af#,bold] COPY #[fg=#f9e2af#,bg=default#,nobold],#[fg=#45475a#,bg=default]#[fg=#a6adc8#,bg=#45475a] NORMAL #[fg=#45475a#,bg=default]}}"
