@@ -31,7 +31,7 @@ layout {
 
                 format_left   "{tabs}"
                 format_center "{notifications}"
-                format_right  "#[bg=default,fg=#b4befe]#[bg=#b4befe,fg=#11111b]⮁ #[bg=#45475a,fg=#b4befe,bold] {swap_layout}#[bg=default,fg=#45475a] #[bg=default,fg=#cba6f7]#[bg=#cba6f7,fg=#11111b] #[bg=#45475a,fg=#cba6f7,bold] {command_hostname}#[bg=default,fg=#45475a] #[bg=default,fg=#74c7ec]#[bg=#74c7ec,fg=#11111b,bold] {session} #[bg=default] {mode}"
+                format_right  "#[bg=default,fg=#b4befe]#[bg=#b4befe,fg=#11111b]⮁ #[bg=#45475a,fg=#b4befe,bold] {swap_layout}#[bg=default,fg=#45475a] #[bg=default,fg=#cba6f7]#[bg=#cba6f7,fg=#11111b] #[bg=#45475a,fg=#cba6f7,bold] {command_hostname}#[bg=default,fg=#45475a] #[bg=default,fg=#74c7ec]#[bg=#74c7ec,fg=#11111b] #[bg=#45475a,fg=#74c7ec,bold] {command_session_count}#[bg=default,fg=#45475a] {mode}"
                 format_space  ""
                 format_hide_on_overlength "true"
                 format_precedence "rlc"
@@ -41,19 +41,19 @@ layout {
                 border_format   "#[fg=#313244]{char}"
                 border_position "bottom"
 
-                mode_normal       "#[bg=#a6e3a1,fg=#11111b,bold] NORMAL#[bg=default,fg=#a6e3a1]"
-                mode_locked       "#[bg=#f38ba8,fg=#11111b,bold] LOCKED#[bg=default,fg=#f38ba8]"
-                mode_pane         "#[bg=#94e2d5,fg=#11111b,bold] PANE#[bg=default,fg=#94e2d5]"
-                mode_tab          "#[bg=#94e2d5,fg=#11111b,bold] TAB#[bg=default,fg=#94e2d5]"
-                mode_resize       "#[bg=#f9e2af,fg=#11111b,bold] RESIZE#[bg=default,fg=#f9e2af]"
-                mode_move         "#[bg=#f9e2af,fg=#11111b,bold] MOVE#[bg=default,fg=#f9e2af]"
-                mode_scroll       "#[bg=#f2cdcd,fg=#11111b,bold] SCROLL#[bg=default,fg=#f2cdcd]"
-                mode_search       "#[bg=#f2cdcd,fg=#11111b,bold] SEARCH#[bg=default,fg=#f2cdcd]"
-                mode_enter_search "#[bg=#f2cdcd,fg=#11111b,bold] SEARCH#[bg=default,fg=#f2cdcd]"
-                mode_session      "#[bg=#f5c2e7,fg=#11111b,bold] SESSION#[bg=default,fg=#f5c2e7]"
-                mode_tmux         "#[bg=#cba6f7,fg=#11111b,bold] TMUX#[bg=default,fg=#cba6f7]"
-                mode_rename_tab   "#[bg=#f9e2af,fg=#11111b,bold] RENAME#[bg=default,fg=#f9e2af]"
-                mode_rename_pane  "#[bg=#f9e2af,fg=#11111b,bold] RENAME#[bg=default,fg=#f9e2af]"
+                mode_normal           "#[bg=default,fg=#a6e3a1]#[bg=#a6e3a1,fg=#11111b]󰌶 #[bg=#45475a,fg=#a6e3a1,bold] normal#[bg=default,fg=#45475a]"
+                mode_locked           "#[bg=default,fg=#f38ba8]#[bg=#f38ba8,fg=#11111b]󰌶 #[bg=#45475a,fg=#f38ba8,bold] locked#[bg=default,fg=#45475a]"
+                mode_pane             "#[bg=default,fg=#94e2d5]#[bg=#94e2d5,fg=#11111b]󰌶 #[bg=#45475a,fg=#94e2d5,bold] pane#[bg=default,fg=#45475a]"
+                mode_tab              "#[bg=default,fg=#94e2d5]#[bg=#94e2d5,fg=#11111b]󰌶 #[bg=#45475a,fg=#94e2d5,bold] tab#[bg=default,fg=#45475a]"
+                mode_resize           "#[bg=default,fg=#f9e2af]#[bg=#f9e2af,fg=#11111b]󰌶 #[bg=#45475a,fg=#f9e2af,bold] resize#[bg=default,fg=#45475a]"
+                mode_move             "#[bg=default,fg=#f9e2af]#[bg=#f9e2af,fg=#11111b]󰌶 #[bg=#45475a,fg=#f9e2af,bold] move#[bg=default,fg=#45475a]"
+                mode_scroll           "#[bg=default,fg=#f2cdcd]#[bg=#f2cdcd,fg=#11111b]󰌶 #[bg=#45475a,fg=#f2cdcd,bold] scroll#[bg=default,fg=#45475a]"
+                mode_search           "#[bg=default,fg=#f2cdcd]#[bg=#f2cdcd,fg=#11111b]󰌶 #[bg=#45475a,fg=#f2cdcd,bold] search#[bg=default,fg=#45475a]"
+                mode_enter_search     "#[bg=default,fg=#f2cdcd]#[bg=#f2cdcd,fg=#11111b]󰌶 #[bg=#45475a,fg=#f2cdcd,bold] search#[bg=default,fg=#45475a]"
+                mode_session          "#[bg=default,fg=#f5c2e7]#[bg=#f5c2e7,fg=#11111b]󰌶 #[bg=#45475a,fg=#f5c2e7,bold] session#[bg=default,fg=#45475a]"
+                mode_tmux             "#[bg=default,fg=#cba6f7]#[bg=#cba6f7,fg=#11111b]󰌶 #[bg=#45475a,fg=#cba6f7,bold] tmux#[bg=default,fg=#45475a]"
+                mode_rename_tab       "#[bg=default,fg=#f9e2af]#[bg=#f9e2af,fg=#11111b]󰌶 #[bg=#45475a,fg=#f9e2af,bold] rename#[bg=default,fg=#45475a]"
+                mode_rename_pane      "#[bg=default,fg=#f9e2af]#[bg=#f9e2af,fg=#11111b]󰌶 #[bg=#45475a,fg=#f9e2af,bold] rename#[bg=default,fg=#45475a]"
 
                 tab_normal              "#[bg=default,fg=#89b4fa]#[bg=#89b4fa,fg=#11111b,bold]{index} #[bg=#45475a,fg=#89b4fa,bold] {name}{floating_indicator}#[bg=default,fg=#45475a]"
                 tab_normal_fullscreen   "#[bg=default,fg=#89b4fa]#[bg=#89b4fa,fg=#11111b,bold]{index} #[bg=#45475a,fg=#89b4fa,bold] {name}{fullscreen_indicator}#[bg=default,fg=#45475a]"
@@ -78,6 +78,11 @@ layout {
                 command_hostname_format        "{stdout}"
                 command_hostname_interval      "0"
                 command_hostname_rendermode    "static"
+
+                command_session_count_command    "sh -c 'zellij list-sessions 2>/dev/null | grep -cv EXITED'" 
+                command_session_count_format     "{stdout}"
+                command_session_count_interval   "5"
+                command_session_count_rendermode "dynamic"
 
             }
         }
