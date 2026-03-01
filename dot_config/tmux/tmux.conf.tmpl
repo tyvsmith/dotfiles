@@ -177,12 +177,6 @@ set -g @resurrect-strategy-nvim 'session'
 set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
 {{- end }}
 
-# ── Pane Borders (Zellij-style: subtle, thin, dim) ───────────────────
-set -g pane-border-lines single
-set -g pane-border-style "fg=#313244"
-set -g pane-active-border-style "fg=#45475a"
-set -g pane-border-indicators off
-
 # ── Catppuccin Theme ─────────────────────────────────────────────────
 # [omarchy override] Uncomment this block to replace the omarchy inline theme
 set -g @plugin 'catppuccin/tmux'
@@ -209,10 +203,7 @@ bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
 bind -T root MouseDown1StatusRight choose-tree -Zw
 set -g status 2
 set -g status-format[1] "#[fg=#313244,bg=default,fill=default]#(printf '▔%.0s' $(seq 1 #{client_width}))"
-# Mode indicator pill: PREFIX (mauve), COPY (yellow), NORMAL (dim)
-# Uses hardcoded Catppuccin Mocha hex to avoid theme variable expansion issues
-set -g status-right "#{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7#,bold] PREFIX #[fg=#cba6f7#,bg=default#,nobold],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af#,bold] COPY #[fg=#f9e2af#,bg=default#,nobold],#[fg=#45475a#,bg=default]#[fg=#a6adc8#,bg=#45475a] NORMAL #[fg=#45475a#,bg=default]}} "
-set -ag status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
+set -g status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
 set -agF status-right "#{E:@catppuccin_status_application}"
 set -ag status-right "#{E:@catppuccin_status_host}"
 set -ag status-right "#{E:@catppuccin_status_session}"
@@ -232,8 +223,19 @@ run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/dis
 # Initialize TMUX plugin manager (cloned by chezmoi to ~/.config/tmux/plugins/tpm)
 run '~/.config/tmux/plugins/tpm/tpm'
 
-# Override catppuccin's activity/bell styles (must be after TPM loads the plugin,
-# otherwise the plugin's set -gF overwrites them). Solid bg breaks custom separators.
+# ── Post-TPM Overrides ─────────────────────────────────────────────────────
+# Must be after TPM loads catppuccin, otherwise the plugin overwrites them.
+
+# Activity/bell: solid bg breaks custom separators
 set -g window-status-activity-style "bold"
 set -g window-status-bell-style "bold"
 set -g status-left "#[fg=#313244,bg=default]#[fg=#cdd6f4,bg=#313244,bold]+#[fg=#313244,bg=default,nobold] "
+
+# Pane borders (Zellij-style: subtle, thin, dim) -- catppuccin sets bright borders
+set -g pane-border-lines single
+set -g pane-border-style "fg=#313244"
+set -g pane-active-border-style "fg=#45475a"
+set -g pane-border-indicators off
+
+# Mode indicator pill appended to end of status-right: PREFIX (mauve), COPY (yellow), NORMAL (dim)
+set -ag status-right "#{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7#,bold] PREFIX #[fg=#cba6f7#,bg=default#,nobold],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af#,bold] COPY #[fg=#f9e2af#,bg=default#,nobold],#[fg=#45475a#,bg=default]#[fg=#a6adc8#,bg=#45475a] NORMAL #[fg=#45475a#,bg=default]}}"

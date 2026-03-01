@@ -24,13 +24,25 @@ macros:
   - name: restart-pane
     commands:
       - display "#{log_info} Restarting pane"
-      - "respawnp -k -c #{pane_current_path}"
+      - respawnp -k -c "#{pane_current_path}"
   - name: container-split-h
     commands:
-      - "run-shell '~/.config/tmux/scripts/container-split.sh -h'"
+      - run-shell "~/.config/tmux/scripts/container-split.sh -h"
   - name: container-split-v
     commands:
-      - "run-shell '~/.config/tmux/scripts/container-split.sh -v'"
+      - run-shell "~/.config/tmux/scripts/container-split.sh -v"
+  - name: toggle-status
+    commands:
+      - if -F "#{==:#{status},off}" "set status 2" "set status off"
+  - name: lazygit-popup
+    commands:
+      - display-popup -E -w 90% -h 90% -d "#{pane_current_path}" lazygit
+  - name: new-window-here
+    commands:
+      - neww -c "#{pane_current_path}"
+  - name: container-pick
+    commands:
+      - display-popup -E -w 80% -h 60% ~/.config/tmux/scripts/container-pick-send.sh
 items:
   - name: Run command
     key: space
@@ -43,7 +55,7 @@ items:
     command: last-pane
   - name: Lazygit
     key: g
-    command: "display-popup -E -w 90% -h 90% -d '#{pane_current_path}' lazygit"
+    macro: lazygit-popup
   - name: Copy mode
     key: c
     command: copy-mode
@@ -65,7 +77,7 @@ items:
         command: next-window
       - name: New
         key: c
-        command: "neww -c #{pane_current_path}"
+        macro: new-window-here
       - name: Kill
         key: x
         command: 'confirm -p "Kill window #W? (y/n)" killw'
@@ -190,7 +202,7 @@ items:
     menu:
       - name: Pick container (fzf)
         key: e
-        command: "display-popup -E -w 80% -h 60% ~/.config/tmux/scripts/container-pick-send.sh"
+        macro: container-pick
       - name: Split horizontal in container
         key: h
         macro: container-split-h
@@ -230,7 +242,7 @@ items:
         command: refresh
       - name: Toggle status bar
         key: b
-        command: "if -F '#{==:#{status},off}' 'set status 2' 'set status off'"
+        macro: toggle-status
       - name: +Plugins
         key: P
         menu:
