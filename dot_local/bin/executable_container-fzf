@@ -5,7 +5,7 @@
 #
 # Flags:
 #   --tmux           tmux mode: enter=new window, alt-s=split, alt-f=N/A
-#   --zellij         zellij mode: enter=new tab, alt-s=split, alt-f=floating
+#   --zellij         zellij mode: enter=new tab, alt-s=split
 #   --print-only     Print the enter command instead of executing it
 #   --running-only   Only show running containers
 #   --header TEXT    Override the fzf header text
@@ -45,7 +45,7 @@ if [[ -n "$custom_header" ]]; then
 elif [[ "$mode" == "tmux" ]]; then
     fzf_header="enter: new window | alt-s: split"
 elif [[ "$mode" == "zellij" ]]; then
-    fzf_header="enter: new tab | alt-s: split | alt-f: floating"
+    fzf_header="enter: new tab | alt-s: split"
 else
     fzf_header="Select container"
 fi
@@ -82,7 +82,7 @@ fzf_args=(
 if [[ "$mode" == "tmux" ]]; then
     fzf_args+=(--expect "alt-s")
 elif [[ "$mode" == "zellij" ]]; then
-    fzf_args+=(--expect "alt-s,alt-f")
+    fzf_args+=(--expect "alt-s")
 fi
 
 # ── Run fzf ──────────────────────────────────────────────────────────
@@ -141,10 +141,6 @@ if [[ "$mode" == "zellij" ]]; then
             # Tiled split running distrobox directly
             zellij action toggle-floating-panes
             zellij action new-pane -d down --name "$container_name" -- distrobox enter "$container_name"
-            ;;
-        alt-f)
-            # Floating pane running distrobox directly
-            zellij action new-pane --floating --name "$container_name" -- distrobox enter "$container_name"
             ;;
         *)
             # New tab via temp layout with UI chrome (Enter key)
