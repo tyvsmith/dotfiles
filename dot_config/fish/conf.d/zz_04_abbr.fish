@@ -7,7 +7,7 @@ if status is-interactive
     # --- Compatible syntax (flags mostly work the same) ---
 
     # Eza for ls
-    abbr --add ls 'eza'
+    abbr --add ls eza
     abbr --add ll 'eza -l --icons=auto --group-directories-first'
     abbr --add l. 'eza -d .*'
     abbr --add l1 'eza -1'
@@ -15,59 +15,61 @@ if status is-interactive
     abbr --add lt 'eza --tree --level=2'
 
     # Bat for cat
-    abbr --add cat 'bat'
+    abbr --add cat bat
 
     # Trash for rm (safer delete)
-    abbr --add rm 'trash'
+    abbr --add rm trash
 
     # Difftastic for diff
-    abbr --add diff 'difft'
+    abbr --add diff difft
 
     # Duf for df (beautiful disk free)
-    abbr --add df 'duf'
+    abbr --add df duf
 
     # Dust for du (visual disk usage)
-    abbr --add du 'dust'
+    abbr --add du dust
 
     # Gping for ping (graph visualization)
-    abbr --add ping 'gping'
+    abbr --add ping gping
 
     # --- Different syntax (forces learning the new tool) ---
 
     # Ripgrep for grep
-    abbr --add grep 'rg'
+    abbr --add grep rg
 
     # fd for find
-    abbr --add find 'fd'
+    abbr --add find fd
 
     # sd for sed
-    abbr --add sed 'sd'
+    abbr --add sed sd
 
     # xh for curl
-    abbr --add curl 'xh'
+    abbr --add curl xh
 
     # --- Editor (force neovim) ---
 
-    abbr --add vim 'nvim'
-    abbr --add vi 'nvim'
+    abbr --add vim nvim
+    abbr --add vi nvim
 
     # --- Shorthand for modern tools ---
 
     # Chezmoi
-    abbr --add cz 'chezmoi'
+    abbr --add cz chezmoi
 
     # Lazygit
-    abbr --add lg 'lazygit'
+    abbr --add lg lazygit
 
     # Broot
-    abbr --add br 'broot'
+    abbr --add br broot
 
     # --- Container management (distrobox) ---
-
-    abbr --add db 'distrobox'
+    abbr --add db distrobox
     abbr --add dbe 'distrobox enter'
     abbr --add dbl 'distrobox list'
     abbr --add dbs 'distrobox stop'
     abbr --add dbrm 'distrobox rm'
     abbr --add dbc 'distrobox create'
+
+    # Zellij
+    abbr --add zj zellij
 end
