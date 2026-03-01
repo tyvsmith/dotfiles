@@ -4,8 +4,8 @@
 # Works from any shell. Called standalone or by tmux/zellij integrations.
 #
 # Flags:
-#   --tmux           tmux mode: enter=new window, alt-h=hsplit, alt-v=vsplit
-#   --zellij         zellij mode: enter=floating, alt-s=split, alt-t=new tab
+#   --tmux           tmux mode: enter=new window, alt-s=split, alt-f=N/A
+#   --zellij         zellij mode: enter=new tab, alt-s=split, alt-f=floating
 #   --print-only     Print the enter command instead of executing it
 #   --running-only   Only show running containers
 #   --header TEXT    Override the fzf header text
@@ -43,9 +43,9 @@ fi
 if [[ -n "$custom_header" ]]; then
     fzf_header="$custom_header"
 elif [[ "$mode" == "tmux" ]]; then
-    fzf_header="enter: new window | alt-h: hsplit | alt-v: vsplit"
+    fzf_header="enter: new window | alt-s: split"
 elif [[ "$mode" == "zellij" ]]; then
-    fzf_header="enter: floating | alt-s: split | alt-t: new tab"
+    fzf_header="enter: new tab | alt-s: split | alt-f: floating"
 else
     fzf_header="Select container"
 fi
@@ -80,9 +80,9 @@ fzf_args=(
 
 # Multi-action modes use --expect to capture which key was pressed
 if [[ "$mode" == "tmux" ]]; then
-    fzf_args+=(--expect "alt-h,alt-v")
+    fzf_args+=(--expect "alt-s")
 elif [[ "$mode" == "zellij" ]]; then
-    fzf_args+=(--expect "alt-s,alt-t")
+    fzf_args+=(--expect "alt-s,alt-f")
 fi
 
 # ── Run fzf ──────────────────────────────────────────────────────────
@@ -126,8 +126,7 @@ fi
 # The popup closes automatically when this script exits.
 if [[ "$mode" == "tmux" ]]; then
     case "$key" in
-        alt-h) tmux split-window -h "distrobox enter $container_name" ;;
-        alt-v) tmux split-window -v "distrobox enter $container_name" ;;
+        alt-s) tmux split-window -v "distrobox enter $container_name" ;;
         *)     tmux new-window -n "$container_name" "distrobox enter $container_name" ;;
     esac
     exit 0
@@ -143,8 +142,12 @@ if [[ "$mode" == "zellij" ]]; then
             zellij action toggle-floating-panes
             zellij action new-pane -d down --name "$container_name" -- distrobox enter "$container_name"
             ;;
-        alt-t)
-            # New tab via temp layout with UI chrome
+        alt-f)
+            # Floating pane running distrobox directly
+            zellij action new-pane --floating --name "$container_name" -- distrobox enter "$container_name"
+            ;;
+        *)
+            # New tab via temp layout with UI chrome (Enter key)
             layout_file=$(mktemp /tmp/zellij-container-XXXXXX.kdl)
             cat > "$layout_file" << LAYOUT
 layout {
@@ -162,10 +165,6 @@ layout {
 LAYOUT
             zellij action new-tab --layout "$layout_file" --name "$container_name"
             rm -f "$layout_file"
-            ;;
-        *)
-            # Floating pane running distrobox directly
-            zellij action new-pane --floating --name "$container_name" -- distrobox enter "$container_name"
             ;;
     esac
     exit 0
