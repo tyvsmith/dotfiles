@@ -2,7 +2,7 @@
 // Usage: zellij --layout container
 //
 // Opens a host tab and a container picker tab.
-// To create a layout with a specific container, use:
+// To create a named session using this layout, use:
 //   zellij --layout container --session my-project
 
 layout {
