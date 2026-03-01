@@ -3,12 +3,11 @@
 # Used standalone or called by tmux/zellij integrations.
 #
 # Flags:
+#   --tmux           tmux mode: enter=new window, alt-h=hsplit, alt-v=vsplit
+#   --zellij         zellij mode: enter=floating, alt-s=split, alt-t=new tab
 #   --print-only     Print the enter command instead of executing it
 #   --running-only   Only show running containers
-#   --new-window     Open selection in a new tmux window (tmux only)
-#   --split-h        Open selection in a horizontal tmux split (tmux only)
-#   --split-v        Open selection in a vertical tmux split (tmux only)
-#   --zellij         Zellij mode: multi-action picker (enter/ctrl-s/ctrl-t)
+#   --header=TEXT    Override the fzf header text
 
 function container-fzf --description "Interactive distrobox container picker"
     # Guard: requires distrobox and fzf
@@ -22,15 +21,15 @@ function container-fzf --description "Interactive distrobox container picker"
     end
 
     # Parse flags
-    argparse 'print-only' 'running-only' 'new-window' 'split-h' 'split-v' 'zellij' 'header=' -- $argv
+    argparse 'print-only' 'running-only' 'tmux' 'zellij' 'header=' -- $argv
     or return 1
 
     # Determine fzf header text
     set -l fzf_header "Select container"
     if set -q _flag_header
         set fzf_header "$_flag_header"
-    else if set -q _flag_new_window
-        set fzf_header "Select container  [new window]"
+    else if set -q _flag_tmux
+        set fzf_header "enter: new window | alt-h: hsplit | alt-v: vsplit"
     else if set -q _flag_zellij
         set fzf_header "enter: floating | alt-s: split | alt-t: new tab"
     end
@@ -63,8 +62,10 @@ function container-fzf --description "Interactive distrobox container picker"
         --border rounded \
         --ansi
 
-    # In zellij mode, use --expect to capture which key was pressed
-    if set -q _flag_zellij
+    # Multi-action modes use --expect to capture which key was pressed
+    if set -q _flag_tmux
+        set -a fzf_opts --expect "alt-h,alt-v"
+    else if set -q _flag_zellij
         set -a fzf_opts --expect "alt-s,alt-t"
     end
 
@@ -75,11 +76,11 @@ function container-fzf --description "Interactive distrobox container picker"
         return 0 # User cancelled
     end
 
-    # In zellij mode, first line is the key pressed, second is the selection
-    # In normal mode, the only line is the selection
+    # With --expect, first line is the key pressed, second is the selection
+    # Without --expect, the only line is the selection
     set -l key ""
     set -l selected ""
-    if set -q _flag_zellij
+    if set -q _flag_tmux; or set -q _flag_zellij
         set key $fzf_output[1]
         set selected $fzf_output[2]
     else
@@ -104,31 +105,24 @@ function container-fzf --description "Interactive distrobox container picker"
         return 0
     end
 
-    # tmux integrations
-    if set -q _flag_new_window
-        if test -n "$TMUX"
-            tmux new-window -n "$container_name" "distrobox enter $container_name"
-            return 0
+    # ── tmux multi-action mode ───────────────────────────────────────
+    # All actions run distrobox as the pane/window command directly.
+    # The popup closes automatically when this script exits.
+    if set -q _flag_tmux
+        switch "$key"
+            case "alt-h"
+                tmux split-window -h -c "#{pane_current_path}" "distrobox enter $container_name"
+            case "alt-v"
+                tmux split-window -v -c "#{pane_current_path}" "distrobox enter $container_name"
+            case ""
+                tmux new-window -n "$container_name" "distrobox enter $container_name"
         end
+        return 0
     end
 
-    if set -q _flag_split_h
-        if test -n "$TMUX"
-            tmux split-window -h "distrobox enter $container_name"
-            return 0
-        end
-    end
-
-    if set -q _flag_split_v
-        if test -n "$TMUX"
-            tmux split-window -v "distrobox enter $container_name"
-            return 0
-        end
-    end
-
-    # zellij multi-action mode
+    # ── zellij multi-action mode ─────────────────────────────────────
     # Picker pane has close_on_exit=true, so it auto-closes when script exits.
-    # All actions launch distrobox as the pane's command directly (no shell wrapper).
+    # All actions launch distrobox as the pane's command directly.
     if set -q _flag_zellij
         switch "$key"
             case "alt-s"
@@ -136,7 +130,7 @@ function container-fzf --description "Interactive distrobox container picker"
                 zellij action toggle-floating-panes
                 zellij action new-pane -d down --name "$container_name" -- distrobox enter $container_name
             case "alt-t"
-                # New tab: generate a temp layout with the distrobox command, open as tab
+                # New tab via temp layout with UI chrome
                 set -l layout_file (mktemp /tmp/zellij-container-XXXXXX.kdl)
                 printf 'layout {
     pane size=1 borderless=true {
@@ -159,6 +153,6 @@ function container-fzf --description "Interactive distrobox container picker"
         return 0
     end
 
-    # Default: enter the container directly in the current shell
+    # Default (no multiplexer flag): enter the container in the current shell
     distrobox enter $container_name
 end
