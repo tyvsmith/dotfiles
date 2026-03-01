@@ -1,0 +1,25 @@
+// Container development layout for zellij
+// Usage: zellij --layout container
+//
+// Opens a host tab and a container picker tab.
+// To create a layout with a specific container, use:
+//   zellij --layout container --session my-project
+
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="compact-bar"
+        }
+        children
+    }
+
+    tab name="host" focus=true {
+        pane name="shell"
+    }
+
+    tab name="container" {
+        pane name="picker" command="fish" {
+            args "-c" "container-fzf"
+        }
+    }
+}

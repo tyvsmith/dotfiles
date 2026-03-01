@@ -147,6 +147,17 @@ bind n new-session
 # [omarchy override] Prefix+R is rename-session in omarchy; this rebinds to reload config
 # bind R source-file ~/.config/tmux/tmux.conf
 
+# ── Container Integration ─────────────────────────────────────────────
+# prefix+e: fzf picker popup — enter selected container in current pane
+# prefix+E: fzf picker popup — open selected container in a new window
+bind e run-shell 'tmux display-popup -E -w 80% -h 60% "~/.config/tmux/scripts/container-pick-send.fish #{pane_id}"'
+bind E display-popup -E -w 80% -h 60% "fish -c 'container-fzf --new-window'"
+
+# Container-aware splits: if current pane is inside a container, new splits
+# auto-enter the same container. Falls back to normal split on host.
+bind h run-shell "~/.config/tmux/scripts/container-split.sh -h"
+bind v run-shell "~/.config/tmux/scripts/container-split.sh -v"
+
 # Mouse: double-click status bar for new window, middle-click tab to close
 bind -T root DoubleClick1Status new-window -c "#{pane_current_path}"
 bind -T root MouseDown2Status kill-window -t=
@@ -194,7 +205,8 @@ bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
 bind -T root MouseDown1StatusRight choose-tree -Zw
 set -g status 2
 set -g status-format[1] "#[fg=#{@thm_surface_1},bg=default,fill=default]#(printf '·%.0s' $(seq 1 #{client_width}))"
-set -g status-right "#{E:@catppuccin_status_application}"
+set -g status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
+set -agF status-right "#{E:@catppuccin_status_application}"
 set -agF status-right "#{E:@catppuccin_status_cpu}"
 set -ag status-right "#{E:@catppuccin_status_host}"
 set -ag status-right "#{E:@catppuccin_status_session}"
