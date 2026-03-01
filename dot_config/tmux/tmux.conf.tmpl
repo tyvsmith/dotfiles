@@ -200,7 +200,6 @@ set -g status-right-length 200
 set -g status-left-length 100
 set -g status-left ""
 bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
-bind -T root MouseDown1StatusRight choose-tree -Zw
 set -g status 2
 set -g status-format[1] "#[fg=#313244,bg=default,fill=default]#(printf '·%.0s' $(seq 1 #{client_width}))"
 set -g status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
