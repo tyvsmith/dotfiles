@@ -201,14 +201,15 @@ set -g status-left-length 100
 set -g status-left ""
 bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
 bind -T root MouseDown1StatusRight choose-tree -Zw
-set -g status on
+set -g status 2
+set -g status-format[1] "#[fg=#313244,bg=default,fill=default]#(printf '▔%.0s' $(seq 1 #{client_width}))"
 set -g status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
 set -agF status-right "#{E:@catppuccin_status_application}"
 set -ag status-right "#{E:@catppuccin_status_host}"
 set -ag status-right "#{E:@catppuccin_status_session}"
 
 # ── Statusbar Toggle ──────────────────────────────────────────────────
-bind b if -F '#{==:#{status},off}' 'set status on' 'set status off'
+bind b if -F '#{==:#{status},off}' 'set status 2' 'set status off'
 
 # ── Right-click Menu Fix ─────────────────────────────────────────────
 # Patch right-click menus: add -O flag so menus stay open after release
@@ -230,8 +231,6 @@ set -g pane-border-lines single
 set -g pane-border-style "fg=#313244"
 set -g pane-active-border-style "fg=#45475a"
 set -g pane-border-indicators off
-set -g pane-border-status top
-set -g pane-border-format ""
 
 # Mode indicator pill appended to end of status-right: PREFIX (mauve), COPY (yellow), NORMAL (dim)
 set -ag status-right "#{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7#,bold] PREFIX #[fg=#cba6f7#,bg=default#,nobold],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af#,bold] COPY #[fg=#f9e2af#,bg=default#,nobold],#[fg=#45475a#,bg=default]#[fg=#a6adc8#,bg=#45475a] NORMAL #[fg=#45475a#,bg=default]}}"
