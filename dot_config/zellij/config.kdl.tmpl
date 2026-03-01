@@ -96,9 +96,9 @@ keybinds clear-defaults=true {
         bind "w" { SearchToggleOption "Wrap"; }
     }
     session {
-        // Container picker: enter=current pane, alt-s=split, alt-t=new tab
+        // Container picker: enter=floating, alt-s=split, alt-t=new tab
         bind "e" {
-            Run "fish" "-c" "container-fzf --zellij" {
+            Run "container-fzf" "--zellij" {
                 floating true
                 close_on_exit true
             }
