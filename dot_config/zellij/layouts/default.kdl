@@ -4,49 +4,48 @@
 layout {
     default_tab_template {
         children
-        pane size=1 borderless=true {
+        pane size=2 borderless=true {
             plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
                 // ── Format ──────────────────────────────────────────
-                format_left   "{mode}#[fg=#313244,bg=default]#[fg=#cdd6f4,bg=#313244,bold] {session}#[fg=#313244,bg=default,nobold] "
+                format_left   "{mode}#[fg=#313244,bg=default]#[fg=#cdd6f4,bg=#313244,bold] {session}#[fg=#313244,bg=default,nobold] "
                 format_center "{tabs}"
                 format_right  "{command_git_branch}{datetime}"
                 format_space  "#[bg=default] "
 
                 // ── Border ──────────────────────────────────────────
                 border_enabled  "true"
-                border_char     "·"
-                border_format   "#[fg=#585b70]{char}"
+                border_char     "─"
+                border_format   "#[fg=#313244]{char}"
                 border_position "top"
 
                 // ── Frame handling ──────────────────────────────────
                 hide_frame_for_single_pane "true"
 
-                // ── Mode indicators ─────────────────────────────────
-                // Small colored text -- minimal, unobtrusive
-                mode_normal        "#[fg=#89b4fa,bold] NORMAL "
-                mode_locked        "#[fg=#f38ba8,bold] LOCKED "
-                mode_pane          "#[fg=#a6e3a1,bold] PANE "
-                mode_tab           "#[fg=#f9e2af,bold] TAB "
-                mode_resize        "#[fg=#f5c2e7,bold] RESIZE "
-                mode_move          "#[fg=#94e2d5,bold] MOVE "
-                mode_scroll        "#[fg=#fab387,bold] SCROLL "
-                mode_search        "#[fg=#fab387,bold] SEARCH "
-                mode_session       "#[fg=#cba6f7,bold] SESSION "
-                mode_enter_search  "#[fg=#fab387,bold] SEARCH "
-                mode_rename_tab    "#[fg=#f9e2af,bold] RENAME "
-                mode_rename_pane   "#[fg=#a6e3a1,bold] RENAME "
-                mode_tmux          "#[fg=#fab387,bold] TMUX "
+                // ── Mode indicators with keybinding hints ───────────
+                mode_normal        "#[fg=#89b4fa,bold]NORMAL #[fg=#585b70,nobold]^p pane  ^t tab  ^n resize  ^s scroll  ^o session  ^b tmux "
+                mode_locked        "#[fg=#f38ba8,bold]LOCKED #[fg=#585b70,nobold]^g unlock "
+                mode_pane          "#[fg=#a6e3a1,bold]PANE #[fg=#585b70,nobold]n new  d/r ↓→  s stack  f full  w float  x close  c rename "
+                mode_tab           "#[fg=#f9e2af,bold]TAB #[fg=#585b70,nobold]n new  r rename  x close  1-9 goto  h/l ←→  s sync "
+                mode_resize        "#[fg=#f5c2e7,bold]RESIZE #[fg=#585b70,nobold]hjkl grow  HJKL shrink  +/- uniform "
+                mode_move          "#[fg=#94e2d5,bold]MOVE #[fg=#585b70,nobold]hjkl move  n/tab cycle "
+                mode_scroll        "#[fg=#fab387,bold]SCROLL #[fg=#585b70,nobold]j/k ↑↓  d/u ½pg  e edit  s search "
+                mode_search        "#[fg=#fab387,bold]SEARCH #[fg=#585b70,nobold]n/p next/prev  c case  w wrap  o word "
+                mode_session       "#[fg=#cba6f7,bold]SESSION #[fg=#585b70,nobold]w mgr  z zoxide  d detach  a about  c config "
+                mode_enter_search  "#[fg=#fab387,bold]SEARCH #[fg=#585b70,nobold]type to search... "
+                mode_rename_tab    "#[fg=#f9e2af,bold]RENAME TAB #[fg=#585b70,nobold]type new name... "
+                mode_rename_pane   "#[fg=#a6e3a1,bold]RENAME PANE #[fg=#585b70,nobold]type new name... "
+                mode_tmux          "#[fg=#fab387,bold]TMUX #[fg=#585b70,nobold]\"  % split  c tab  g lazygit  z full  n/p tabs  d detach "
 
                 // ── Tab formatting ──────────────────────────────────
-                // Inactive tabs: overlay_2 powerline
-                tab_normal              "#[fg=#585b70,bg=default]#[fg=#cdd6f4,bg=#585b70] {index} {name}{floating_indicator}#[fg=#585b70,bg=default] "
-                tab_normal_fullscreen   "#[fg=#585b70,bg=default]#[fg=#cdd6f4,bg=#585b70] {index} {name}{fullscreen_indicator}#[fg=#585b70,bg=default] "
-                tab_normal_sync         "#[fg=#585b70,bg=default]#[fg=#cdd6f4,bg=#585b70] {index} {name}{sync_indicator}#[fg=#585b70,bg=default] "
+                // Inactive tabs: surface_1 powerline
+                tab_normal              "#[fg=#585b70,bg=default]#[fg=#cdd6f4,bg=#585b70] {index} {name}{floating_indicator}#[fg=#585b70,bg=default] "
+                tab_normal_fullscreen   "#[fg=#585b70,bg=default]#[fg=#cdd6f4,bg=#585b70] {index} {name}{fullscreen_indicator}#[fg=#585b70,bg=default] "
+                tab_normal_sync         "#[fg=#585b70,bg=default]#[fg=#cdd6f4,bg=#585b70] {index} {name}{sync_indicator}#[fg=#585b70,bg=default] "
 
                 // Active tab: mauve/purple powerline (matches tmux)
-                tab_active              "#[fg=#cba6f7,bg=default]#[fg=#11111b,bg=#cba6f7,bold] {index} {name}{floating_indicator}#[fg=#cba6f7,bg=default,nobold] "
-                tab_active_fullscreen   "#[fg=#cba6f7,bg=default]#[fg=#11111b,bg=#cba6f7,bold] {index} {name}{fullscreen_indicator}#[fg=#cba6f7,bg=default,nobold] "
-                tab_active_sync         "#[fg=#cba6f7,bg=default]#[fg=#11111b,bg=#cba6f7,bold] {index} {name}{sync_indicator}#[fg=#cba6f7,bg=default,nobold] "
+                tab_active              "#[fg=#cba6f7,bg=default]#[fg=#11111b,bg=#cba6f7,bold] {index} {name}{floating_indicator}#[fg=#cba6f7,bg=default,nobold] "
+                tab_active_fullscreen   "#[fg=#cba6f7,bg=default]#[fg=#11111b,bg=#cba6f7,bold] {index} {name}{fullscreen_indicator}#[fg=#cba6f7,bg=default,nobold] "
+                tab_active_sync         "#[fg=#cba6f7,bg=default]#[fg=#11111b,bg=#cba6f7,bold] {index} {name}{sync_indicator}#[fg=#cba6f7,bg=default,nobold] "
 
                 tab_separator ""
 
@@ -57,7 +56,7 @@ layout {
 
                 // ── Git branch (command widget) ─────────────────────
                 command_git_branch_command     "git rev-parse --abbrev-ref HEAD"
-                command_git_branch_format      "#[fg=#94e2d5] {stdout} "
+                command_git_branch_format      "#[fg=#94e2d5] {stdout} "
                 command_git_branch_interval    "10"
                 command_git_branch_rendermode  "static"
 
