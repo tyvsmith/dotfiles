@@ -32,7 +32,7 @@ function container-fzf --description "Interactive distrobox container picker"
     else if set -q _flag_new_window
         set fzf_header "Select container  [new window]"
     else if set -q _flag_zellij
-        set fzf_header "enter: current pane | alt-s: split | alt-t: new tab"
+        set fzf_header "enter: floating | alt-s: split | alt-t: new tab"
     end
 
     # Get container list, skip header line
@@ -128,8 +128,7 @@ function container-fzf --description "Interactive distrobox container picker"
 
     # zellij multi-action mode
     # Picker pane has close_on_exit=true, so it auto-closes when script exits.
-    # Uses --in-place or -- COMMAND to launch distrobox as the pane's process
-    # (no leftover shell command text, clean pane title).
+    # All actions launch distrobox as the pane's command directly (no shell wrapper).
     if set -q _flag_zellij
         switch "$key"
             case "alt-s"
@@ -154,11 +153,8 @@ function container-fzf --description "Interactive distrobox container picker"
                 zellij action new-tab --layout "$layout_file" --name "$container_name"
                 rm -f "$layout_file"
             case ""
-                # Current pane: send distrobox command to the original pane
-                zellij action toggle-floating-panes
-                sleep 0.3
-                zellij action write-chars "distrobox enter $container_name"
-                zellij action write 10
+                # Floating pane running distrobox directly
+                zellij action new-pane --floating --name "$container_name" -- distrobox enter $container_name
         end
         return 0
     end
