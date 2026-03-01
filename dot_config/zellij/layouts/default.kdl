@@ -29,12 +29,12 @@ layout {
                 color_mantle "#181825"
                 color_crust "#11111b"
 
-                format_left   "#[bg=default,fg=#74c7ec]#[bg=#74c7ec,fg=#11111b,bold] {session} #[bg=default] {mode}#[bg=default] {tabs}"
+                format_left   "{tabs}"
                 format_center "{notifications}"
-                format_right  "#[bg=default,fg=#94e2d5]#[fg=#11111b,bg=#94e2d5] #[bg=#45475a,fg=#94e2d5,bold] {command_git_branch}#[bg=default,fg=#45475a]#[bg=default,fg=#eba0ac]#[bg=#eba0ac,fg=#11111b]󰅐 #[bg=#45475a,fg=#eba0ac,bold] {datetime}#[bg=default,fg=#45475a]"
+                format_right  "#[bg=default,fg=#b4befe]#[bg=#b4befe,fg=#11111b]⮁ #[bg=#45475a,fg=#b4befe,bold] {swap_layout}#[bg=default,fg=#45475a] #[bg=default,fg=#cba6f7]#[bg=#cba6f7,fg=#11111b] #[bg=#45475a,fg=#cba6f7,bold] {command_hostname}#[bg=default,fg=#45475a] #[bg=default,fg=#fab387]#[bg=#fab387,fg=#11111b] #[bg=#45475a,fg=#fab387,bold] {command_cpu}#[bg=default,fg=#45475a] #[bg=default,fg=#eba0ac]#[bg=#eba0ac,fg=#11111b]󰅐 #[bg=#45475a,fg=#eba0ac,bold] {datetime}#[bg=default,fg=#45475a] #[bg=default,fg=#74c7ec]#[bg=#74c7ec,fg=#11111b,bold] {session} #[bg=default] {mode}"
                 format_space  ""
                 format_hide_on_overlength "true"
-                format_precedence "lrc"
+                format_precedence "rlc"
 
                 border_enabled  "true"
                 border_char     "┈"
@@ -71,10 +71,18 @@ layout {
                 notification_format_no_notifications ""
                 notification_show_interval "10"
 
-                command_git_branch_command     "git rev-parse --abbrev-ref HEAD"
-                command_git_branch_format      "{stdout}"
-                command_git_branch_interval    "10"
-                command_git_branch_rendermode  "static"
+                swap_layout_format          "{name}"
+                swap_layout_hide_if_empty   "true"
+
+                command_hostname_command       "hostname -s"
+                command_hostname_format        "{stdout}"
+                command_hostname_interval      "0"
+                command_hostname_rendermode    "static"
+
+                command_cpu_command            "bash -c \"cut -d' ' -f1 /proc/loadavg\""
+                command_cpu_format             "{stdout}"
+                command_cpu_interval           "5"
+                command_cpu_rendermode         "static"
 
                 datetime          "{format}"
                 datetime_format   "%H:%M"
@@ -84,7 +92,7 @@ layout {
 
         children
 
-        pane size=1 borderless=true {
+        pane size=2 borderless=true {
             plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
                 color_rosewater "#f5e0dc"
                 color_flamingo "#f2cdcd"
@@ -117,7 +125,10 @@ layout {
                 format_center ""
                 format_right  "#[fg=#6c7086]#[fg=#89b4fa]Alt #[fg=#6c7086]hjkl focus  #[fg=#89b4fa]Alt+n #[fg=#6c7086]pane  #[fg=#89b4fa]Alt+f #[fg=#6c7086]float  #[fg=#89b4fa]Alt+[/] #[fg=#6c7086]layout "
                 format_space  ""
-                border_enabled  "false"
+                border_enabled  "true"
+                border_char     "┈"
+                border_format   "#[fg=#313244]{char}"
+                border_position "top"
 
                 mode_normal       "#[fg=#6c7086] #[fg=#f38ba8]^g #[fg=#6c7086]lock  #[fg=#94e2d5]^p #[fg=#6c7086]pane  #[fg=#94e2d5]^t #[fg=#6c7086]tab  #[fg=#f9e2af]^n #[fg=#6c7086]resize  #[fg=#f2cdcd]^s #[fg=#6c7086]scroll  #[fg=#f9e2af]^h #[fg=#6c7086]move  #[fg=#f5c2e7]^o #[fg=#6c7086]session  #[fg=#cba6f7]^b #[fg=#6c7086]tmux"
                 mode_locked       "#[fg=#6c7086] #[fg=#a6e3a1]^g #[fg=#6c7086]unlock"

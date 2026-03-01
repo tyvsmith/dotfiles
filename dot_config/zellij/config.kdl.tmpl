@@ -1,6 +1,9 @@
 keybinds clear-defaults=true {
     locked {
-        bind "Ctrl g" { SwitchToMode "normal"; }
+        bind "Ctrl g" {
+            MessagePlugin "autolock" { payload "toggle"; };
+            SwitchToMode "normal";
+        }
     }
     pane {
         bind "left" { MoveFocus "left"; }
@@ -159,7 +162,10 @@ keybinds clear-defaults=true {
         bind "Alt [" { PreviousSwapLayout; }
         bind "Alt ]" { NextSwapLayout; }
         bind "Alt f" { ToggleFloatingPanes; }
-        bind "Ctrl g" { SwitchToMode "locked"; }
+        bind "Ctrl g" {
+            MessagePlugin "autolock" { payload "toggle"; };
+            SwitchToMode "locked";
+        }
         bind "Alt h" { MoveFocusOrTab "left"; }
         bind "Alt i" { MoveTab "left"; }
         bind "Alt j" { MoveFocus "down"; }
@@ -283,18 +289,17 @@ plugins {
     welcome-screen location="zellij:session-manager" {
         welcome_screen true
     }
+    autolock location="https://github.com/fresh2dev/zellij-autolock/releases/latest/download/zellij-autolock.wasm" {
+        is_enabled true
+        triggers "nvim|vim|vi|helix|hx|fzf|atuin"
+        reaction_seconds "0.3"
+        print_to_log true
+    }
 }
 
 // Plugins to load in the background when a new session starts
 load_plugins {
-    // zellij-autolock: auto-lock when in vim/neovim/helix so keybindings don't conflict
-    "https://github.com/fresh2dev/zellij-autolock/releases/latest/download/zellij-autolock.wasm" {
-        triggers "nvim|vim|vi|helix|hx|fzf|atuin"
-        watch_triggers "lazygit"
-        reaction "lock"
-        watch_interval "1.0"
-        print_to_log "true"
-    }
+    autolock
 }
 
 // ── Theme ───────────────────────────────────────────────────────────
