@@ -8,7 +8,7 @@
 #   --new-window     Open selection in a new tmux window (tmux only)
 #   --split-h        Open selection in a horizontal tmux split (tmux only)
 #   --split-v        Open selection in a vertical tmux split (tmux only)
-#   --zellij-pane    Open selection in a new zellij pane
+#   --zellij         Zellij mode: multi-action picker (enter/ctrl-s/ctrl-t)
 
 function container-fzf --description "Interactive distrobox container picker"
     # Guard: requires distrobox and fzf
@@ -22,7 +22,7 @@ function container-fzf --description "Interactive distrobox container picker"
     end
 
     # Parse flags
-    argparse 'print-only' 'running-only' 'new-window' 'split-h' 'split-v' 'zellij-pane' 'header=' -- $argv
+    argparse 'print-only' 'running-only' 'new-window' 'split-h' 'split-v' 'zellij' 'header=' -- $argv
     or return 1
 
     # Determine fzf header text
@@ -31,8 +31,8 @@ function container-fzf --description "Interactive distrobox container picker"
         set fzf_header "$_flag_header"
     else if set -q _flag_new_window
         set fzf_header "Select container  [new window]"
-    else if set -q _flag_zellij_pane
-        set fzf_header "Select container  [new pane]"
+    else if set -q _flag_zellij
+        set fzf_header "enter: current pane | alt-s: split | alt-t: new tab"
     end
 
     # Get container list, skip header line
@@ -54,23 +54,40 @@ function container-fzf --description "Interactive distrobox container picker"
         end
     end
 
-    # Format for fzf: show NAME | STATUS | IMAGE (skip ID column)
-    # Extract just the name for selection
-    # Note: fzf uses $SHELL for preview, so we force sh -c for POSIX compat
-    set -l selected (
-        printf '%s\n' $db_output | \
-        fzf \
-            --header "$fzf_header" \
-            --preview 'sh -c '"'"'name=$(echo "$1" | awk -F"|" "{print \$2}" | xargs); echo "$1"; echo "---"; podman inspect --format "Image: {{.Config.Image}}\nCreated: {{.Created}}\nState: {{.State.Status}}" "$name" 2>/dev/null || echo "Container not running - will start on enter"'"'"' -- {}' \
-            --prompt "container> " \
-            --height 60% \
-            --layout reverse \
-            --border rounded \
-            --ansi
-    )
+    # Build fzf options
+    set -l fzf_opts \
+        --header "$fzf_header" \
+        --preview 'sh -c '"'"'name=$(echo "$1" | awk -F"|" "{print \$2}" | xargs); echo "$1"; echo "---"; podman inspect --format "Image: {{.Config.Image}}\nCreated: {{.Created}}\nState: {{.State.Status}}" "$name" 2>/dev/null || echo "Container not running - will start on enter"'"'"' -- {}' \
+        --prompt "container> " \
+        --layout reverse \
+        --border rounded \
+        --ansi
+
+    # In zellij mode, use --expect to capture which key was pressed
+    if set -q _flag_zellij
+        set -a fzf_opts --expect "alt-s,alt-t"
+    end
+
+    # Run fzf
+    set -l fzf_output (printf '%s\n' $db_output | fzf $fzf_opts)
+
+    if test (count $fzf_output) -eq 0
+        return 0 # User cancelled
+    end
+
+    # In zellij mode, first line is the key pressed, second is the selection
+    # In normal mode, the only line is the selection
+    set -l key ""
+    set -l selected ""
+    if set -q _flag_zellij
+        set key $fzf_output[1]
+        set selected $fzf_output[2]
+    else
+        set selected $fzf_output[1]
+    end
 
     if test -z "$selected"
-        return 0 # User cancelled
+        return 0
     end
 
     # Extract container name (second column, pipe-delimited)
@@ -109,12 +126,32 @@ function container-fzf --description "Interactive distrobox container picker"
         end
     end
 
-    # zellij integration
-    if set -q _flag_zellij_pane
-        if test -n "$ZELLIJ"
-            zellij run --name "$container_name" -- distrobox enter $container_name
-            return 0
+    # zellij multi-action mode
+    # Picker pane has close_on_exit=true, so it auto-closes when script exits.
+    # For "enter", exec replaces the picker process so the pane stays as container.
+    if set -q _flag_zellij
+        switch "$key"
+            case "alt-s"
+                # Hide floating picker, create tiled pane (gets focus), write command
+                zellij action toggle-floating-panes
+                zellij action new-pane -d down --name "$container_name"
+                sleep 0.3
+                zellij action write-chars "distrobox enter $container_name"
+                zellij action write 10
+            case "alt-t"
+                # New tab; write distrobox command into it; picker auto-closes on exit
+                zellij action new-tab --name "$container_name"
+                sleep 0.3
+                zellij action write-chars "distrobox enter $container_name"
+                zellij action write 10
+            case ""
+                # Enter key: hide picker, write command to the original pane
+                zellij action toggle-floating-panes
+                sleep 0.3
+                zellij action write-chars "distrobox enter $container_name"
+                zellij action write 10
         end
+        return 0
     end
 
     # Default: enter the container directly in the current shell

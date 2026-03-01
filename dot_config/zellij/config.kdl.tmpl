@@ -96,10 +96,11 @@ keybinds clear-defaults=true {
         bind "w" { SearchToggleOption "Wrap"; }
     }
     session {
-        // Container picker: fzf-based distrobox selector in a floating pane
+        // Container picker: enter=current pane, alt-s=split, alt-t=new tab
         bind "e" {
-            Run "fish" "-c" "container-fzf --zellij-pane" {
-                direction "Down"
+            Run "fish" "-c" "container-fzf --zellij" {
+                floating true
+                close_on_exit true
             }
             SwitchToMode "normal"
         }
