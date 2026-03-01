@@ -234,4 +234,4 @@ set -g pane-border-indicators off
 set -g pane-border-status off
 
 # Mode indicator pill appended to end of status-right: PREFIX (mauve), COPY (yellow), NORMAL (dim)
-set -ag status-right " #{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7#,bold] 󰌆 PREFIX #[fg=#cba6f7#,bg=default#,nobold],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af#,bold] 󰆏 COPY #[fg=#f9e2af#,bg=default#,nobold],#[fg=#45475a#,bg=default]#[fg=#a6adc8#,bg=#45475a] 󰝦 NORMAL #[fg=#45475a#,bg=default]}}"
+set -ag status-right " #{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7] 󰌆 #[fg=#cdd6f4#,bg=#313244] PREFIX #[fg=#313244#,bg=default],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af] 󰆏 #[fg=#cdd6f4#,bg=#313244] COPY #[fg=#313244#,bg=default],#[fg=#6c7086#,bg=default]#[fg=#11111b#,bg=#6c7086] 󰝦 #[fg=#a6adc8#,bg=#313244] NORMAL #[fg=#313244#,bg=default]}}"
