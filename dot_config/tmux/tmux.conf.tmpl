@@ -165,6 +165,9 @@ set -g @plugin 'tmux-plugins/tmux-cpu'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'sainnhe/tmux-fzf'
+set -g @plugin 'alexwforsythe/tmux-which-key'
+set -g @tmux-which-key-xdg-enable 1
+set -g @tmux-which-key-xdg-plugin-path "tmux/tmux-which-key"
 
 set -g @resurrect-capture-pane-contents 'on'
 set -g @continuum-restore 'off'
@@ -175,6 +178,12 @@ set -g @resurrect-strategy-nvim 'session'
 set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
 {{- end }}
 
+# ── Pane Borders (Zellij-style: subtle, thin, dim) ───────────────────
+set -g pane-border-lines single
+set -g pane-border-style "fg=#313244"
+set -g pane-active-border-style "fg=#45475a"
+set -g pane-border-indicators off
+
 # ── Catppuccin Theme ─────────────────────────────────────────────────
 # [omarchy override] Uncomment this block to replace the omarchy inline theme
 set -g @plugin 'catppuccin/tmux'
@@ -182,15 +191,15 @@ set -g @catppuccin_flavor "mocha"
 
 set -g @catppuccin_status_background "none"
 set -g @catppuccin_window_status_style "custom"
-set -g @catppuccin_window_left_separator "#[fg=##{?window_activity_flag,##{@thm_lavender},##{@thm_overlay_2}},bg=default]#[fg=#{@thm_crust},bg=##{?window_activity_flag,##{@thm_lavender},##{@thm_overlay_2}}]"
+set -g @catppuccin_window_left_separator "#[fg=##{?window_activity_flag,##{@thm_lavender},##{@thm_overlay_2}},bg=default]#[fg=#{@thm_crust},bg=##{?window_activity_flag,##{@thm_lavender},##{@thm_overlay_2}}]"
 set -g @catppuccin_window_middle_separator " "
-set -g @catppuccin_window_right_separator "#[fg=#{@thm_surface_0},bg=default]"
-set -g @catppuccin_window_current_left_separator "#[fg=#{@thm_mauve},bg=default]#[fg=#{@thm_crust},bg=#{@thm_mauve}]"
+set -g @catppuccin_window_right_separator "#[fg=#{@thm_surface_0},bg=default]"
+set -g @catppuccin_window_current_left_separator "#[fg=#{@thm_mauve},bg=default]#[fg=#{@thm_crust},bg=#{@thm_mauve}]"
 set -g @catppuccin_window_current_middle_separator " "
-set -g @catppuccin_window_current_right_separator "#[fg=#{@thm_surface_1},bg=default]"
+set -g @catppuccin_window_current_right_separator "#[fg=#{@thm_surface_1},bg=default]"
 set -g @catppuccin_status_connect_separator "no"
 
-set -g @catppuccin_status_right_separator " "
+set -g @catppuccin_status_right_separator " "
 set -g @catppuccin_window_flags "icon"
 set -g @catppuccin_window_text "#{?window_activity_flag,#[bold fg=#{@thm_lavender}],} #T (#{window_panes})"
 set -g @catppuccin_window_current_text " #T (#{window_panes})"
@@ -200,7 +209,7 @@ set -g status-left ""
 bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
 bind -T root MouseDown1StatusRight choose-tree -Zw
 set -g status 2
-set -g status-format[1] "#[fg=#{@thm_surface_1},bg=default,fill=default]#(printf '·%.0s' $(seq 1 #{client_width}))"
+set -g status-format[1] "#[fg=#313244,bg=default,fill=default]#(printf '─%.0s' $(seq 1 #{client_width}))"
 set -g status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
 set -agF status-right "#{E:@catppuccin_status_application}"
 set -agF status-right "#{E:@catppuccin_status_cpu}"
