@@ -161,7 +161,6 @@ bind -T root MouseDown2Status kill-window -t=
 # ── Plugins ──────────────────────────────────────────────────────────
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
 
-set -g @plugin 'tmux-plugins/tmux-cpu'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'sainnhe/tmux-fzf'
@@ -215,7 +214,6 @@ set -g status-format[1] "#[fg=#313244,bg=default,fill=default]#(printf '─%.0s'
 set -g status-right "#{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7#,bold] PREFIX #[fg=#cba6f7#,bg=default#,nobold],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af#,bold] COPY #[fg=#f9e2af#,bg=default#,nobold],#[fg=#45475a#,bg=default]#[fg=#a6adc8#,bg=#45475a] NORMAL #[fg=#45475a#,bg=default]}} "
 set -ag status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
 set -agF status-right "#{E:@catppuccin_status_application}"
-set -agF status-right "#{E:@catppuccin_status_cpu}"
 set -ag status-right "#{E:@catppuccin_status_host}"
 set -ag status-right "#{E:@catppuccin_status_session}"
 
