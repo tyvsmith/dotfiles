@@ -21,4 +21,6 @@ if status is-interactive
 
     # Set simple hostname for prompt display
     set -gx HOST (string split -f1 '.' $hostname)
+
+
 end
