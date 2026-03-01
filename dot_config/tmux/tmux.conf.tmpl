@@ -147,8 +147,9 @@ bind n new-session
 # [omarchy override] Prefix+R is rename-session in omarchy; this rebinds to reload config
 # bind R source-file ~/.config/tmux/tmux.conf
 
-# Mouse: double-click status bar for new window
+# Mouse: double-click status bar for new window, middle-click tab to close
 bind -T root DoubleClick1Status new-window -c "#{pane_current_path}"
+bind -T root MouseDown2Status kill-window -t=
 
 # ── Plugins ──────────────────────────────────────────────────────────
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
@@ -189,12 +190,22 @@ set -g @catppuccin_window_current_text " #T (#{window_panes})"
 set -g status-right-length 200
 set -g status-left-length 100
 set -g status-left ""
+bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
+bind -T root MouseDown1StatusRight choose-tree -Zw
 set -g status 2
 set -g status-format[1] "#[fg=#{@thm_surface_1},bg=default,fill=default]#(printf '·%.0s' $(seq 1 #{client_width}))"
 set -g status-right "#{E:@catppuccin_status_application}"
 set -agF status-right "#{E:@catppuccin_status_cpu}"
 set -ag status-right "#{E:@catppuccin_status_host}"
 set -ag status-right "#{E:@catppuccin_status_session}"
+
+# ── Statusbar Auto-hide ──────────────────────────────────────────────
+# Show statusbar only when >1 window; toggle manually with prefix+b
+set-hook -g after-new-window         'if -F "#{==:#{session_windows},1}" "set status off" "set status 2"'
+set-hook -g window-unlinked          'if -F "#{==:#{session_windows},1}" "set status off" "set status 2"'
+set-hook -g client-session-changed   'if -F "#{==:#{session_windows},1}" "set status off" "set status 2"'
+set-hook -g session-created          'set status off'
+bind b if -F '#{==:#{status},off}' 'set status 2' 'set status off'
 
 # ── Right-click Menu Fix ─────────────────────────────────────────────
 # Patch right-click menus: add -O flag so menus stay open after release
@@ -207,3 +218,4 @@ run '~/.config/tmux/plugins/tpm/tpm'
 # otherwise the plugin's set -gF overwrites them). Solid bg breaks custom separators.
 set -g window-status-activity-style "bold"
 set -g window-status-bell-style "bold"
+set -g status-left "#[fg=#313244,bg=default]#[fg=#cdd6f4,bg=#313244,bold]+#[fg=#313244,bg=default,nobold] "
