@@ -11,7 +11,7 @@ add_newline = false
 # $character
 # """
 format = """
-$cmd_duration 󰜥 $directory $git_branch
+$cmd_duration$container 󰜥 $directory $git_branch
 $character"""
 
 # Replace the "❯" symbol in the prompt with "➜"
@@ -94,6 +94,11 @@ format = '[](bold fg:#a6e3a1)[󰉋 $path]($style)[](bold fg:#a6e3a1)'
 "Pictures" = "  "
 "Videos" = "  "
 "GitHub" = " 󰊤 "
+
+[container]
+symbol = "󰏖"
+style = "bold bg:#cba6f7 fg:#11111b"
+format = ' [](bold fg:#cba6f7)[$symbol $name]($style)[](bold fg:#cba6f7)'
 
 [cmd_duration]
 min_time = 0

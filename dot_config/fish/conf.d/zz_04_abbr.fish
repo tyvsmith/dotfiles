@@ -61,4 +61,13 @@ if status is-interactive
 
     # Broot
     abbr --add br 'broot'
+
+    # --- Container management (distrobox) ---
+
+    abbr --add db 'distrobox'
+    abbr --add dbe 'distrobox enter'
+    abbr --add dbl 'distrobox list'
+    abbr --add dbs 'distrobox stop'
+    abbr --add dbrm 'distrobox rm'
+    abbr --add dbc 'distrobox create'
 end
