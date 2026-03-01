@@ -178,38 +178,11 @@ set -g @resurrect-strategy-nvim 'session'
 set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
 {{- end }}
 
-# ── Catppuccin Theme ─────────────────────────────────────────────────
-# [omarchy override] Uncomment this block to replace the omarchy inline theme
-set -g @plugin 'catppuccin/tmux'
-set -g @catppuccin_flavor "mocha"
-
-set -g @catppuccin_status_background "none"
-set -g @catppuccin_window_status_style "custom"
-set -g @catppuccin_window_left_separator "#[fg=##{?window_activity_flag,##{@thm_lavender},##{@thm_blue}},bg=default]#[fg=#{@thm_crust},bg=##{?window_activity_flag,##{@thm_lavender},##{@thm_blue}}]"
-set -g @catppuccin_window_middle_separator " "
-set -g @catppuccin_window_right_separator "#[fg=#{@thm_surface_0},bg=default]"
-set -g @catppuccin_window_current_left_separator "#[fg=#{@thm_peach},bg=default]#[fg=#{@thm_crust},bg=#{@thm_peach}]"
-set -g @catppuccin_window_current_middle_separator " "
-set -g @catppuccin_window_current_right_separator "#[fg=#{@thm_surface_1},bg=default]"
-set -g @catppuccin_status_connect_separator "no"
-
-set -g @catppuccin_status_right_separator " "
-set -g @catppuccin_window_flags "icon"
-set -g @catppuccin_window_text "#{?window_activity_flag,#[bold fg=#{@thm_lavender}],#[fg=#{@thm_blue}]} #T (#{window_panes})"
-set -g @catppuccin_window_current_text "#[fg=#{@thm_peach}] #T (#{window_panes})"
-set -g status-right-length 200
-set -g status-left-length 100
-set -g status-left ""
+# ── Status Bar ───────────────────────────────────────────────────────
+# [omarchy override] Catppuccin theme + Zellij-style status bar.
+# Split into two files: pre-TPM config and post-TPM overrides.
+source-file ~/.config/tmux/statusbar.conf
 bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
-set -g status 2
-set -g status-format[1] "#[fg=#313244,bg=default,fill=default]#(printf '·%.0s' $(seq 1 #{client_width}))"
-set -g status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
-set -agF status-right "#{E:@catppuccin_status_application}"
-set -ag status-right "#{E:@catppuccin_status_host}"
-set -ag status-right "#{E:@catppuccin_status_session}"
-
-# ── Statusbar Toggle ──────────────────────────────────────────────────
-bind b if -F '#{==:#{status},off}' 'set status 2' 'set status off'
 
 # ── Right-click Menu Fix ─────────────────────────────────────────────
 # Patch right-click menus: add -O flag so menus stay open after release
@@ -218,28 +191,5 @@ run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/dis
 # Initialize TMUX plugin manager (cloned by chezmoi to ~/.config/tmux/plugins/tpm)
 run '~/.config/tmux/plugins/tpm/tpm'
 
-# ── Post-TPM Overrides ─────────────────────────────────────────────────────
-# Must be after TPM loads catppuccin, otherwise the plugin overwrites them.
-
-# Activity/bell: solid bg breaks custom separators
-set -g window-status-activity-style "bold"
-set -g window-status-bell-style "bold"
-set -g status-left "#[fg=#313244,bg=default]#[fg=#cdd6f4,bg=#313244,bold]+#[fg=#313244,bg=default,nobold] "
-
-# Pane borders (Zellij-style: subtle, thin, dim) -- catppuccin sets bright borders
-set -g pane-border-lines single
-set -g pane-border-style "fg=#313244"
-set -g pane-active-border-style "fg=#45475a"
-set -g pane-border-indicators off
-set -g pane-border-status off
-
-
-# Application pill: flamingo icon, flamingo text
-set -g @catppuccin_status_application "#[fg=#eba0ac]#[bg=default]#[fg=#11111b,bg=#eba0ac] #[fg=#eba0ac,bg=#313244]#{E:@catppuccin_application_text}#[fg=#313244]#[bg=default] "
-# Host pill: mauve monitor icon, mauve text
-set -g @catppuccin_status_host "#[fg=#cba6f7]#[bg=default]#[fg=#11111b,bg=#cba6f7]󰍹 #[fg=#cba6f7,bg=#313244]#{E:@catppuccin_host_text}#[fg=#313244]#[bg=default] "
-
-# Session pill: constant blue (override catppuccin green/red prefix switch)
-set -g @catppuccin_status_session "#[fg=#89b4fa]#[bg=default]#[fg=#11111b,bg=#89b4fa] #[fg=#89b4fa,bg=#313244]#{E:@catppuccin_session_text}#[fg=#313244]#[bg=default] "
-# Mode indicator pill appended to end of status-right: PREFIX (mauve), COPY (yellow), NORMAL (dim)
-set -ag status-right "#{?client_prefix,#[fg=#cba6f7]#[bg=default]#[fg=#11111b#,bg=#cba6f7]󰌶 #[fg=#cba6f7#,bg=#313244] prefix#[fg=#313244]#[bg=default] ,#{?pane_in_mode,#[fg=#f9e2af]#[bg=default]#[fg=#11111b#,bg=#f9e2af]󰌶 #[fg=#f9e2af#,bg=#313244] copy#[fg=#313244]#[bg=default] ,#[fg=#a6e3a1]#[bg=default]#[fg=#11111b#,bg=#a6e3a1]󰌶 #[fg=#a6e3a1#,bg=#313244] normal#[fg=#313244]#[bg=default] }}"
+# Post-TPM overrides (catppuccin overwrites borders, pill styles at load time)
+source-file ~/.config/tmux/statusbar-overrides.conf
