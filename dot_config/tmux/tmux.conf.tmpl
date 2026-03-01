@@ -196,6 +196,7 @@ set -g @catppuccin_status_right_separator " "
 set -g @catppuccin_window_flags "icon"
 set -g @catppuccin_window_text "#{?window_activity_flag,#[bold fg=#{@thm_lavender}],} #T (#{window_panes})"
 set -g @catppuccin_window_current_text " #T (#{window_panes})"
+set -g @catppuccin_session_color "#{@thm_blue}"
 set -g status-right-length 200
 set -g status-left-length 100
 set -g status-left ""
@@ -234,4 +235,4 @@ set -g pane-border-indicators off
 set -g pane-border-status off
 
 # Mode indicator pill appended to end of status-right: PREFIX (mauve), COPY (yellow), NORMAL (dim)
-set -ag status-right " #{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7] 󰌆 #[fg=#cdd6f4#,bg=#313244] PREFIX #[fg=#313244#,bg=default],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af] 󰆏 #[fg=#cdd6f4#,bg=#313244] COPY #[fg=#313244#,bg=default],#[fg=#6c7086#,bg=default]#[fg=#11111b#,bg=#6c7086] 󰝦 #[fg=#a6adc8#,bg=#313244] NORMAL #[fg=#313244#,bg=default]}}"
+set -ag status-right "#{?client_prefix,#[fg=#cba6f7]#[bg=default]#[fg=#11111b#,bg=#cba6f7]󰌵 #[fg=#cdd6f4#,bg=#313244]PREFIX#[fg=#313244]#[bg=default] ,#{?pane_in_mode,#[fg=#f9e2af]#[bg=default]#[fg=#11111b#,bg=#f9e2af]󰌵 #[fg=#cdd6f4#,bg=#313244]COPY#[fg=#313244]#[bg=default] ,#[fg=#a6e3a1]#[bg=default]#[fg=#11111b#,bg=#a6e3a1]󰌵 #[fg=#cdd6f4#,bg=#313244]NORMAL#[fg=#313244]#[bg=default] }}"
