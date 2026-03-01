@@ -210,7 +210,10 @@ bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
 bind -T root MouseDown1StatusRight choose-tree -Zw
 set -g status 2
 set -g status-format[1] "#[fg=#313244,bg=default,fill=default]#(printf '─%.0s' $(seq 1 #{client_width}))"
-set -g status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
+# Mode indicator pill: PREFIX (mauve), COPY (yellow), NORMAL (dim)
+# Uses hardcoded Catppuccin Mocha hex to avoid theme variable expansion issues
+set -g status-right "#{?client_prefix,#[fg=#cba6f7#,bg=default]#[fg=#11111b#,bg=#cba6f7#,bold] PREFIX #[fg=#cba6f7#,bg=default#,nobold],#{?pane_in_mode,#[fg=#f9e2af#,bg=default]#[fg=#11111b#,bg=#f9e2af#,bold] COPY #[fg=#f9e2af#,bg=default#,nobold],#[fg=#45475a#,bg=default]#[fg=#a6adc8#,bg=#45475a] NORMAL #[fg=#45475a#,bg=default]}} "
+set -ag status-right "#[fg=#{@thm_mauve}]#(~/.config/tmux/scripts/container-status.sh) "
 set -agF status-right "#{E:@catppuccin_status_application}"
 set -agF status-right "#{E:@catppuccin_status_cpu}"
 set -ag status-right "#{E:@catppuccin_status_host}"
