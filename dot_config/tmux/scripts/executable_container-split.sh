@@ -19,9 +19,9 @@ CONTAINER_ID=""
 # Walk the process tree to find a shell that has CONTAINER_ID set
 if [ -n "$PANE_PID" ]; then
     # Try to read CONTAINER_ID from any child process of the pane
-    for pid in $(pgrep -P "$PANE_PID" 2>/dev/null) $PANE_PID; do
+    for pid in $(pgrep -P "$PANE_PID" 2>/dev/null || true) $PANE_PID; do
         if [ -r "/proc/$pid/environ" ]; then
-            cid=$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep '^CONTAINER_ID=' | head -1 | cut -d= -f2-)
+            cid=$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | sed -n 's/^CONTAINER_ID=//p' | head -1)
             if [ -n "$cid" ]; then
                 CONTAINER_ID="$cid"
                 break
@@ -31,8 +31,13 @@ if [ -n "$PANE_PID" ]; then
 fi
 
 if [ -n "$CONTAINER_ID" ]; then
+    # Sanitize: only allow alphanumeric, dash, underscore, dot
+    if ! [[ "$CONTAINER_ID" =~ ^[A-Za-z0-9._-]+$ ]]; then
+        echo "container-split.sh: invalid CONTAINER_ID: $CONTAINER_ID" >&2
+        exit 1
+    fi
     # Inside a container — new split enters the same container
-    tmux split-window "$SPLIT_DIR" -c "#{pane_current_path}" "distrobox enter $CONTAINER_ID"
+    tmux split-window "$SPLIT_DIR" -c "#{pane_current_path}" -- distrobox enter "$CONTAINER_ID"
 else
     # On host — normal split
     tmux split-window "$SPLIT_DIR" -c "#{pane_current_path}"

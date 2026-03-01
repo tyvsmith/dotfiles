@@ -9,9 +9,9 @@ PANE_PID=$(tmux display-message -p '#{pane_pid}' 2>/dev/null)
 [ -z "$PANE_PID" ] && exit 0
 
 # Walk the pane's process tree looking for CONTAINER_ID
-for pid in $(pgrep -P "$PANE_PID" 2>/dev/null) $PANE_PID; do
+for pid in $(pgrep -P "$PANE_PID" 2>/dev/null || true) $PANE_PID; do
     if [ -r "/proc/$pid/environ" ]; then
-        cid=$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep '^CONTAINER_ID=' | head -1 | cut -d= -f2-)
+        cid=$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | sed -n 's/^CONTAINER_ID=//p' | head -1)
         if [ -n "$cid" ]; then
             echo "󰏖 $cid"
             exit 0

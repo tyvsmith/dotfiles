@@ -18,9 +18,7 @@ setw -g mode-keys vi
 bind -T copy-mode-vi v send -X begin-selection
 bind -T copy-mode-vi y send -X copy-selection-and-cancel
 
-# Pane Controls
-bind h split-window -h -c "#{pane_current_path}"
-bind v split-window -v -c "#{pane_current_path}"
+# Pane Controls (prefix+h/v are container-aware splits, see Container Integration below)
 bind -n C-M-PageUp split-window -h -c "#{pane_current_path}"
 bind -n C-M-PageDown split-window -v -c "#{pane_current_path}"
 bind -n C-M-Home split-window -h -c "#{pane_current_path}"
@@ -148,7 +146,7 @@ bind n new-session
 # bind R source-file ~/.config/tmux/tmux.conf
 
 # ── Container Integration ─────────────────────────────────────────────
-# prefix+e: fzf container picker (enter=new window, alt-h=hsplit, alt-v=vsplit)
+# prefix+e: fzf container picker (enter=new window, alt-s=split)
 bind e display-popup -E -w 80% -h 60% "~/.config/tmux/scripts/container-pick-send.sh"
 
 # Container-aware splits: if current pane is inside a container, new splits
