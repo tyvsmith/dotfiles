@@ -33,7 +33,7 @@ macros:
       - run-shell "~/.config/tmux/scripts/container-split.sh -v"
   - name: toggle-status
     commands:
-      - if -F "#{==:#{status},off}" "set status 3" "set status off"
+      - if -F "#{==:#{status},off}" "set status 2" "set status off"
   - name: lazygit-popup
     commands:
       - display-popup -E -w 90% -h 90% -d "#{pane_current_path}" lazygit
