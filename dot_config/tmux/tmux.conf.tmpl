@@ -209,12 +209,7 @@ set -agF status-right "#{E:@catppuccin_status_application}"
 set -ag status-right "#{E:@catppuccin_status_host}"
 set -ag status-right "#{E:@catppuccin_status_session}"
 
-# ── Statusbar Auto-hide ──────────────────────────────────────────────
-# Show statusbar only when >1 window; toggle manually with prefix+b
-set-hook -g after-new-window         'if -F "#{==:#{session_windows},1}" "set status off" "set status 3"'
-set-hook -g window-unlinked          'if -F "#{==:#{session_windows},1}" "set status off" "set status 3"'
-set-hook -g client-session-changed   'if -F "#{==:#{session_windows},1}" "set status off" "set status 3"'
-set-hook -g session-created          'set status off'
+# ── Statusbar Toggle ──────────────────────────────────────────────────
 bind b if -F '#{==:#{status},off}' 'set status 3' 'set status off'
 
 # ── Right-click Menu Fix ─────────────────────────────────────────────
