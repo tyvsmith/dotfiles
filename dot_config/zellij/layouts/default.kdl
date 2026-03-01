@@ -31,7 +31,7 @@ layout {
 
                 format_left   "{tabs}"
                 format_center "{notifications}"
-                format_right  "#[bg=default,fg=#b4befe]#[bg=#b4befe,fg=#11111b]⮁ #[bg=#45475a,fg=#b4befe,bold] {swap_layout}#[bg=default,fg=#45475a] #[bg=default,fg=#cba6f7]#[bg=#cba6f7,fg=#11111b] #[bg=#45475a,fg=#cba6f7,bold] {command_hostname}#[bg=default,fg=#45475a] #[bg=default,fg=#fab387]#[bg=#fab387,fg=#11111b] #[bg=#45475a,fg=#fab387,bold] {command_cpu}#[bg=default,fg=#45475a] #[bg=default,fg=#eba0ac]#[bg=#eba0ac,fg=#11111b]󰅐 #[bg=#45475a,fg=#eba0ac,bold] {datetime}#[bg=default,fg=#45475a] #[bg=default,fg=#74c7ec]#[bg=#74c7ec,fg=#11111b,bold] {session} #[bg=default] {mode}"
+                format_right  "#[bg=default,fg=#b4befe]#[bg=#b4befe,fg=#11111b]⮁ #[bg=#45475a,fg=#b4befe,bold] {swap_layout}#[bg=default,fg=#45475a] #[bg=default,fg=#cba6f7]#[bg=#cba6f7,fg=#11111b] #[bg=#45475a,fg=#cba6f7,bold] {command_hostname}#[bg=default,fg=#45475a] #[bg=default,fg=#74c7ec]#[bg=#74c7ec,fg=#11111b,bold] {session} #[bg=default] {mode}"
                 format_space  ""
                 format_hide_on_overlength "true"
                 format_precedence "rlc"
@@ -79,14 +79,6 @@ layout {
                 command_hostname_interval      "0"
                 command_hostname_rendermode    "static"
 
-                command_cpu_command            "bash -c \"cut -d' ' -f1 /proc/loadavg\""
-                command_cpu_format             "{stdout}"
-                command_cpu_interval           "5"
-                command_cpu_rendermode         "static"
-
-                datetime          "{format}"
-                datetime_format   "%H:%M"
-                datetime_timezone "America/Chicago"
             }
         }
 
