@@ -1,10 +1,3 @@
-# ╔══════════════════════════════════════════════════════════════════════╗
-# ║  OMARCHY BASE                                                       ║
-# ║  Default tmux config from omarchy. Keybinds designed to coexist     ║
-# ║  with Hyprland: Super=WM, Ctrl+Alt=panes, Ctrl+Shift=windows,     ║
-# ║  Ctrl+Alt+Shift=sessions.                                          ║
-# ╚══════════════════════════════════════════════════════════════════════╝
-
 # Prefix
 set -g prefix C-Space
 set -g prefix2 C-b
@@ -18,11 +11,10 @@ setw -g mode-keys vi
 bind -T copy-mode-vi v send -X begin-selection
 bind -T copy-mode-vi y send -X copy-selection-and-cancel
 
-# Pane Controls (prefix+h/v are container-aware splits, see Container Integration below)
-bind -n C-M-PageUp split-window -h -c "#{pane_current_path}"
-bind -n C-M-PageDown split-window -v -c "#{pane_current_path}"
-bind -n C-M-Home split-window -h -c "#{pane_current_path}"
-bind -n C-M-End kill-pane
+# Pane Controls
+bind h split-window -v -c "#{pane_current_path}"
+bind v split-window -h -c "#{pane_current_path}"
+bind x kill-pane
 
 bind -n C-M-Left select-pane -L
 bind -n C-M-Right select-pane -R
@@ -37,22 +29,32 @@ bind -n C-M-S-Right resize-pane -R 5
 # Window navigation
 bind r command-prompt -I "#W" "rename-window -- '%%'"
 bind c new-window -c "#{pane_current_path}"
-bind x kill-window
-bind -n C-S-Home new-window -c "#{pane_current_path}"
-bind -n C-S-End kill-window
+bind k kill-window
 
-bind -n C-S-PageUp next-window
-bind -n C-S-PageDown previous-window
+bind -n M-1 select-window -t 1
+bind -n M-2 select-window -t 2
+bind -n M-3 select-window -t 3
+bind -n M-4 select-window -t 4
+bind -n M-5 select-window -t 5
+bind -n M-6 select-window -t 6
+bind -n M-7 select-window -t 7
+bind -n M-8 select-window -t 8
+bind -n M-9 select-window -t 9
+
+bind -n M-Left select-window -t -1
+bind -n M-Right select-window -t +1
+bind -n M-S-Left swap-window -t -1 \; select-window -t -1
+bind -n M-S-Right swap-window -t +1 \; select-window -t +1
 
 # Session controls
 bind R command-prompt -I "#S" "rename-session -- '%%'"
-bind C new-session
-bind X kill-session
-bind -n C-M-S-Home new-session -c "#{pane_current_path}"
-bind -n C-M-S-End kill-session
+bind C new-session -c "#{pane_current_path}"
+bind K kill-session
+bind P switch-client -p
+bind N switch-client -n
 
-bind -n C-M-S-PageUp switch-client -p
-bind -n C-M-S-PageDown switch-client -n
+bind -n M-Up switch-client -p
+bind -n M-Down switch-client -n
 
 # General
 set -g default-terminal "tmux-256color"
@@ -65,138 +67,29 @@ set -g history-limit 50000
 set -g escape-time 0
 set -g focus-events on
 set -g set-clipboard on
+set -g allow-passthrough on
 setw -g aggressive-resize on
 set -g detach-on-destroy off
 
 # Status bar
 set -g status-position top
-# set -g status-interval 5
-# set -g status-left-length 30
-# set -g status-right-length 50
-# set -g window-status-separator ""
+set -g status-interval 5
+set -g status-left-length 30
+set -g status-right-length 50
+set -g window-status-separator ""
 
 # Theme
-# set -g status-style "bg=default,fg=default"
-# set -g status-left "#[fg=black,bg=blue,bold] #S #[bg=default] "
-# set -g status-right "#[fg=blue]#{?client_prefix,PREFIX ,}#[fg=brightblack]#h "
-# set -g window-status-format "#[fg=brightblack] #I:#W "
-# set -g window-status-current-format "#[fg=blue,bold] #I:#W "
-# set -g pane-border-style "fg=brightblack"
-# set -g pane-active-border-style "fg=blue"
-# set -g message-style "bg=default,fg=blue"
-# set -g message-command-style "bg=default,fg=blue"
-# set -g mode-style "bg=blue,fg=black"
-# setw -g clock-mode-colour blue
+set -g status-style "bg=default,fg=default"
+set -g status-left "#[fg=black,bg=blue,bold] #S #[bg=default] "
+set -g status-right "#[fg=blue]#{?client_prefix,PREFIX ,}#[fg=brightblack]#h "
+set -g window-status-format "#[fg=brightblack] #I:#W "
+set -g window-status-current-format "#[fg=blue,bold] #I:#W "
+set -g pane-border-style "fg=brightblack"
+set -g pane-active-border-style "fg=blue"
+set -g message-style "bg=default,fg=blue"
+set -g message-command-style "bg=default,fg=blue"
+set -g mode-style "bg=blue,fg=black"
+setw -g clock-mode-colour blue
 
-
-# ╔══════════════════════════════════════════════════════════════════════╗
-# ║  PERSONAL ADDITIONS                                                  ║
-# ║                                                                     ║
-# ║  Additions from personal dotfiles. Overrides of omarchy defaults    ║
-# ║  are commented out with "[omarchy override]" prefix.                ║
-# ║  Uncomment to enable.                                               ║
-# ╚══════════════════════════════════════════════════════════════════════╝
-
-# ── Terminal & Shell ─────────────────────────────────────────────────
-set-option -g default-shell ${SHELL}
-set -g allow-passthrough on
-
-
-# Propagate terminal identity so tools (yazi, superfile, etc.) can detect
-# graphics protocol support from the outer terminal (Ghostty/Kitty).
-# Without this, TERM_PROGRAM is unset inside tmux and image preview fails.
-set -ga update-environment "TERM_PROGRAM"
-set -ga update-environment "TERM_PROGRAM_VERSION"
-
-# [omarchy override] More precise terminal features (replaces terminal-overrides ",*:RGB")
-# set -as terminal-features ",xterm-256color:RGB:clipboard"
-
-# [omarchy override] 1M scrollback (replaces history-limit 50000)
-# set -g history-limit 1000000
-
-# ── Cursor ───────────────────────────────────────────────────────────
-# Set default cursor for new panes. Actual restore after apps exit is
-# handled by fish prompt (see fish/conf.d/zz_03_interactive.fish).
-# Tmux doesn't restore cursor shape on alt-screen exit like terminals do.
-set -g cursor-style bar
-
-# ── Display Timing ───────────────────────────────────────────────────
-set -g display-panes-time 4000
-set -g display-time 2000
-set -sg repeat-time 600
-
-# ── Activity ─────────────────────────────────────────────────────────
-set -g monitor-activity on
-set -g visual-activity off
-set -g status-keys emacs
-
-# ── Pane Scrollbars ──────────────────────────────────────────────────
-set -g pane-scrollbars modal
-
-# ── Copy Mode (additional triggers) ───────────────────────────────────
-# Clipboard works via OSC 52 (set-clipboard on) — no wl-copy/pbcopy pipe needed.
-# These just add Enter, mouse-drag, and Escape as copy-mode triggers.
-bind -T copy-mode-vi Enter send -X copy-selection-and-cancel
-bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-selection-and-cancel
-bind -T copy-mode-vi Escape send -X cancel
-
-# ── Additional Prefixed Keybinds ─────────────────────────────────────
-bind g display-popup -E -w 90% -h 90% -d "#{pane_current_path}" "lazygit"
-bind ^x swap-pane -t :.+
-bind w choose-tree
-bind n new-session
-
-# [omarchy override] Prefix+X is kill-session in omarchy; this rebinds to swap-pane chooser
-# bind X choose-tree "swap-pane -t '%%'"
-
-# [omarchy override] Prefix+R is rename-session in omarchy; this rebinds to reload config
-# bind R source-file ~/.config/tmux/tmux.conf
-
-# ── Container Integration ─────────────────────────────────────────────
-# prefix+e: fzf container picker (enter=new window, alt-s=split)
-bind e display-popup -E -w 80% -h 60% "~/.config/tmux/scripts/container-pick-send.sh"
-
-# Container-aware splits: if current pane is inside a container, new splits
-# auto-enter the same container. Falls back to normal split on host.
-bind h run-shell "~/.config/tmux/scripts/container-split.sh -h"
-bind v run-shell "~/.config/tmux/scripts/container-split.sh -v"
-
-# Mouse: double-click status bar for new window, middle-click tab to close
-bind -T root DoubleClick1Status new-window -c "#{pane_current_path}"
-bind -T root MouseDown2Status kill-window -t=
-unbind -T root MouseDown1StatusRight
-
-# ── Plugins ──────────────────────────────────────────────────────────
-set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
-
-set -g @plugin 'tmux-plugins/tmux-resurrect'
-set -g @plugin 'tmux-plugins/tmux-continuum'
-set -g @plugin 'sainnhe/tmux-fzf'
-set -g @plugin 'alexwforsythe/tmux-which-key'
-set -g @tmux-which-key-xdg-enable 1
-set -g @tmux-which-key-xdg-plugin-path "tmux/tmux-which-key"
-
-set -g @resurrect-capture-pane-contents 'on'
-set -g @continuum-restore 'off'
-set -g @resurrect-strategy-nvim 'session'
-
-{{ if stat "/var/home" -}}
-# Silverblue/Bazzite: /home is a symlink to /var/home, fix saved paths
-set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
-{{- end }}
-
-# ── Status Bar ───────────────────────────────────────────────────────
-# [omarchy override] Catppuccin theme + Zellij-style status bar.
-# Split into two files: pre-TPM config and post-TPM overrides.
-source-file ~/.config/tmux/statusbar.conf
-bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
-
-# ── Right-click Menu Fix ─────────────────────────────────────────────
-# Patch right-click menus: add -O flag so menus stay open after release
-run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/display-menu /display-menu -O /;s/-O -O /-O /" > /tmp/tmux-menu-fix.conf && tmux source-file /tmp/tmux-menu-fix.conf && rm -f /tmp/tmux-menu-fix.conf'
-
-# Initialize TMUX plugin manager (cloned by chezmoi to ~/.config/tmux/plugins/tpm)
-run '~/.config/tmux/plugins/tpm/tpm'
-
-# Post-TPM overrides (catppuccin overwrites borders, pill styles at load time)
-source-file ~/.config/tmux/statusbar-overrides.conf
+# Personal customizations
+source-file ~/.config/tmux/tmux-custom.conf

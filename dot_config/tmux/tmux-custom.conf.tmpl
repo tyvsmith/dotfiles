@@ -1,0 +1,95 @@
+# ╔══════════════════════════════════════════════════════════════════════╗
+# ║  PERSONAL CUSTOMIZATIONS                                            ║
+# ║  Sourced after omarchy base tmux.conf. Overrides are noted.         ║
+# ╚══════════════════════════════════════════════════════════════════════╝
+
+# ── Terminal & Shell ─────────────────────────────────────────────────
+set-option -g default-shell ${SHELL}
+
+# Propagate terminal identity so tools (yazi, superfile, etc.) can detect
+# graphics protocol support from the outer terminal (Ghostty/Kitty).
+# Without this, TERM_PROGRAM is unset inside tmux and image preview fails.
+set -ga update-environment "TERM_PROGRAM"
+set -ga update-environment "TERM_PROGRAM_VERSION"
+
+# ── Cursor ───────────────────────────────────────────────────────────
+# Set default cursor for new panes. Actual restore after apps exit is
+# handled by fish prompt (see fish/conf.d/zz_03_interactive.fish).
+# Tmux doesn't restore cursor shape on alt-screen exit like terminals do.
+set -g cursor-style bar
+
+# ── Display Timing ───────────────────────────────────────────────────
+set -g display-panes-time 4000
+set -g display-time 2000
+set -sg repeat-time 600
+
+# ── Activity ─────────────────────────────────────────────────────────
+set -g monitor-activity on
+set -g visual-activity off
+set -g status-keys emacs
+
+# ── Pane Scrollbars ──────────────────────────────────────────────────
+set -g pane-scrollbars modal
+
+# ── Copy Mode (additional triggers) ───────────────────────────────────
+# Clipboard works via OSC 52 (set-clipboard on) — no wl-copy/pbcopy pipe needed.
+# These just add Enter, mouse-drag, and Escape as copy-mode triggers.
+bind -T copy-mode-vi Enter send -X copy-selection-and-cancel
+bind -T copy-mode-vi MouseDragEnd1Pane send -X copy-selection-and-cancel
+bind -T copy-mode-vi Escape send -X cancel
+
+# ── Additional Prefixed Keybinds ─────────────────────────────────────
+bind g display-popup -E -w 90% -h 90% -d "#{pane_current_path}" "lazygit"
+bind ^x swap-pane -t :.+
+bind w choose-tree
+bind n new-session
+
+# ── Container Integration ─────────────────────────────────────────────
+# prefix+e: fzf container picker (enter=new window, alt-s=split)
+bind e display-popup -E -w 80% -h 60% "~/.config/tmux/scripts/container-pick-send.sh"
+
+# Container-aware splits: if current pane is inside a container, new splits
+# auto-enter the same container. Falls back to normal split on host.
+# [omarchy override] Rebinds prefix+h/v from plain splits to container-aware splits.
+bind h run-shell "~/.config/tmux/scripts/container-split.sh -h"
+bind v run-shell "~/.config/tmux/scripts/container-split.sh -v"
+
+# Mouse: double-click status bar for new window, middle-click tab to close
+bind -T root DoubleClick1Status new-window -c "#{pane_current_path}"
+bind -T root MouseDown2Status kill-window -t=
+unbind -T root MouseDown1StatusRight
+
+# ── Plugins ──────────────────────────────────────────────────────────
+set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
+
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+set -g @plugin 'sainnhe/tmux-fzf'
+set -g @plugin 'alexwforsythe/tmux-which-key'
+set -g @tmux-which-key-xdg-enable 1
+set -g @tmux-which-key-xdg-plugin-path "tmux/tmux-which-key"
+
+set -g @resurrect-capture-pane-contents 'on'
+set -g @continuum-restore 'off'
+set -g @resurrect-strategy-nvim 'session'
+
+{{ if stat "/var/home" -}}
+# Silverblue/Bazzite: /home is a symlink to /var/home, fix saved paths
+set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
+{{- end }}
+
+# ── Status Bar ───────────────────────────────────────────────────────
+# [omarchy override] Catppuccin theme + Zellij-style status bar.
+# Split into two files: pre-TPM config and post-TPM overrides.
+source-file ~/.config/tmux/statusbar.conf
+bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
+
+# ── Right-click Menu Fix ─────────────────────────────────────────────
+# Patch right-click menus: add -O flag so menus stay open after release
+run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/display-menu /display-menu -O /;s/-O -O /-O /" > /tmp/tmux-menu-fix.conf && tmux source-file /tmp/tmux-menu-fix.conf && rm -f /tmp/tmux-menu-fix.conf'
+
+# Initialize TMUX plugin manager (cloned by chezmoi to ~/.config/tmux/plugins/tpm)
+run '~/.config/tmux/plugins/tpm/tpm'
+
+# Post-TPM overrides (catppuccin overwrites borders, pill styles at load time)
+source-file ~/.config/tmux/statusbar-overrides.conf
