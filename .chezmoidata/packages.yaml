@@ -411,6 +411,11 @@ packages:
     desc: "Modern terminal emulator"
     brew_cask: true
 
+  kitty:
+    tier: 5
+    desc: "GPU-accelerated terminal emulator"
+    brew_cask: true
+
   # ===========================================================================
   # Tier 5: Basic UI — Productivity
   # ===========================================================================
