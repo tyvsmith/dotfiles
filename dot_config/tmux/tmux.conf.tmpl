@@ -101,6 +101,7 @@ set -g status-position top
 set-option -g default-shell ${SHELL}
 set -g allow-passthrough on
 
+
 # Propagate terminal identity so tools (yazi, superfile, etc.) can detect
 # graphics protocol support from the outer terminal (Ghostty/Kitty).
 # Without this, TERM_PROGRAM is unset inside tmux and image preview fails.
@@ -112,6 +113,12 @@ set -ga update-environment "TERM_PROGRAM_VERSION"
 
 # [omarchy override] 1M scrollback (replaces history-limit 50000)
 # set -g history-limit 1000000
+
+# ── Cursor ───────────────────────────────────────────────────────────
+# Set default cursor for new panes. Actual restore after apps exit is
+# handled by fish prompt (see fish/conf.d/zz_03_interactive.fish).
+# Tmux doesn't restore cursor shape on alt-screen exit like terminals do.
+set -g cursor-style bar
 
 # ── Display Timing ───────────────────────────────────────────────────
 set -g display-panes-time 4000

@@ -22,5 +22,13 @@ if status is-interactive
     # Set simple hostname for prompt display
     set -gx HOST (string split -f1 '.' $hostname)
 
+    # Reset cursor to bar on each prompt. Tmux doesn't restore cursor shape
+    # after apps (neovim, opencode, etc.) change it, unlike Ghostty natively.
+    # Only needed inside tmux — Ghostty handles this via alt-screen restore.
+    if set -q TMUX
+        function __reset_cursor --on-event fish_prompt
+            printf '\e[6 q'
+        end
+    end
 
 end
