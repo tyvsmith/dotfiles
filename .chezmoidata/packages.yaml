@@ -48,6 +48,14 @@ packages:
     tier: 1
     desc: "Magical shell history"
 
+  blesh:
+    tier: 1
+    desc: "Bash line editor with syntax highlighting and autosuggestions"
+    pacman: blesh-git
+    brew: false
+    apt: false
+    dnf: false
+
   zoxide:
     tier: 1
     desc: "Smarter cd command"
