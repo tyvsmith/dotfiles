@@ -81,8 +81,8 @@ set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
 # ── Status Bar ───────────────────────────────────────────────────────
 # [omarchy override] Catppuccin theme + Zellij-style status bar.
 # Split into two files: pre-TPM config and post-TPM overrides.
-source-file ~/.config/tmux/statusbar.conf
-bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
+#source-file ~/.config/tmux/statusbar.conf
+#bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
 
 # ── Right-click Menu Fix ─────────────────────────────────────────────
 # Patch right-click menus: add -O flag so menus stay open after release
@@ -92,4 +92,4 @@ run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/dis
 run '~/.config/tmux/plugins/tpm/tpm'
 
 # Post-TPM overrides (catppuccin overwrites borders, pill styles at load time)
-source-file ~/.config/tmux/statusbar-overrides.conf
+#source-file ~/.config/tmux/statusbar-overrides.conf
