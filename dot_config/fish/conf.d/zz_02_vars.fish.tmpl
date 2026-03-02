@@ -11,6 +11,12 @@ set -gx SUDO_EDITOR $EDITOR
 # Bat — use ansi theme so terminal colors aren't overridden
 set -gx BAT_THEME ansi
 
+{{ if eq .profile "arch-desktop" -}}
+# Omarchy
+set -gx OMARCHY_PATH $HOME/.local/share/omarchy
+fish_add_path $OMARCHY_PATH/bin
+{{ end -}}
+
 # Podman — point Docker-compatible tools (lazydocker, etc.) at podman socket
 {{ if ne .chezmoi.os "darwin" -}}
 set -gx DOCKER_HOST "unix:///run/user/"(id -u)"/podman/podman.sock"

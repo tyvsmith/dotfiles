@@ -62,6 +62,29 @@ if status is-interactive
     # Broot
     abbr --add br broot
 
+    # AI tools
+    abbr --add c opencode
+    abbr --add cx 'claude --allow-dangerously-skip-permissions'
+
+    # Common tools
+    abbr --add d docker
+    abbr --add p podman
+    abbr --add t 'tmux attach || tmux new -s Work'
+
+    # fzf file finder + open in editor
+    abbr --add ff "fzf --preview 'bat --style=numbers --color=always {}'"
+
+    # --- Git ---
+    abbr --add g git
+    abbr --add gcm 'git commit -m'
+    abbr --add gcam 'git commit -a -m'
+    abbr --add gcad 'git commit -a --amend'
+
+    # --- Directory navigation ---
+    abbr --add .. 'cd ..'
+    abbr --add ... 'cd ../..'
+    abbr --add .... 'cd ../../..'
+
     # --- Container management (distrobox) ---
     abbr --add db distrobox
     abbr --add dbe 'distrobox enter'
