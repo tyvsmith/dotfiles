@@ -1,8 +1,10 @@
 # =============================================================================
 # Abbreviations (ble.sh sabbrev + alias)
 # Mirrors fish's abbreviations — type keyword, hit Space/Enter, it expands.
-# Each entry is both an alias (so ble.sh highlights it as valid) and a sabbrev
-# (so it expands visibly). Without ble.sh, plain aliases are used.
+# All abbreviations are command-position-only (like fish's default), so
+# "paru -S d" won't expand "d" to "docker".
+# Each entry is both an alias (so ble.sh highlights it as valid) and a
+# dynamic sabbrev (so it expands visibly). Without ble.sh, plain aliases work.
 # =============================================================================
 
 # ---------------------------------------------------------------------------
@@ -21,25 +23,14 @@ _ble_abbr_cmd_expand() {
   fi
 }
 
-# Helper: alias + dynamic sabbrev that only expands in command position.
-# Used for tool replacements where the name clashes with subcommands
-# (e.g. "git diff" must not become "git difft").
+# Register alias + dynamic sabbrev (command-position-only expansion).
 _abbr_cmd() {
   local name="$1" expansion="$2"
   alias "$name=$expansion"
   [[ ${BLE_VERSION-} ]] && ble-sabbrev -m "$name=_ble_abbr_cmd_expand ${name} ${expansion}"
 }
 
-# Helper: alias + sabbrev (expands visibly anywhere — use for unique shorthand only)
-_abbr() {
-  local name="$1" expansion="$2"
-  alias "$name=$expansion"
-  [[ ${BLE_VERSION-} ]] && ble-sabbrev "$name=$expansion"
-}
-
-# --- Modern CLI tool replacements (command-position only) ---
-# These override real commands and must NOT expand when used as subcommands
-# (e.g. "git diff", "git grep", "docker rm")
+# --- Modern CLI tool replacements ---
 _abbr_cmd ls    'eza'
 _abbr_cmd ll    'eza -l --icons=auto --group-directories-first'
 _abbr_cmd la    'eza -la --icons=auto --group-directories-first'
@@ -52,47 +43,47 @@ _abbr_cmd diff  'difft'
 _abbr_cmd df    'duf'
 _abbr_cmd du    'dust'
 _abbr_cmd ping  'gping'
-_abbr_cmd grep  'rg'
+#_abbr_cmd grep  'rg'
 _abbr_cmd find  'fd'
 _abbr_cmd sed   'sd'
 _abbr_cmd curl  'xh'
 _abbr_cmd vim   'nvim'
 _abbr_cmd vi    'nvim'
 
-# --- Shorthand (safe to expand anywhere — unique words) ---
-_abbr lg    'lazygit'
-_abbr br    'broot'
-_abbr cz    'chezmoi'
+# --- Shorthand for modern tools ---
+_abbr_cmd lg    'lazygit'
+_abbr_cmd br    'broot'
+_abbr_cmd cz    'chezmoi'
 
 # --- AI tools ---
-_abbr c     'opencode'
-_abbr cx    'printf "\033[2J\033[3J\033[H" && claude --allow-dangerously-skip-permissions'
+_abbr_cmd c     'opencode'
+_abbr_cmd cx    'printf "\033[2J\033[3J\033[H" && claude --allow-dangerously-skip-permissions'
 
 # --- Common tools ---
-_abbr d     'docker'
-_abbr p     'podman'
-_abbr t     'tmux attach || tmux new -s Work'
+_abbr_cmd d     'docker'
+_abbr_cmd p     'podman'
+_abbr_cmd t     'tmux attach || tmux new -s Work'
 
 # --- Git ---
-_abbr g     'git'
-_abbr gcm   'git commit -m'
-_abbr gcam  'git commit -a -m'
-_abbr gcad  'git commit -a --amend'
+_abbr_cmd g     'git'
+_abbr_cmd gcm   'git commit -m'
+_abbr_cmd gcam  'git commit -a -m'
+_abbr_cmd gcad  'git commit -a --amend'
 
 # --- Directory navigation ---
-_abbr ..    'cd ..'
-_abbr ...   'cd ../..'
-_abbr ....  'cd ../../..'
+_abbr_cmd ..    'cd ..'
+_abbr_cmd ...   'cd ../..'
+_abbr_cmd ....  'cd ../../..'
 
 # --- Container management ---
-_abbr db    'distrobox'
-_abbr dbe   'distrobox enter'
-_abbr dbl   'distrobox list'
-_abbr dbs   'distrobox stop'
-_abbr dbrm  'distrobox rm'
-_abbr dbc   'distrobox create'
+_abbr_cmd db    'distrobox'
+_abbr_cmd dbe   'distrobox enter'
+_abbr_cmd dbl   'distrobox list'
+_abbr_cmd dbs   'distrobox stop'
+_abbr_cmd dbrm  'distrobox rm'
+_abbr_cmd dbc   'distrobox create'
 
 # --- Zellij ---
-_abbr zj    'zellij'
+_abbr_cmd zj    'zellij'
 
-unset -f _abbr _abbr_cmd
+unset -f _abbr_cmd

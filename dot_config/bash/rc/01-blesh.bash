@@ -11,9 +11,15 @@
 bleopt complete_auto_complete=1
 bleopt complete_auto_delay=50
 bleopt complete_auto_history=1
+# Only use history for auto-suggestions, not programmable completion.
+# The "syntax" source triggers registered completion functions on every
+# keystroke, which is unusably slow for heavy completers like paru.
+# Tab still triggers full programmable completion on demand.
+bleopt complete_auto_complete_opts='syntax-disabled'
 
-# --- Menu completion (cycle through candidates with Tab) ---
+# --- Menu completion (fish-like: show candidate list, navigate with Tab) ---
 bleopt complete_menu_complete=1
+bleopt complete_menu_complete_opts=
 bleopt complete_menu_filter=1
 
 # --- Ambiguous completion (fuzzy matching like fish) ---
