@@ -476,10 +476,6 @@ packages:
   # ===========================================================================
   # Tier 6: Extended UI — Terminals
   # ===========================================================================
-  alacritty:
-    tier: 6
-    desc: "GPU-accelerated terminal"
-    brew_cask: true
 
   warp-terminal:
     tier: 6

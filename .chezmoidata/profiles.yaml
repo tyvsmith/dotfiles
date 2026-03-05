@@ -24,7 +24,7 @@ profiles:
   # --- macOS ---
   macos-work:
     desc: "Work Mac — full dev setup with corporate config"
-    tier: 7
+    tier: 6
     brew: true
     work: true
     decrypt: true
