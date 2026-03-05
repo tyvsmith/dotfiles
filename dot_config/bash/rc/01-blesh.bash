@@ -84,6 +84,42 @@ ble-bind -m emacs -f C-i complete
 ble-bind -m emacs -f TAB complete
 
 # =============================================================================
+# Bash 5.3+ compgen -V workaround
+# =============================================================================
+
+# On bash 5.3+, ble.sh uses `compgen -V compgen` to store completion results
+# in an array variable. It then serializes this array via `writearray` which
+# calls `declare -p compgen | awk`. However, the `compgen` variable set by
+# `compgen -V` is not visible to `declare -p` in certain deep call stacks,
+# causing all but the first completion candidate to be silently dropped.
+#
+# Workaround: After the completion library loads, patch the serialization
+# function to use direct `printf` expansion of the array instead of the
+# `declare -p | awk` pipeline. This only applies to the bash 5.3+ array
+# code path and falls back to the original for entries containing newlines.
+if ((_ble_bash >= 50300)); then
+  blehook/eval-after-load complete '
+    eval "_ble_user_orig_filter_and_split() $(declare -f ble/complete/progcomp/.filter-and-split-compgen | tail -n +2)"
+
+    function ble/complete/progcomp/.filter-and-split-compgen {
+      if [[ :$2: == *:array:* ]]; then
+        local _entry _has_nl=
+        for _entry in "${compgen[@]}"; do
+          [[ $_entry == *$'\''\n'\''* ]] && { _has_nl=1; break; }
+        done
+        if [[ ! $_has_nl ]]; then
+          local compgen
+          compgen=$(printf '\''%s\n'\'' "${compgen[@]}")
+          _ble_user_orig_filter_and_split "$1" "${2/array/}"
+          return "$?"
+        fi
+      fi
+      _ble_user_orig_filter_and_split "$@"
+    }
+  '
+fi
+
+# =============================================================================
 # Faces (colors)
 # =============================================================================
 
