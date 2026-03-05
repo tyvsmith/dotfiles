@@ -72,6 +72,18 @@ bleopt prompt_ps1_transient='same-dir'
 bleopt edit_magic_accept='sabbrev:verify-syntax'
 
 # =============================================================================
+# Key Bindings
+# =============================================================================
+
+# Override omarchy's inputrc TAB binding. Omarchy sets "TAB: menu-complete"
+# (readline), which ble.sh imports via its inputrc reconstruction. This causes
+# TAB to cycle through candidates one-by-one instead of showing a menu.
+# Restore ble.sh's "complete" widget which: first TAB inserts common prefix +
+# shows menu, second TAB enters menu-complete for navigation.
+ble-bind -m emacs -f C-i complete
+ble-bind -m emacs -f TAB complete
+
+# =============================================================================
 # Faces (colors)
 # =============================================================================
 
