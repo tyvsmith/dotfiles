@@ -55,6 +55,7 @@ if status is-interactive
 
     # Chezmoi
     abbr --add cz chezmoi
+    abbr --add cza chezmoi apply
 
     # Lazygit
     abbr --add lg lazygit
@@ -74,12 +75,6 @@ if status is-interactive
     # fzf file finder + open in editor
     abbr --add ff "fzf --preview 'bat --style=numbers --color=always {}'"
 
-    # --- Git ---
-    abbr --add g git
-    abbr --add gcm 'git commit -m'
-    abbr --add gcam 'git commit -a -m'
-    abbr --add gcad 'git commit -a --amend'
-
     # --- Directory navigation ---
     abbr --add .. 'cd ..'
     abbr --add ... 'cd ../..'
@@ -95,4 +90,22 @@ if status is-interactive
 
     # Zellij
     abbr --add zj zellij
+
+    # --- Git ---
+    abbr --add g git
+    abbr --add gst git status
+    abbr --add gco git checkout
+    abbr --add gbr git branch
+    abbr --add gco git checkout
+    abbr --add gp git push
+    abbr --add gcm 'git commit -m'
+    abbr --add gcam 'git commit -a -m'
+    abbr --add gcad 'git commit -a --amend'
+    abbr -a --position anywhere --command git st status
+    abbr -a --position anywhere --command git co checkout
+    abbr -a --position anywhere --command git cm commit
+    abbr -a --position anywhere --command git br branch
+    abbr -a --position anywhere --command git aa add --all
+    abbr -a --position anywhere --command git ap add --patch
+    abbr -a --position anywhere --command git pf push --force-with-lease
 end
