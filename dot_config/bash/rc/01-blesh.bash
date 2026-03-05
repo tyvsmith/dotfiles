@@ -72,17 +72,6 @@ bleopt prompt_ps1_transient='same-dir'
 bleopt edit_magic_accept='sabbrev:verify-syntax'
 
 # =============================================================================
-# Key Bindings
-# =============================================================================
-
-# M-right: accept first word of auto-suggestion (like fish)
-# (already default, but be explicit)
-ble-bind -m emacs -f M-right 'auto_complete/@end insert-word'
-
-# C-right: accept first WORD (larger units) of auto-suggestion
-ble-bind -m emacs -f C-right 'auto_complete/@end insert-cword'
-
-# =============================================================================
 # Faces (colors)
 # =============================================================================
 
