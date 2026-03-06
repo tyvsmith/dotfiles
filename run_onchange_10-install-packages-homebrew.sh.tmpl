@@ -48,7 +48,7 @@ require_cmd brew
 # Install formulas via brew bundle
 # =============================================================================
 log "Running brew bundle (formulas)..."
-brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
+brew bundle --verbose --file=/dev/stdin <<'BREWFILE'
 {{- range $key, $pkg := .packages }}
 {{-   if hasKey $pkg "brew_tap" }}
 {{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $.chezmoi.os) }}
@@ -57,7 +57,7 @@ tap "{{ $pkg.brew_tap }}"
 {{-   end }}
 {{- end }}
 {{- range $key, $pkg := .packages }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "brew" "fmt" "brew \"%s\"") }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "brew" "fmt" "brew \"%s\"  # %s") }}
 {{- end }}
 {{ if eq .chezmoi.os "darwin" -}}
 brew "mas"

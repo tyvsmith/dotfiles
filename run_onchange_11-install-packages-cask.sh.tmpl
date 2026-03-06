@@ -26,9 +26,9 @@ require_cmd brew
 # Install casks via brew bundle
 # =============================================================================
 log "Running brew bundle (casks)..."
-brew bundle --no-lock --file=/dev/stdin <<'BREWFILE'
+brew bundle --verbose --file=/dev/stdin <<'BREWFILE'
 {{- range $key, $pkg := .packages }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "brew_cask" "fmt" "cask \"%s\"") }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "brew_cask" "fmt" "cask \"%s\"  # %s") }}
 {{- end }}
 BREWFILE
 

@@ -406,6 +406,7 @@ packages:
   visual-studio-code-insiders:
     tier: 5
     desc: "Code editor (Insiders)"
+    brew: "visual-studio-code@insiders"
     brew_cask: true
     pacman: visual-studio-code-insiders-bin
     appimage: tyvsmith/VSCodeInsiders-AppImage
@@ -491,6 +492,7 @@ packages:
     tier: 6
     desc: "Enhanced Discord client"
     flatpak: dev.vencord.Vesktop
+    brew_cask: true
 
   beeper:
     tier: 6
@@ -516,6 +518,7 @@ packages:
   deskflow:
     tier: 6
     desc: "Software KVM"
+    brew_tap: "deskflow/tap"
     brew_cask: true
     flatpak: org.deskflow.deskflow
 
