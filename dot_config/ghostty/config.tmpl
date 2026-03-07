@@ -1,6 +1,8 @@
+{{ if eq .de "hyprland-omarchy" -}}
 # Dynamic theme colors
 config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 
+{{ end -}}
 # Font
 font-family = "JetBrainsMono Nerd Font"
 font-style = Regular
@@ -33,9 +35,10 @@ keybind = super+control+shift+alt+arrow_right=resize_split:right,100
 # Slowdown mouse scrolling
 mouse-scroll-multiplier = 0.95
 
+{{ if eq .de "hyprland-omarchy" -}}
 # Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
 async-backend = epoll
 
+{{ end -}}
 #custom-shader-animation = always
 custom-shader = shaders/cursor_warp.glsl
-

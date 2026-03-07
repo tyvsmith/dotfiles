@@ -5,6 +5,9 @@
      Auto-detects from distro if non-interactive.
 */ -}}
 
+{{- /* Load profiles from single source of truth */ -}}
+{{- $profiles := (include ".chezmoidata/profiles.yaml" | fromYaml).profiles -}}
+
 {{- /* Detect distribution and map to default profile */ -}}
 {{- $distro := "unknown" -}}
 {{- $defaultProfile := "" -}}
@@ -28,38 +31,24 @@
 {{- if ne $envProfile "" -}}
 {{-   $profile = $envProfile -}}
 {{- else -}}
-{{-   $choices := list
-       "arch-desktop"
-       "debian-devpod"
-       "debian-server"
-       "macos-work"
-       "silverblue" -}}
+{{-   $choices := keys $profiles | sortAlpha -}}
 {{-   writeToStdout "\nAvailable profiles:\n" -}}
-{{-   writeToStdout "  arch-desktop       Arch Linux desktop — paru + flatpak\n" -}}
-{{-   writeToStdout "  debian-devpod      Debian/Ubuntu dev — CLI + dev tools via apt\n" -}}
-{{-   writeToStdout "  debian-server      Debian/Ubuntu server — CLI tools only\n" -}}
-{{-   writeToStdout "  macos-work         Work Mac — corporate dev + GUI\n" -}}
-{{-   writeToStdout "  silverblue         Silverblue/Bazzite — immutable desktop\n" -}}
+{{-   range $name := $choices -}}
+{{-     $p := index $profiles $name -}}
+{{-     writeToStdout (printf "  %-20s %s\n" $name $p.desc) -}}
+{{-   end -}}
 {{-   writeToStdout "\n" -}}
 {{-   $profile = promptChoiceOnce . "profile" "Machine profile" $choices $defaultProfile -}}
 {{- end -}}
 
-{{- /*
-  Derive profile properties. These duplicate profiles.yaml because chezmoi
-  renders this config template before .chezmoidata is available. The profile
-  name is the single input; everything below is a pure function of it.
-
-  If you add a new profile to profiles.yaml, update the lists below too.
-*/ -}}
-{{- $tier7 := list "arch-desktop" "macos-work" "silverblue" -}}
-{{- $tier1 := list "debian-server" -}}
-{{- $tier := 3 -}}
-{{- if has $profile $tier7 -}}{{- $tier = 7 -}}
-{{- else if has $profile $tier1 -}}{{- $tier = 1 -}}
+{{- /* Read profile properties from profiles.yaml */ -}}
+{{- $profileData := index $profiles $profile -}}
+{{- $tier := $profileData.tier -}}
+{{- $wantsDecrypt := or (get $profileData "decrypt") false -}}
+{{- $work := or (get $profileData "work") false -}}
+{{- $de := "" -}}
+{{- if hasKey $profileData "de" -}}{{- $de = $profileData.de -}}
 {{- end -}}
-
-{{- $wantsDecrypt := has $profile (list "arch-desktop" "debian-devpod" "macos-work" "silverblue") -}}
-{{- $work := has $profile (list "macos-work") -}}
 
 {{- /* Enable encryption only when the key file exists. The decrypt data flag
      reflects whether the profile WANTS decryption (so run_before scripts can
@@ -79,6 +68,7 @@ encryption = "age"
     work = {{ $work }}
     decrypt = {{ $wantsDecrypt }}
     decrypt_active = {{ not (not (and $wantsDecrypt $hasKey)) }}
+    de = "{{ $de }}"
 {{ if and $wantsDecrypt $hasKey }}
 [age]
     identity = "~/.config/chezmoi/age-key.txt"

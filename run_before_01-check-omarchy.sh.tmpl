@@ -1,0 +1,18 @@
+{{- if eq .de "hyprland-omarchy" -}}
+#!/usr/bin/env bash
+# Verify omarchy is installed — Hyprland configs are overlays on omarchy
+set -euo pipefail
+
+OMARCHY_PATH="${OMARCHY_PATH:-$HOME/.local/share/omarchy}"
+
+if [[ ! -d "$OMARCHY_PATH" ]]; then
+    echo "ERROR: omarchy not found at $OMARCHY_PATH"
+    echo ""
+    echo "  The '{{ .profile }}' profile requires omarchy for Hyprland configs."
+    echo "  Install omarchy first, then re-run chezmoi apply."
+    echo ""
+    echo "  Or choose a different profile:"
+    echo "    DOTFILES_PROFILE=debian-server chezmoi init"
+    exit 1
+fi
+{{ end -}}

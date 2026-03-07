@@ -16,9 +16,11 @@
 # Auto-detected from distro if non-interactive.
 #
 # NOTE: Adding a new profile here also requires updating:
-#   - .chezmoi.toml.tmpl (choices list, writeToStdout descriptions,
-#     tier/decrypt/work derivation lists)
+#   - .chezmoi.toml.tmpl (distro auto-detection, if the new profile needs it)
 #   - install.sh is NOT involved — profile selection is handled by chezmoi
+#
+# Properties (tier, work, decrypt, de, desc) are read directly from this file
+# by .chezmoi.toml.tmpl — no duplication needed.
 
 profiles:
   # --- macOS ---
@@ -33,6 +35,7 @@ profiles:
   arch-desktop:
     desc: "Arch Linux desktop — full setup with paru + flatpak"
     tier: 7
+    de: hyprland-omarchy
     pacman: true
     flatpak: true
     appimage: true
@@ -54,6 +57,7 @@ profiles:
   silverblue:
     desc: "Fedora Silverblue/Bazzite — immutable desktop"
     tier: 7
+    de: gnome
     brew: true
     rpm_ostree: true
     flatpak: true

@@ -17,3 +17,12 @@ scripts/
 # Without them chezmoi fatally aborts, so skip them entirely.
 **/*.age
 {{ end }}
+
+{{ if ne .de "hyprland-omarchy" }}
+# Hyprland+omarchy ecosystem — skip on non-Hyprland systems
+dot_config/hypr/
+dot_config/quickshell/
+dot_config/hypr-dock/
+dot_config/fish/functions/iso2sd.fish
+dot_local/bin/executable_lan-mouse-extended
+{{ end }}
