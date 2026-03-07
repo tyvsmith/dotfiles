@@ -1,0 +1,36 @@
+#!/bin/bash
+# Launch eirefox as a PWA with tiled fullscreen
+
+PROFILE="${1:-Personal}"
+URL="$2"
+
+if [[ -z "$URL" ]]; then
+    echo "Usage: zen-pwa <profile> <url>"
+    exit 1
+fi
+
+# Get current Zen window addresses
+before=$(hyprctl clients -j | jq -r '[.[] | select(.class == "zen") | .address] | sort | join("\n")')
+
+# Launch zen
+setsid zen-browser -P "$PROFILE" --new-window "$URL" &
+
+# Wait for new window to appear (max 10 seconds)
+for i in {1..100}; do
+    after=$(hyprctl clients -j | jq -r '[.[] | select(.class == "zen") | .address] | sort | join("\n")')
+    
+    # Find the new address that wasn't in before
+    new_addr=$(comm -13 <(echo "$before") <(echo "$after") | head -1)
+    
+    if [[ -n "$new_addr" ]]; then
+        # Small delay to let window settle
+        sleep 0.3
+        hyprctl dispatch focuswindow "address:$new_addr"
+        hyprctl dispatch fullscreenstate 0 2
+        exit 0
+    fi
+    sleep 0.1
+done
+
+echo "Timeout waiting for Zen window"
+exit 1

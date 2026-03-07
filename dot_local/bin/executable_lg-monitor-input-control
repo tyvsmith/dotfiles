@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Input control for LG 45GX950A via ddcutil DDC2AB sidechannel
+# https://github.com/rockowitz/ddcutil/wiki/Switching-input-source-on-LG-monitors
+
+DDC_51_PBP=0xD7
+DDC_50_INPUT_SWITCH=0xF4
+
+PBP_NONE=0x01
+PBP_LR_50_50=0x05
+
+resolve_input() {
+    case "$1" in
+        dp)    echo 0xD0 ;;
+        usbc)  echo 0xD1 ;;
+        hdmi1) echo 0x90 ;;
+        hdmi2) echo 0x91 ;;
+        *)     return 1 ;;
+    esac
+}
+
+get_pbp_mode() {
+    echo "0x$(ddcutil getvcp $DDC_51_PBP | grep -oP '(?<=sl=0x)[0-9A-F]+')"
+}
+
+current_pbp=$(get_pbp_mode)
+
+case "$1" in
+    dp|usbc|hdmi1|hdmi2)
+        input=$(resolve_input "$1")
+        ddcutil -d 1 setvcp $DDC_50_INPUT_SWITCH "$input" --i2c-source-addr=x50 --noverify
+
+        if [ "$current_pbp" != "$PBP_NONE" ]; then
+            ddcutil -d 1 setvcp $DDC_51_PBP $PBP_NONE --i2c-source-addr=x51 --noverify
+        fi
+        ;;
+
+    pbp-*-*)
+        left=$(echo "$1" | cut -d- -f2)
+        right=$(echo "$1" | cut -d- -f3)
+
+        left_input=$(resolve_input "$left") || { echo "Unknown input: $left"; exit 1; }
+        right_input=$(resolve_input "$right") || { echo "Unknown input: $right"; exit 1; }
+
+        ddcutil -d 1 setvcp $DDC_50_INPUT_SWITCH "$left_input" --i2c-source-addr=x50 --noverify
+        ddcutil -d 1 setvcp $DDC_51_PBP $PBP_LR_50_50 --i2c-source-addr=x51 --noverify
+        ddcutil -d 1 setvcp $DDC_50_INPUT_SWITCH "$right_input" --i2c-source-addr=x50 --noverify
+        ;;
+
+    *)
+        echo "Usage: lg-monitor-input-control <command>"
+        echo ""
+        echo "Inputs:"
+        echo "  dp      DisplayPort"
+        echo "  usbc    USB-C / Thunderbolt"
+        echo "  hdmi1   HDMI 1"
+        echo "  hdmi2   HDMI 2"
+        echo ""
+        echo "Commands:"
+        echo "  <input>                 Switch to fullscreen input"
+        echo "  pbp-<left>-<right>      PBP 50/50 split (e.g. pbp-dp-usbc)"
+        exit 1
+        ;;
+esac

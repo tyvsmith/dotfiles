@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+
+# Persistent companion service for lan-mouse. Waits for an active
+# client connection, then monitors cursor position to toggle Hyprland
+# input settings when the cursor moves to the remote client.
+#
+# Features (all opt-in via flags):
+#   --natural-scroll    Toggle natural scrolling on the Razer mouse dock
+#   --swap-keys         Swap alt/win on the Keychron keyboard
+#   --quiet / -q        Suppress log output
+
+set -euo pipefail
+
+# --- Defaults ---
+QUIET=false
+NATURAL_SCROLL=false
+SWAP_KEYS=false
+
+# --- Parse flags ---
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -q|--quiet)          QUIET=true ;;
+    --natural-scroll)    NATURAL_SCROLL=true ;;
+    --swap-keys)         SWAP_KEYS=true ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: lan-mouse-extended [OPTIONS]
+
+Companion service for lan-mouse that toggles Hyprland input settings
+when the cursor moves to a remote client.
+
+Options:
+  --natural-scroll    Toggle natural scrolling (Razer mouse dock)
+  --swap-keys         Swap alt/win keys (Keychron keyboard)
+  -q, --quiet         Suppress log output
+  -h, --help          Show this help
+EOF
+      exit 0
+      ;;
+    *) echo "Unknown option: $1" >&2; exit 1 ;;
+  esac
+  shift
+done
+
+# Require at least one feature flag
+if ! $NATURAL_SCROLL && ! $SWAP_KEYS; then
+  echo "Error: specify at least one of --natural-scroll, --swap-keys" >&2
+  exit 1
+fi
+
+log() { $QUIET || echo "[lan-mouse-extended] $*"; }
+
+SOCKET="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/lan-mouse-socket.sock"
+
+# --- Guard against duplicate instances ---
+PIDFILE="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/lan-mouse-extended.pid"
+if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+  log "Already running (pid $(cat "$PIDFILE")), exiting"
+  exit 0
+fi
+echo $$ > "$PIDFILE"
+trap 'rm -f "$PIDFILE"' EXIT
+
+# --- State tracking ---
+IS_LINUX=true
+CURRENT_X=999
+
+# --- Input setting functions ---
+set_linux() {
+  if $IS_LINUX; then return; fi
+  log "Switching to Linux mode (cursor X=$CURRENT_X)"
+  if $NATURAL_SCROLL; then
+    hyprctl keyword device[razer-razer-mouse-dock-pro]:natural_scroll false > /dev/null
+  fi
+  if $SWAP_KEYS; then
+    hyprctl keyword device[keychron-keychron-k6-pro]:kb_options "" > /dev/null
+  fi
+  IS_LINUX=true
+}
+
+set_mac() {
+  if ! $IS_LINUX; then return; fi
+  log "Switching to Mac mode (cursor X=$CURRENT_X)"
+  if $NATURAL_SCROLL; then
+    hyprctl keyword device[razer-razer-mouse-dock-pro]:natural_scroll true > /dev/null
+  fi
+  if $SWAP_KEYS; then
+    hyprctl keyword device[keychron-keychron-k6-pro]:kb_options "altwin:swap_alt_win" > /dev/null
+  fi
+  IS_LINUX=false
+}
+
+has_active_client() {
+  [ -S "$SOCKET" ] && lan-mouse cli list 2>/dev/null | grep -q "active: true"
+}
+
+# --- Main loop ---
+while true; do
+  # Wait for an active client connection
+  while ! has_active_client; do
+    sleep 2
+  done
+  log "lan-mouse client active"
+
+  # Monitor cursor position while a client is active
+  while has_active_client; do
+    CURRENT_X=$(hyprctl cursorpos | grep -o '^[0-9]\+')
+    if ! $IS_LINUX; then
+      if [ "$CURRENT_X" -gt 4 ]; then
+        set_linux
+      fi
+    else
+      if [ "$CURRENT_X" -eq 0 ]; then
+        set_mac
+      fi
+    fi
+    sleep 0.5
+  done
+
+  # Client disconnected — reset to Linux and wait
+  set_linux
+  log "lan-mouse client disconnected, waiting"
+done
