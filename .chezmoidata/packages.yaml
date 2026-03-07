@@ -532,7 +532,6 @@ packages:
     tier: 6
     desc: "Music streaming"
     brew_cask: true
-    pacman: false
     flatpak: com.spotify.Client
 
   # ===========================================================================

@@ -8,6 +8,6 @@ vim/bundle/*
 .vscode/
 .claude/
 .idea/
-
+.env
 # Decrypted plaintext copies for editing; encrypted .age files are committed
 **/decrypted_*

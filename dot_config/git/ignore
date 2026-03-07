@@ -12,9 +12,9 @@
 .vscode/
 
 # Environment
-.env
 .env.local
-.envrc
 
 # direnv
 .direnv/
+
+**/.claude/settings.local.json
