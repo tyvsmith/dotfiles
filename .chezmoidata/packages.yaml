@@ -11,6 +11,8 @@
 #   tier:       (required)        # 1=core CLI, 2=containers, 3=dev SDKs, 4=hardware, 5=basic UI, 6=extended UI, 7=gaming
 #   desc:       (required)        # short description
 #   os:         null              # restrict to: darwin | linux
+#   de:         null              # restrict to a desktop environment (e.g., hyprland-omarchy, gnome)
+#   enabled:    true              # set false to temporarily skip without removing the entry
 #   work:       null              # absent=all, true=work only, false=personal only
 #   decrypt:    null              # absent=all, true=decrypt only, false=no-decrypt only
 #
@@ -411,6 +413,21 @@ packages:
     pacman: visual-studio-code-insiders-bin
     appimage: tyvsmith/VSCodeInsiders-AppImage
 
+
+  # ===========================================================================
+  # Tier 5: Basic UI — Desktop Environment
+  # ===========================================================================
+  hypr-dock:
+    tier: 5
+    de: hyprland-omarchy
+    desc: "Interactive dock panel for Hyprland"
+    enabled: false  # re-enable after 1.2.1 release
+
+  quickshell-overview:
+    tier: 5
+    de: hyprland-omarchy
+    desc: "Quickshell-based overview for Hyprland"
+    pacman: quickshell-overview-git
 
   # ===========================================================================
   # Tier 5: Basic UI — Terminal
