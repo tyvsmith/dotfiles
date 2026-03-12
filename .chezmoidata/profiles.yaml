@@ -49,7 +49,7 @@ profiles:
 
   debian-devpod:
     desc: "Debian/Ubuntu dev — CLI + dev tools via apt"
-    tier: 3
+    tier: 1
     apt: true
     decrypt: true
 
