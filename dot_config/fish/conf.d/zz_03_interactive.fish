@@ -29,6 +29,16 @@ if status is-interactive
         function __reset_cursor --on-event fish_prompt
             printf '\e[6 q'
         end
+
+        # Refresh SSH_AUTH_SOCK from tmux session environment on each prompt.
+        # tmux update-environment only sets vars on attach/new-session, so
+        # existing shells can have stale values (breaks ussh, git over ssh, etc.)
+        function __refresh_ssh_auth_sock --on-event fish_prompt
+            set -l val (tmux show-environment SSH_AUTH_SOCK 2>/dev/null)
+            if string match -q 'SSH_AUTH_SOCK=*' $val
+                set -gx SSH_AUTH_SOCK (string replace 'SSH_AUTH_SOCK=' '' $val)
+            end
+        end
     end
 
 end
