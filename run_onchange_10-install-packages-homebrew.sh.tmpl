@@ -45,6 +45,14 @@ ensure_brew_in_path
 require_cmd brew
 
 # =============================================================================
+# Repair any packages installed but not linked from previous interrupted runs
+# =============================================================================
+if brew list --formula &>/dev/null 2>&1; then
+    log "Re-linking any unlinked formulas..."
+    brew list --formula | xargs -r brew link --overwrite 2>/dev/null || true
+fi
+
+# =============================================================================
 # Install formulas via brew bundle
 # =============================================================================
 log "Running brew bundle (formulas)..."
