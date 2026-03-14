@@ -27,10 +27,47 @@ ensure_brew_in_path() {
       eval "$(/opt/homebrew/bin/brew shellenv)"
     elif [[ -x /usr/local/bin/brew ]]; then
       eval "$(/usr/local/bin/brew shellenv)"
+    else
+      # Install Homebrew on macOS if not found
+      log "Homebrew not found, installing..."
+      NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+      # Now set up the path
+      if [[ -x /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+      elif [[ -x /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+      fi
     fi
   else
     if [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
       eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    elif [[ -x "$HOME/.linuxbrew/bin/brew" ]]; then
+      eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
+    else
+      # Install Homebrew on Linux if not found
+      log "Homebrew not found, installing..."
+
+      # Install prerequisites via system package manager
+      if command -v apt-get &>/dev/null; then
+        log "Installing Homebrew prerequisites via apt..."
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+          build-essential curl file git procps
+      elif command -v dnf &>/dev/null; then
+        log "Installing Homebrew prerequisites via dnf..."
+        sudo dnf install -y gcc make curl file git procps-ng
+      fi
+
+      log "Installing Homebrew..."
+      NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+      # Now set up the path
+      if [[ -x /home/linuxbrew/.linuxbrew/bin/brew ]]; then
+        eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+      elif [[ -x "$HOME/.linuxbrew/bin/brew" ]]; then
+        eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
+      fi
     fi
   fi
 }

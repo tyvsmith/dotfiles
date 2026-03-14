@@ -19,28 +19,7 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 log "Using profile '{{ .profile }}' — installing Homebrew formulas"
 
-# =============================================================================
-# Install Homebrew (Linux only — macOS ships with it or user installs manually)
-# =============================================================================
-{{ if ne .chezmoi.os "darwin" -}}
-if ! command -v brew &>/dev/null; then
-    # Install prerequisites via system package manager
-    if command -v apt-get &>/dev/null; then
-        log "Installing Homebrew prerequisites via apt..."
-        sudo apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
-            build-essential curl file git procps
-    elif command -v dnf &>/dev/null; then
-        log "Installing Homebrew prerequisites via dnf..."
-        sudo dnf install -y gcc make curl file git procps-ng
-    fi
-
-    log "Installing Homebrew..."
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-fi
-{{ end -}}
-
-# Add brew to PATH for the rest of this session
+# Add brew to PATH (installs Homebrew on Linux if not present)
 ensure_brew_in_path
 require_cmd brew
 
@@ -56,7 +35,8 @@ fi
 # Install formulas via brew bundle
 # =============================================================================
 log "Running brew bundle (formulas)..."
-brew bundle --verbose --file=/dev/stdin <<'BREWFILE'
+
+BREWFILE_CONTENT=$(cat <<'BREWFILE'
 {{- range $key, $pkg := .packages }}
 {{-   if hasKey $pkg "brew_tap" }}
 {{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $.chezmoi.os) }}
@@ -76,6 +56,13 @@ mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
 {{- end }}
 {{ end -}}
 BREWFILE
+)
+
+# Run brew bundle with one retry (some packages need dependencies fully installed first)
+if ! brew bundle --verbose --file=- <<<"$BREWFILE_CONTENT"; then
+  log "Some packages failed, retrying..."
+  brew bundle --verbose --file=- <<<"$BREWFILE_CONTENT"
+fi
 
 log "Homebrew formula installation complete!"
 {{ end -}}
