@@ -34,14 +34,19 @@ if ! grep -qxF "$FISH_PATH" /etc/shells 2>/dev/null; then
 fi
 
 # Set fish as login shell — try chsh (no sudo), fall back to sudo usermod
+current_shell() {
 {{ if eq .chezmoi.os "darwin" -}}
-CURRENT_SHELL="$(dscl . -read /Users/"$(whoami)" UserShell | awk '{print $2}')"
+    dscl . -read /Users/"$(whoami)" UserShell | awk '{print $2}'
 {{ else -}}
-CURRENT_SHELL="$(getent passwd "$(whoami)" | cut -d: -f7)"
+    getent passwd "$(whoami)" | cut -d: -f7
 {{ end -}}
-if [[ "$CURRENT_SHELL" != "$FISH_PATH" ]]; then
+}
+
+if [[ "$(current_shell)" != "$FISH_PATH" ]]; then
     log "Setting login shell to $FISH_PATH"
-    if ! chsh -s "$FISH_PATH" 2>/dev/null; then
+    chsh -s "$FISH_PATH" 2>/dev/null || true
+    # Verify it took — chsh can return 0 but silently fail
+    if [[ "$(current_shell)" != "$FISH_PATH" ]]; then
         sudo usermod -s "$FISH_PATH" "$(whoami)"
     fi
 fi
