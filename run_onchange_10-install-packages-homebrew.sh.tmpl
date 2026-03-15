@@ -58,12 +58,20 @@ mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
 BREWFILE
 )
 
-# Run brew bundle with one retry (some packages need dependencies fully installed first)
-if ! brew bundle --verbose --file=- <<<"$BREWFILE_CONTENT"; then
-  log "Some packages failed, retrying..."
-  brew list --formula | xargs -r brew link --overwrite 2>/dev/null || true
-  brew bundle --verbose --file=- <<<"$BREWFILE_CONTENT"
-fi
+# Run brew bundle with retries (fresh Homebrew installs often have linking failures
+# on first pass that resolve after an explicit relink)
+MAX_RETRIES=3
+for attempt in $(seq 1 "$MAX_RETRIES"); do
+  if brew bundle --verbose --file=- <<<"$BREWFILE_CONTENT"; then
+    break
+  fi
+  if [ "$attempt" -eq "$MAX_RETRIES" ]; then
+    log "brew bundle still failing after $MAX_RETRIES attempts"
+    exit 1
+  fi
+   log "Some packages failed (attempt $attempt/$MAX_RETRIES), relinking and retrying..."
+   brew list --formula | xargs -r brew link --overwrite 2>/dev/null || true
+done
 
 log "Homebrew formula installation complete!"
 {{ end -}}
