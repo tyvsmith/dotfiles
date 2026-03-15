@@ -50,6 +50,7 @@ profiles:
   devpod:
     desc: "Debian/Ubuntu dev — CLI + dev tools via apt"
     tier: 1
+    work: true
     brew: true
     decrypt: true
 
