@@ -1,6 +1,5 @@
-{{- if eq .profile "devpod" -}}
 #!/usr/bin/env bash
-# Configure fish as login shell on devpod after brew installs it.
+# Configure fish as login shell after package managers install it.
 # profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
 
 set -euo pipefail
@@ -8,25 +7,37 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
+# Find fish binary — check brew path first, then system path
+FISH_PATH=""
+{{ $p := index .profiles .profile -}}
+{{ if and (hasKey $p "brew") $p.brew -}}
 ensure_brew_in_path
+if [[ -x "$(brew --prefix)/bin/fish" ]]; then
+    FISH_PATH="$(brew --prefix)/bin/fish"
+fi
+{{ end -}}
+if [[ -z "$FISH_PATH" ]]; then
+    FISH_PATH="$(command -v fish 2>/dev/null || true)"
+fi
 
-FISH_PATH="$(brew --prefix)/bin/fish"
-
-if [[ ! -x "$FISH_PATH" ]]; then
-    warn "fish not found at $FISH_PATH — skipping shell setup"
+if [[ -z "$FISH_PATH" || ! -x "$FISH_PATH" ]]; then
+    warn "fish not found — skipping shell setup"
     exit 0
 fi
 
-# Add fish to /etc/shells if not already present
+# Add fish to /etc/shells if not already present (needs sudo)
 if ! grep -qxF "$FISH_PATH" /etc/shells 2>/dev/null; then
     log "Adding $FISH_PATH to /etc/shells"
     echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
 fi
 
-# Set fish as login shell for current user
+# Set fish as login shell (chsh works without sudo via PAM)
+{{ if eq .chezmoi.os "darwin" -}}
+CURRENT_SHELL="$(dscl . -read /Users/"$(whoami)" UserShell | awk '{print $2}')"
+{{ else -}}
 CURRENT_SHELL="$(getent passwd "$(whoami)" | cut -d: -f7)"
+{{ end -}}
 if [[ "$CURRENT_SHELL" != "$FISH_PATH" ]]; then
     log "Setting login shell to $FISH_PATH"
-    sudo usermod -s "$FISH_PATH" "$(whoami)"
+    chsh -s "$FISH_PATH"
 fi
-{{ end -}}
