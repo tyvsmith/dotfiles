@@ -11,3 +11,5 @@ vim/bundle/*
 .env
 # Decrypted plaintext copies for editing; encrypted .age files are committed
 **/decrypted_*
+.mcp.json
+.mcp.json.bak
