@@ -1,0 +1,32 @@
+{{- if eq .profile "devpod" -}}
+#!/usr/bin/env bash
+# Configure fish as login shell on devpod after brew installs it.
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+ensure_brew_in_path
+
+FISH_PATH="$(brew --prefix)/bin/fish"
+
+if [[ ! -x "$FISH_PATH" ]]; then
+    warn "fish not found at $FISH_PATH — skipping shell setup"
+    exit 0
+fi
+
+# Add fish to /etc/shells if not already present
+if ! grep -qxF "$FISH_PATH" /etc/shells 2>/dev/null; then
+    log "Adding $FISH_PATH to /etc/shells"
+    echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
+fi
+
+# Set fish as login shell for current user
+CURRENT_SHELL="$(getent passwd "$(whoami)" | cut -d: -f7)"
+if [[ "$CURRENT_SHELL" != "$FISH_PATH" ]]; then
+    log "Setting login shell to $FISH_PATH"
+    sudo usermod -s "$FISH_PATH" "$(whoami)"
+fi
+{{ end -}}

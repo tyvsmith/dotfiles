@@ -1,0 +1,22 @@
+{{- if eq .profile "devpod" -}}
+#!/usr/bin/env bash
+# Bootstrap devpod environment before other run_before scripts.
+# Sets up Linuxbrew directory structure that brew install scripts expect.
+
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+log "Bootstrapping devpod environment..."
+
+# Remove stale brew shims that block real Homebrew install
+sudo rm -f /usr/local/bin/brew /etc/homebrew/brew.no_install
+
+# Set up Linuxbrew directory structure
+# Homebrew on Linux expects /home/linuxbrew/.linuxbrew
+sudo install -d -o "$(whoami)" -g "$(id -gn)" /home/linuxbrew 2>/dev/null || true
+mkdir -p "$HOME/.linuxbrew"
+ln -sfn "$HOME/.linuxbrew" /home/linuxbrew/.linuxbrew
+sudo ln -sfn /home/linuxbrew /linuxbrew 2>/dev/null || true
+{{ end -}}
