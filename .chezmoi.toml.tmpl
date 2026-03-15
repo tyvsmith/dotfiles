@@ -50,15 +50,11 @@
 {{- if hasKey $profileData "de" -}}{{- $de = $profileData.de -}}
 {{- end -}}
 
-{{- /* Enable encryption only when the key file exists. The decrypt data flag
-     reflects whether the profile WANTS decryption (so run_before scripts can
-     try to fetch the key). On first run without a key, the decrypt script
-     warns and encrypted files are skipped via .chezmoiignore. After placing
-     the key, re-run chezmoi init to enable decryption. */ -}}
-{{- $ageKeyPath := joinPath .chezmoi.homeDir ".config" "chezmoi" "age-key.txt" -}}
-{{- $hasKey := stat $ageKeyPath -}}
+{{- /* Enable encryption when the profile declares it. The run_before decrypt
+     script ensures the key exists (via env var, 1Password, or manual placement)
+     before chezmoi processes any encrypted files. */ -}}
 
-{{ if and $wantsDecrypt $hasKey -}}
+{{ if $wantsDecrypt -}}
 encryption = "age"
 {{ end }}
 [data]
@@ -67,9 +63,8 @@ encryption = "age"
     tier = {{ $tier }}
     work = {{ $work }}
     decrypt = {{ $wantsDecrypt }}
-    decrypt_active = {{ not (not (and $wantsDecrypt $hasKey)) }}
     de = "{{ $de }}"
-{{ if and $wantsDecrypt $hasKey }}
+{{ if $wantsDecrypt }}
 [age]
     identity = "~/.config/chezmoi/age-key.txt"
     recipients = [

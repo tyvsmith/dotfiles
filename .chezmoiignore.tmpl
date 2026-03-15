@@ -12,12 +12,6 @@ scripts/
 # Plaintext versions of encrypted files are for local editing only, never deployed
 **/decrypted_*
 
-{{ if not (and (hasKey . "decrypt_active") .decrypt_active) }}
-# Encrypted files require encryption config + age key to process.
-# Without them chezmoi fatally aborts, so skip them entirely.
-**/*.age
-{{ end }}
-
 {{ if ne .de "hyprland-omarchy" }}
 # Hyprland+omarchy ecosystem — skip on non-Hyprland systems
 dot_config/hypr/

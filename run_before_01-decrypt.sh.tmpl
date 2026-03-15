@@ -1,0 +1,63 @@
+{{- if .decrypt -}}
+#!/usr/bin/env bash
+# Ensure age decryption key exists for chezmoi encrypted files
+# Key sources (in order): local file, DOTFILES_AGE_KEY env var, 1Password
+# Fails if no key can be obtained — profile requires decryption.
+
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+ensure_pkg age
+
+AGE_KEY_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/chezmoi/age-key.txt"
+
+# Skip if key already exists on disk
+if [[ -s "$AGE_KEY_FILE" ]]; then
+    exit 0
+fi
+
+# Create directory if needed
+mkdir -p "$(dirname "$AGE_KEY_FILE")"
+
+# Try env var (passed via install.sh --age-key)
+if [[ -n "${DOTFILES_AGE_KEY:-}" ]]; then
+    printf '%s\n' "$DOTFILES_AGE_KEY" > "$AGE_KEY_FILE"
+    chmod 600 "$AGE_KEY_FILE"
+    log "Age key written from DOTFILES_AGE_KEY"
+    exit 0
+fi
+
+# Try 1Password if available
+if command -v op &>/dev/null && op account list &>/dev/null; then
+    log "Fetching age key from 1Password..."
+    op read "op://Private/dotfiles-age-key/key" > "$AGE_KEY_FILE"
+
+    if [[ -s "$AGE_KEY_FILE" ]] && grep -q "AGE-SECRET-KEY" "$AGE_KEY_FILE"; then
+        chmod 600 "$AGE_KEY_FILE"
+        exit 0
+    fi
+
+    rm -f "$AGE_KEY_FILE"
+fi
+
+# Prompt interactively as last resort
+if [[ -t 0 ]]; then
+    warn "Age key not found via env var or 1Password"
+    echo "Paste your age secret key (AGE-SECRET-KEY-...), then press Enter:"
+    read -r key_input
+    if [[ "$key_input" == AGE-SECRET-KEY-* ]]; then
+        printf '%s\n' "$key_input" > "$AGE_KEY_FILE"
+        chmod 600 "$AGE_KEY_FILE"
+        log "Age key written from interactive input"
+        exit 0
+    fi
+    warn "Invalid key — must start with AGE-SECRET-KEY-"
+fi
+
+fail "Age key required but not found. Supply via:
+    --age-key 'AGE-SECRET-KEY-...'
+    Place manually at $AGE_KEY_FILE
+    Sign in to 1Password CLI: op signin"
+{{ end -}}

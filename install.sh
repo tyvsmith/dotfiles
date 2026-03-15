@@ -1,197 +1,43 @@
 #!/usr/bin/env bash
-# Bootstrap script for new machines
+# Bootstrap dotfiles on a new machine
 #
 # Usage:
-#   Remote:  curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh | bash
-#            curl ... | bash -s -- [options]
-#   Local:   ./install.sh [options]
+#   curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh | bash
+#   curl ... | bash -s -- --profile macos-work
+#   curl ... | bash -s -- --profile debian-server --branch feature-x
 #
 # Options:
-#   --profile <name>          Machine profile (skips interactive prompt)
-#   --branch <branch>         Git branch (default: main)
-#   --quiet, -q               Minimal output
-#   --help, -h                Show this help
-#
-# Profile selection happens interactively during chezmoi init.
-# Override with --profile or DOTFILES_PROFILE env var for automation.
-#
-# Environment variables (overridden by flags):
-#   DOTFILES_BRANCH, DOTFILES_PROFILE
+#   --profile <name>      Machine profile (skips interactive prompt)
+#   --branch <branch>     Git branch (default: main)
+#   --age-key <key>       Age secret key content (written to ~/.config/chezmoi/age-key.txt)
+#   --help, -h            Show this help
 
 set -e
 
-# =============================================================================
-# Configuration
-# =============================================================================
-DOTFILES_REPO="tyvsmith/dotfiles"
 DOTFILES_BRANCH="${DOTFILES_BRANCH:-main}"
-LOCAL_SOURCE=""
-QUIET=false
 OPT_PROFILE="${DOTFILES_PROFILE:-}"
+AGE_KEY=""
 
-# =============================================================================
-# Output helpers
-# =============================================================================
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-info()    { [[ "$QUIET" == true ]] || echo -e "${BLUE}==>${NC} $1"; }
-success() { [[ "$QUIET" == true ]] || echo -e "${GREEN}==>${NC} $1"; }
-warn()    { echo -e "${YELLOW}==>${NC} $1"; }
-error()   { echo -e "${RED}==>${NC} $1" >&2; }
-
-show_help() {
-    sed -n '2,/^$/p' "$0" | grep '^#' | sed 's/^# \?//'
-    exit 0
-}
-
-# =============================================================================
-# Parse arguments
-# =============================================================================
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --profile)    OPT_PROFILE="$2"; shift 2 ;;
         --profile=*)  OPT_PROFILE="${1#*=}"; shift ;;
         --branch)     DOTFILES_BRANCH="$2"; shift 2 ;;
         --branch=*)   DOTFILES_BRANCH="${1#*=}"; shift ;;
-        --quiet|-q)   QUIET=true; shift ;;
-        --help|-h)    show_help ;;
-        *)            error "Unknown option: $1"; show_help ;;
+        --age-key)    AGE_KEY="$2"; shift 2 ;;
+        --age-key=*)  AGE_KEY="${1#*=}"; shift ;;
+        --help|-h)    sed -n '2,/^$/p' "$0" | grep '^#' | sed 's/^# \?//'; exit 0 ;;
+        *)            echo "Unknown option: $1" >&2; exit 1 ;;
     esac
 done
 
-# Detect local source (skip when piped from curl — BASH_SOURCE[0] is empty)
-if [[ -n "${BASH_SOURCE[0]:-}" ]] && [[ -f "${BASH_SOURCE[0]}" ]]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)"
-    if [[ -n "$SCRIPT_DIR" ]] && [[ -f "$SCRIPT_DIR/.chezmoi.toml.tmpl" ]]; then
-        LOCAL_SOURCE="$SCRIPT_DIR"
-    fi
-fi
-
-# =============================================================================
-# Banner
-# =============================================================================
-if [[ "$QUIET" != true ]]; then
-    echo ""
-    echo "╔════════════════════════════════════════╗"
-    echo "║        Ty's Dotfiles Installer         ║"
-    echo "╚════════════════════════════════════════╝"
-    echo ""
-
-    if [[ -n "$LOCAL_SOURCE" ]]; then
-        info "Using local source: $LOCAL_SOURCE"
-    elif [[ "$DOTFILES_BRANCH" != "main" ]]; then
-        warn "Using branch: $DOTFILES_BRANCH"
-    fi
-fi
-
-# =============================================================================
-# Install system prerequisites
-# =============================================================================
-info "Checking prerequisites..."
-
-if ! command -v git &>/dev/null || ! command -v gcc &>/dev/null; then
-    info "Installing build dependencies..."
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        if ! xcode-select -p &>/dev/null; then
-            xcode-select --install
-            error "Please wait for Xcode Command Line Tools, then re-run."
-            exit 0
-        fi
-    elif command -v rpm-ostree &>/dev/null; then
-        error "Missing build tools on rpm-ostree system"
-        echo "  Option 1: distrobox enter <container>"
-        echo "  Option 2: sudo rpm-ostree install gcc gcc-c++ make procps-ng curl file git && reboot"
-        exit 1
-    elif [[ -f /etc/debian_version ]]; then
-        sudo apt-get update && sudo apt-get install -y build-essential procps curl file git
-    elif [[ -f /etc/fedora-release ]] || [[ -f /etc/redhat-release ]]; then
-        sudo dnf install -y gcc gcc-c++ make procps-ng curl file git
-    elif [[ -f /etc/arch-release ]] || command -v pacman &>/dev/null; then
-        sudo pacman -Sy --needed --noconfirm base-devel procps-ng curl file git
-    else
-        error "Unsupported OS. Install git, gcc, and build tools manually."
-        exit 1
-    fi
-fi
-
-# =============================================================================
-# Install Homebrew (macOS only — Linux Homebrew handled by chezmoi scripts)
-# =============================================================================
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    if ! command -v brew &>/dev/null; then
-        info "Installing Homebrew..."
-        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-        eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv)"
-    fi
-fi
-
-# =============================================================================
-# Install chezmoi
-# =============================================================================
-if ! command -v chezmoi &>/dev/null; then
-    info "Installing chezmoi..."
-    if command -v brew &>/dev/null; then
-        brew install chezmoi
-    elif command -v pacman &>/dev/null; then
-        sudo pacman -S --needed --noconfirm chezmoi
-    else
-        info "Using chezmoi install script..."
-        sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin
-        export PATH="$HOME/.local/bin:$PATH"
-    fi
-fi
-
-# =============================================================================
-# Initialize dotfiles (clone repo + render config, but don't apply yet)
-# =============================================================================
-# Profile is set via env var (--profile flag or DOTFILES_PROFILE).
-# If unset, chezmoi init will prompt interactively via .chezmoi.toml.tmpl.
 [[ -n "$OPT_PROFILE" ]] && export DOTFILES_PROFILE="$OPT_PROFILE"
+[[ -n "$AGE_KEY" ]] && export DOTFILES_AGE_KEY="$AGE_KEY"
 
-INIT_ARGS=()
-[[ "$DOTFILES_BRANCH" != "main" ]] && INIT_ARGS+=(--branch="$DOTFILES_BRANCH")
+INIT_ARGS=(init --apply tyvsmith)
+[[ "$DOTFILES_BRANCH" != "main" ]] && INIT_ARGS+=(--branch "$DOTFILES_BRANCH")
 
-if [[ -n "$LOCAL_SOURCE" ]]; then
-    info "Initializing dotfiles from local source..."
-    chezmoi init "${INIT_ARGS[@]}" --source="$LOCAL_SOURCE"
-else
-    info "Initializing dotfiles from $DOTFILES_REPO..."
-    chezmoi init "${INIT_ARGS[@]}" "$DOTFILES_REPO"
-fi
+# Install chezmoi to ~/.local/bin, then init + apply dotfiles
+sh -c "$(curl -fsLS get.chezmoi.io/lb)" -- "${INIT_ARGS[@]}"
 
-# =============================================================================
-# Back up existing files before apply
-# =============================================================================
-BACKUP_DIR="$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)"
-backed_up=0
-
-while IFS= read -r target; do
-    full_path="$HOME/$target"
-    if [[ -f "$full_path" ]] || [[ -L "$full_path" ]]; then
-        if [[ $backed_up -eq 0 ]]; then
-            info "Backing up existing files to $BACKUP_DIR/"
-        fi
-        backup_dest="$BACKUP_DIR/$target"
-        mkdir -p "$(dirname "$backup_dest")"
-        cp -a "$full_path" "$backup_dest"
-        backed_up=$((backed_up + 1))
-    fi
-done < <(chezmoi managed --include=files 2>/dev/null)
-
-if [[ $backed_up -gt 0 ]]; then
-    success "Backed up $backed_up file(s) to $BACKUP_DIR/"
-else
-    info "No existing files to back up"
-fi
-
-# =============================================================================
-# Apply dotfiles
-# =============================================================================
-info "Applying dotfiles..."
-chezmoi apply
-
-success "Done! Restart your shell or run: exec fish"
+echo "Done! Restart your shell or run: exec fish"
