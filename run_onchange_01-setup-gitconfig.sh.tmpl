@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Ensure ~/.gitconfig includes the chezmoi-managed XDG git config.
+# Git only reads ~/.gitconfig OR ~/.config/git/config (not both).
+# By injecting an [include], Chef/devpod/system defaults in ~/.gitconfig
+# are preserved and our settings override via last-value-wins.
+#
+# config.tmpl hash: {{ include "dot_config/git/config.tmpl" | sha256sum }}
+
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+GITCONFIG="$HOME/.gitconfig"
+INCLUDE_PATH="~/.config/git/config"
+INCLUDE_LINE="	path = $INCLUDE_PATH"
+
+# If ~/.gitconfig is a symlink (from previous chezmoi setup), remove it
+# so we can create a real file with the include
+if [[ -L "$GITCONFIG" ]]; then
+    log "Removing old ~/.gitconfig symlink"
+    rm "$GITCONFIG"
+fi
+
+# Create ~/.gitconfig if it doesn't exist
+touch "$GITCONFIG"
+
+# Add include if not already present
+if ! grep -qF "$INCLUDE_PATH" "$GITCONFIG" 2>/dev/null; then
+    log "Adding include for $INCLUDE_PATH to ~/.gitconfig"
+    printf '\n[include]\n%s\n' "$INCLUDE_LINE" >> "$GITCONFIG"
+fi
