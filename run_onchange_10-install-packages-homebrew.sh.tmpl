@@ -61,6 +61,7 @@ BREWFILE
 # Run brew bundle with one retry (some packages need dependencies fully installed first)
 if ! brew bundle --verbose --file=- <<<"$BREWFILE_CONTENT"; then
   log "Some packages failed, retrying..."
+  brew list --formula | xargs -r brew link --overwrite 2>/dev/null || true
   brew bundle --verbose --file=- <<<"$BREWFILE_CONTENT"
 fi
 
