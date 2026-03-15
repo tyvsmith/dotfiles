@@ -1,0 +1,61 @@
+{{- if .work }}
+# =============================================================================
+# Work machine configuration
+# =============================================================================
+
+{{- if eq .chezmoi.os "darwin" }}
+# =============================================================================
+# Mac
+# =============================================================================
+
+# SSH agent - use system agent for ussh compatibility (macOS)
+# Inside tmux, launchctl getenv returns empty — use tmux's session env instead.
+if set -q TMUX
+    set -l _sock (tmux show-environment SSH_AUTH_SOCK 2>/dev/null | string replace 'SSH_AUTH_SOCK=' '')
+    test -n "$_sock"; and set -gx SSH_AUTH_SOCK $_sock
+else
+    set -gx SSH_AUTH_SOCK (launchctl getenv SSH_AUTH_SOCK)
+end
+
+# Replay corporate-provisioned shell configs (managed by Chef/IT)
+# /etc/zsh/cpe: SSL certs, UBER identity, USSH settings, /opt/uber/bin
+# ~/.profile_lda: UBER_BINARIES_PATH and LDA path
+replay "source /etc/zsh/cpe 2>/dev/null; source ~/.profile_lda 2>/dev/null"
+{{- else }}
+# =============================================================================
+# Devpod
+# =============================================================================
+
+# Source system profile — single source of truth for DevPod/Uber env vars
+# (sets SSH_AUTH_SOCK, GOPATH, JAVA_HOME, NVM, PATH additions, etc.)
+replay source /etc/profile
+{{- end }}
+
+# Refresh SSH_AUTH_SOCK from tmux session environment on each prompt.
+# tmux update-environment only captures new values on attach/new-session,
+# so existing shells can have stale socket paths after reattach.
+if set -q TMUX; and status is-interactive
+    function __refresh_ssh_auth_sock --on-event fish_prompt
+        set -l val (tmux show-environment SSH_AUTH_SOCK 2>/dev/null)
+        if string match -q 'SSH_AUTH_SOCK=*' $val
+            set -gx SSH_AUTH_SOCK (string replace 'SSH_AUTH_SOCK=' '' $val)
+        end
+    end
+end
+
+# =============================================================================
+# Alias
+# =============================================================================
+
+alias opencode='aifx agent run opencode'
+alias claude='aifx agent run claude'
+
+# =============================================================================
+# Vars
+# =============================================================================
+
+set -gx AIFX_ENABLE_DECLARATIVE_AGENT true
+set -gx AIFX_ENABLE_PRIVATE_PREVIEW_FEATURES true
+
+
+{{- end }}
