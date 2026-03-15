@@ -72,5 +72,8 @@ encryption = "age"
 {{ if and $wantsDecrypt $hasKey }}
 [age]
     identity = "~/.config/chezmoi/age-key.txt"
-    recipient = "{{ include ".age-public-key" | trim }}"
+    recipients = [
+        "{{ include ".age-public-key" | trim }}",
+        "{{ include ".age-public-key-work" | trim }}",
+    ]
 {{- end }}
