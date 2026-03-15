@@ -7,15 +7,17 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
-# Find fish binary — check brew path first, then system path
+# Find fish binary — check well-known install paths, then fall back to PATH
 FISH_PATH=""
-{{ $p := index .profiles .profile -}}
-{{ if and (hasKey $p "brew") $p.brew -}}
-ensure_brew_in_path
-if [[ -x "$(brew --prefix)/bin/fish" ]]; then
-    FISH_PATH="$(brew --prefix)/bin/fish"
-fi
-{{ end -}}
+for p in /opt/homebrew/bin/fish /usr/local/bin/fish \
+         /home/linuxbrew/.linuxbrew/bin/fish "$HOME/.linuxbrew/bin/fish" \
+         /usr/bin/fish; do
+    if [[ -x "$p" ]]; then
+        FISH_PATH="$p"
+        break
+    fi
+done
+
 if [[ -z "$FISH_PATH" ]]; then
     FISH_PATH="$(command -v fish 2>/dev/null || true)"
 fi
@@ -31,7 +33,7 @@ if ! grep -qxF "$FISH_PATH" /etc/shells 2>/dev/null; then
     echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
 fi
 
-# Set fish as login shell (chsh works without sudo via PAM)
+# Set fish as login shell — try chsh (no sudo), fall back to sudo usermod
 {{ if eq .chezmoi.os "darwin" -}}
 CURRENT_SHELL="$(dscl . -read /Users/"$(whoami)" UserShell | awk '{print $2}')"
 {{ else -}}
@@ -39,5 +41,7 @@ CURRENT_SHELL="$(getent passwd "$(whoami)" | cut -d: -f7)"
 {{ end -}}
 if [[ "$CURRENT_SHELL" != "$FISH_PATH" ]]; then
     log "Setting login shell to $FISH_PATH"
-    chsh -s "$FISH_PATH"
+    if ! chsh -s "$FISH_PATH" 2>/dev/null; then
+        sudo usermod -s "$FISH_PATH" "$(whoami)"
+    fi
 fi
