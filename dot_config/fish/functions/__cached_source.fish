@@ -21,12 +21,17 @@ function __cached_source --description 'Source a command output with version-bas
 
     set -l cache_file $cache_dir/$name.$ver.fish
 
-    if not test -f $cache_file
+    if not test -s $cache_file
         mkdir -p $cache_dir
         for old in $cache_dir/$name.*.fish
             command rm -f $old
         end
         $tool $subcmd >$cache_file
+        if not test -s $cache_file
+            # Tool produced no output (env already set?) — don't cache empty state
+            command rm -f $cache_file
+            return 0
+        end
     end
 
     source $cache_file
