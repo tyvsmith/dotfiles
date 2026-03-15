@@ -1,0 +1,24 @@
+{{- if ne .de "" -}}
+#!/usr/bin/env bash
+# Verify profile prerequisites are met before applying configs.
+# Checks are driven by profile properties (de, etc.).
+
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+{{ if eq .de "hyprland-omarchy" -}}
+# hyprland-omarchy: configs are overlays on omarchy's base
+OMARCHY_PATH="${OMARCHY_PATH:-$HOME/.local/share/omarchy}"
+if [[ ! -d "$OMARCHY_PATH" ]]; then
+    fail "omarchy not found at $OMARCHY_PATH
+
+  The '{{ .profile }}' profile requires omarchy for Hyprland configs.
+  Install omarchy first, then re-run chezmoi apply.
+
+  Or choose a different profile:
+    DOTFILES_PROFILE=debian-server chezmoi init"
+fi
+{{ end -}}
+{{ end -}}
