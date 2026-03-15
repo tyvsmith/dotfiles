@@ -51,7 +51,7 @@ profiles:
     desc: "Debian/Ubuntu dev — CLI + dev tools via apt"
     tier: 1
     brew: true
-    decrypt: false
+    decrypt: true
 
   # --- Immutable Fedora ---
   silverblue:
