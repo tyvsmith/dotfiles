@@ -1,0 +1,14 @@
+{{- if .work }}
+---
+schema_version: 0
+flavor: base
+ide:
+  jetbrains:
+    plugins:
+      - 15552
+region: oregon
+tasks:
+  - name: Setup dotfiles
+    command: curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh | bash -s -- --profile devpod
+    when: on-create, on-restart
+{{- end }}
