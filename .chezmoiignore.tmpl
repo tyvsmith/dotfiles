@@ -12,6 +12,11 @@ scripts/
 # Plaintext versions of encrypted files are for local editing only, never deployed
 **/decrypted_*
 
+{{ if not .decrypt }}
+# Encryption not configured for this profile — skip encrypted files
+**/*.age
+{{ end }}
+
 {{ if ne .de "hyprland-omarchy" }}
 # Hyprland+omarchy ecosystem — skip on non-Hyprland systems
 dot_config/hypr/
