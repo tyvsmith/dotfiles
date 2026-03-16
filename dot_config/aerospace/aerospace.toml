@@ -1,0 +1,237 @@
+#
+# Physical keys map directly:
+#   alt  in this config = physical Option key = SUPER on Omarchy
+#   cmd  in this config = physical Command key = ALT on Omarchy
+
+
+# Config version for compatibility and deprecations
+# Fallback value (if you omit the key): config-version = 1
+config-version = 2
+
+start-at-login = true
+
+# Dwindle/Fibonacci tiling — matches Hyprland's "layout = dwindle"
+# opposite-orientation: nested containers alternate H/V automatically
+# flatten-containers: removes redundant single-child nesting
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+# Possible values: tiles|accordion
+default-root-container-layout = 'tiles'
+
+# Possible values: horizontal|vertical|auto
+# 'auto' means: wide monitor (anything wider than high) gets horizontal orientation,
+#               tall monitor (anything higher than wide) gets vertical orientation
+default-root-container-orientation = 'auto'
+
+
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+on-focus-changed = ['exec-and-forget $HOME/.config/aerospace/on-focus-changed.sh']
+automatically-unhide-macos-hidden-apps = true
+
+exec-on-workspace-change = ['/bin/bash', '-c',
+    'sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE'
+]
+
+after-startup-command = [
+  'exec-and-forget borders'
+]
+
+# Gaps — matches Omarchy (gaps_in=5, gaps_out=10)
+[gaps]
+inner.horizontal = 10
+inner.vertical   = 10
+outer.left       = 10
+outer.bottom     = 10
+outer.top        = 38
+outer.right      = 10
+
+# -------------------------------------------------------
+# Main bindings
+# -------------------------------------------------------
+[mode.main.binding]
+
+# Workspace switching — Omarchy: SUPER + 1-9,0
+alt-1 = 'workspace 1'
+alt-2 = 'workspace 2'
+alt-3 = 'workspace 3'
+alt-4 = 'workspace 4'
+alt-5 = 'workspace 5'
+alt-6 = 'workspace 6'
+alt-7 = 'workspace 7'
+alt-8 = 'workspace 8'
+alt-9 = 'workspace 9'
+
+# Move window to workspace — Omarchy: SUPER + SHIFT + 1-9,0
+alt-shift-1 = 'move-node-to-workspace 1'
+alt-shift-2 = 'move-node-to-workspace 2'
+alt-shift-3 = 'move-node-to-workspace 3'
+alt-shift-4 = 'move-node-to-workspace 4'
+alt-shift-5 = 'move-node-to-workspace 5'
+alt-shift-6 = 'move-node-to-workspace 6'
+alt-shift-7 = 'move-node-to-workspace 7'
+alt-shift-8 = 'move-node-to-workspace 8'
+alt-shift-9 = 'move-node-to-workspace 9'
+alt-shift-0 = 'move-node-to-workspace 10'
+
+# Focus navigation — Omarchy: SUPER + arrows
+alt-left  = 'focus left'
+alt-right = 'focus right'
+alt-up    = 'focus up'
+alt-down  = 'focus down'
+
+# Move windows — Omarchy: SUPER + SHIFT + arrows
+alt-shift-left  = 'move left'
+alt-shift-right = 'move right'
+alt-shift-up    = 'move up'
+alt-shift-down  = 'move down'
+
+# Window controls
+alt-w = 'close' # Omarchy: SUPER + W
+alt-f = 'fullscreen' # Omarchy: SUPER + F
+alt-t = 'layout floating tiling' # Omarchy: SUPER + T (toggle float)
+alt-j = 'layout tiles horizontal vertical' # Omarchy: SUPER + J (toggle split)
+alt-l = 'layout tiles accordion' # Omarchy: SUPER + L (toggle layout)
+
+# Workspace cycling — Omarchy: SUPER + TAB
+alt-tab       = 'exec-and-forget ~/.config/sketchybar/plugins/workspace_next.sh'
+alt-shift-tab = 'exec-and-forget ~/.config/sketchybar/plugins/workspace_prev.sh'
+
+# Navigation extras
+alt-ctrl-tab = 'workspace-back-and-forth' # SUPER+Ctrl+Tab → former workspace
+alt-s = 'workspace 10' # SUPER+S → scratchpad
+alt-cmd-s = 'move-node-to-workspace 10' # ALT+S → move window to scratchpad
+
+# Resize
+alt-minus       = 'resize width -50'
+alt-equal       = 'resize width +50'
+alt-shift-minus = 'resize height -50'
+alt-shift-equal = 'resize height +50'
+
+# App launchers
+alt-enter       = 'exec-and-forget open -na Ghostty' # Omarchy: SUPER + RETURN
+alt-shift-enter = 'exec-and-forget open -na "Google Chrome Canary"' # Omarchy: SUPER + SHIFT + RETURN
+alt-shift-n     = 'exec-and-forget open -na Zed' # Omarchy: SUPER + SHIFT + N
+alt-shift-c     = 'exec-and-forget open -b "com.google.Chrome.app.kjbdgfilnfhdoflbpgamdcdgpehopbep"' # Omarchy: SUPER+SHIFT+C → Google Calendar
+alt-shift-e     = 'exec-and-forget open -b "com.google.Chrome.app.fmgjjmmmlfnkbppncabfkddbjimcfncm"' # Omarchy: SUPER+SHIFT+E → Gmail
+alt-shift-g     = 'exec-and-forget open -b "net.whatsapp.WhatsApp"' # Omarchy: SUPER+SHIFT+G → WhatsApp
+alt-shift-m     = 'exec-and-forget open -b "com.spotify.client"' # Omarchy: SUPER+SHIFT+M → Spotify
+alt-shift-o     = 'exec-and-forget open -b "md.obsidian"' # Omarchy: SUPER+SHIFT+O → Obsidian
+alt-shift-f     = 'exec-and-forget open -a Finder' # Omarchy: SUPER+SHIFT+F → Finder
+alt-shift-slash = 'exec-and-forget open -b "com.1password.1password"' # Omarchy: SUPER+SHIFT+/ → 1Password
+alt-shift-a     = 'exec-and-forget open -b "com.anthropic.claudefordesktop"' # SUPER+SHIFT+A → Claude
+alt-cmd-enter   = 'exec-and-forget open -na Ghostty --args -e tmux new-session -A -s main' # ALT+RETURN → Ghostty+tmux
+alt-shift-cmd-b = 'exec-and-forget open -na "Google Chrome Canary" --args --incognito' # ALT+SHIFT+B → Chrome incognito
+alt-shift-d     = 'exec-and-forget open -na Ghostty --args -e lazydocker' # SUPER+SHIFT+D → LazyDocker
+
+# System controls
+alt-ctrl-c = 'exec-and-forget open "cleanshot://all-in-one"' # SUPER+Ctrl+C → CleanShot all-in-one
+alt-ctrl-l = 'exec-and-forget pmset displaysleepnow' # SUPER+Ctrl+L → Lock screen
+alt-ctrl-t = 'exec-and-forget open -na Ghostty --args -e btop' # SUPER+Ctrl+T → btop
+alt-ctrl-v = 'exec-and-forget open "raycast://extensions/raycast/clipboard-history/clipboard-history"' # SUPER+Ctrl+V → Clipboard history
+alt-ctrl-a = 'exec-and-forget open "x-apple.systempreferences:com.apple.preference.sound"' # SUPER+Ctrl+A → Sound preferences
+alt-ctrl-b = 'exec-and-forget open "x-apple.systempreferences:com.apple.preferences.Bluetooth"' # SUPER+Ctrl+B → Bluetooth preferences
+alt-ctrl-w = 'exec-and-forget open "x-apple.systempreferences:com.apple.wifi-settings-extension"' # SUPER+Ctrl+W → Wi-Fi preferences
+
+# Workspace menu
+alt-cmd-space = ['mode workspace_menu', 'exec-and-forget $HOME/.config/sketchybar/plugins/workspace_menu.sh keyboard']
+
+# -------------------------------------------------------
+# Workspace menu mode
+# -------------------------------------------------------
+[mode.workspace_menu.binding]
+up    = 'exec-and-forget $HOME/.config/sketchybar/plugins/workspace_menu_nav.sh up'
+down  = 'exec-and-forget $HOME/.config/sketchybar/plugins/workspace_menu_nav.sh down'
+space = ['mode main', 'exec-and-forget $HOME/.config/sketchybar/plugins/workspace_menu_nav.sh enter']
+enter = 'mode main'
+esc   = ['mode main', 'exec-and-forget $HOME/.config/sketchybar/plugins/workspace_menu_nav.sh esc']
+alt-cmd-space = ['mode main', 'exec-and-forget $HOME/.config/sketchybar/plugins/workspace_menu_nav.sh esc']
+
+# -------------------------------------------------------
+# Window rules
+# NOTE: Chrome PWA app IDs may change on reinstall or Chrome update
+# If PWA window rules stop working, reinstall the PWA to get new ID
+# -------------------------------------------------------
+# 1: Ghostty + Zed
+# 2: Chrome + Safari
+# 3: Slack
+# 4: Gmail
+# 5: Todoist + Calendar + Meet
+# 6: Notion + Linear + GitHub
+# 7: HEY
+# 8: WhatsApp
+# 9: Spotify + YouTube
+# 10: (scratchpad)
+# -------------------------------------------------------
+
+[[on-window-detected]] # 1: Ghostty
+if.app-id = 'com.mitchellh.ghostty'
+run = ['move-node-to-workspace --focus-follows-window 1']
+
+[[on-window-detected]] # 1: Zed
+if.app-id = 'dev.zed.Zed'
+run = ['move-node-to-workspace --focus-follows-window 1']
+
+[[on-window-detected]] # 2: Chrome
+if.app-id = 'com.google.ChromeCanary'
+run = ['move-node-to-workspace --focus-follows-window 2']
+
+[[on-window-detected]] # 2: Safari
+if.app-id = 'com.apple.Safari'
+run = ['move-node-to-workspace --focus-follows-window 2']
+
+[[on-window-detected]] # 3: Slack
+if.app-id = 'com.tinyspeck.slackmacgap'
+run = ['move-node-to-workspace --focus-follows-window 3']
+
+[[on-window-detected]] # 4: Gmail (Chrome PWA)
+if.app-id = 'com.google.ChromeCanary.app.fmgjjmmmlfnkbppncabfkddbjimcfncm'
+run = ['move-node-to-workspace --focus-follows-window 4']
+
+[[on-window-detected]] # 5: Todoist
+if.app-id = 'com.todoist.mac.Todoist'
+run = ['move-node-to-workspace --focus-follows-window 5']
+
+[[on-window-detected]] # 5: Todoist (alternate bundle id)
+if.app-id = 'com.todoist.mac'
+run = ['move-node-to-workspace --focus-follows-window 5']
+
+[[on-window-detected]] # 5: Google Calendar (Chrome PWA)
+if.app-id = 'com.google.ChromeCanary.app.kjbdgfilnfhdoflbpgamdcdgpehopbep'
+run = ['move-node-to-workspace --focus-follows-window 5']
+
+[[on-window-detected]] # 5: Google Meet (Chrome PWA)
+if.app-id = 'com.google.ChromeCanary.app.kjgfgldnnfoeklkmfkjfagphfepbbdan'
+run = ['move-node-to-workspace --focus-follows-window 5']
+
+[[on-window-detected]] # 6: Notion
+if.app-id = 'notion.id'
+run = ['move-node-to-workspace --focus-follows-window 6']
+
+[[on-window-detected]] # 6: Linear
+if.app-id = 'com.linear'
+run = ['move-node-to-workspace --focus-follows-window 6']
+
+[[on-window-detected]] # 6: Linear (alternate bundle id)
+if.app-id = 'com.linear.Linear'
+run = ['move-node-to-workspace --focus-follows-window 6']
+
+[[on-window-detected]] # 6: GitHub (Chrome PWA)
+if.app-id = 'com.google.ChromeCanary.app.mjoklplbddabcmpepnokjaffbmgbkkgg'
+run = ['move-node-to-workspace --focus-follows-window 6']
+
+[[on-window-detected]] # 7: HEY
+if.app-id = 'com.basecamp.hey'
+run = ['move-node-to-workspace --focus-follows-window 7']
+
+[[on-window-detected]] # 8: WhatsApp
+if.app-id = 'net.whatsapp.WhatsApp'
+run = ['move-node-to-workspace --focus-follows-window 8']
+
+[[on-window-detected]] # 9: Spotify
+if.app-id = 'com.spotify.client'
+run = ['move-node-to-workspace --focus-follows-window 9']
+
+[[on-window-detected]] # 9: YouTube (Chrome PWA)
+if.app-id = 'com.google.ChromeCanary.app.agimnkijcaahngcdmfeangaknmldooml'
+run = ['move-node-to-workspace --focus-follows-window 9']

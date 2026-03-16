@@ -17,6 +17,13 @@ scripts/
 **/*.age
 {{ end }}
 
+{{ if ne .chezmoi.os "darwin" }}
+# macOS-only apps — skip on Linux
+dot_config/aerospace/
+dot_config/borders/
+dot_config/sketchybar/
+{{ end }}
+
 {{ if ne .de "hyprland-omarchy" }}
 # Hyprland+omarchy ecosystem — skip on non-Hyprland systems
 dot_config/hypr/
