@@ -52,7 +52,7 @@ profiles:
     tier: 1
     work: true
     brew: true
-    decrypt: true
+    decrypt: false
 
   # --- Immutable Fedora ---
   silverblue:
