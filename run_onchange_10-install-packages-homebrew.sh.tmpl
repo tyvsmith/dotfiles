@@ -50,7 +50,12 @@ tap "{{ $pkg.brew_tap }}"
 {{ if eq .chezmoi.os "darwin" -}}
 brew "mas"
 {{- range $key, $pkg := .packages }}
-{{-   if and (le (int $pkg.tier) (int $.tier)) (hasKey $pkg "mas") }}
+{{-   $mas_tags_ok := false -}}
+{{-   $mas_profile_tags := splitList ", " $.tags -}}
+{{-   range $pkg.tags -}}
+{{-     if has . $mas_profile_tags -}}{{- $mas_tags_ok = true -}}{{- end -}}
+{{-   end -}}
+{{-   if and $mas_tags_ok (hasKey $pkg "mas") }}
 mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
 {{-   end }}
 {{- end }}

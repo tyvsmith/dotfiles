@@ -8,7 +8,7 @@
 #
 # Fields:
 #   name:       YAML key          # override for display (e.g., 7zip)
-#   tier:       (required)        # 1=core CLI, 2=containers, 3=dev SDKs, 4=hardware, 5=basic UI, 6=extended UI, 7=gaming
+#   tags:       (required)        # list of category tags (core, container, dev, ai, experiment, hardware, ui, ui-extra, gaming)
 #   desc:       (required)        # short description
 #   os:         null              # restrict to: darwin | linux
 #   de:         null              # restrict to a desktop environment (e.g., hyprland-omarchy, gnome)
@@ -40,18 +40,18 @@
 
 packages:
   # ===========================================================================
-  # Tier 1: Shell & Environment
+  # Shell & Environment
   # ===========================================================================
   fish:
-    tier: 1
+    tags: [core]
     desc: "Modern shell"
 
   atuin:
-    tier: 1
+    tags: [core]
     desc: "Magical shell history"
 
   blesh:
-    tier: 1
+    tags: [experiment]
     desc: "Bash line editor with syntax highlighting and autosuggestions"
     pacman: blesh-git
     brew: false
@@ -59,354 +59,346 @@ packages:
     dnf: false
 
   zoxide:
-    tier: 1
+    tags: [core]
     desc: "Smarter cd command"
 
   starship:
-    tier: 1
+    tags: [core]
     desc: "Cross-shell prompt"
 
   direnv:
-    tier: 1
+    tags: [core]
     desc: "Per-directory env vars"
 
   fastfetch:
-    tier: 1
+    tags: [core]
     desc: "System information display"
 
   # ===========================================================================
-  # Tier 1: Editor
+  # Editor
   # ===========================================================================
   neovim:
-    tier: 1
+    tags: [core]
     desc: "Hyperextensible text editor"
 
   # ===========================================================================
-  # Tier 1: Modern CLI Replacements
+  # Modern CLI Replacements
   # ===========================================================================
   eza:
-    tier: 1
+    tags: [core]
     desc: "ls replacement"
 
   bat:
-    tier: 1
+    tags: [core]
     desc: "cat replacement"
 
   fd:
-    tier: 1
+    tags: [core]
     desc: "find replacement"
     apt: fd-find
     dnf: fd-find
 
   ripgrep:
-    tier: 1
+    tags: [core]
     desc: "grep replacement"
 
   sd:
-    tier: 1
+    tags: [core]
     desc: "sed replacement"
 
   dust:
-    tier: 1
+    tags: [core]
     desc: "du replacement"
 
   duf:
-    tier: 1
+    tags: [core]
     desc: "df replacement"
 
   procs:
-    tier: 1
+    tags: [core]
     desc: "ps replacement"
 
   btop:
-    tier: 1
+    tags: [core]
     desc: "System resource monitor TUI"
 
-  bottom:
-    tier: 1
-    desc: "top/htop replacement"
-
-  glances:
-    tier: 1
-    desc: "Cross-platform system monitor"
-
   difftastic:
-    tier: 1
+    tags: [dev]
     desc: "Structural diff tool"
 
   git-delta:
-    tier: 1
+    tags: [core]
     desc: "Git pager with syntax highlighting"
 
   trash-cli:
-    tier: 1
+    tags: [core]
     desc: "Safe rm replacement"
 
   choose:
-    tier: 1
+    tags: [dev]
     desc: "cut/awk replacement"
 
   broot:
-    tier: 1
+    tags: [dev]
     desc: "Interactive tree explorer"
 
   xh:
-    tier: 1
+    tags: [core]
     desc: "curl replacement"
 
   doggo:
-    tier: 1
+    tags: [dev]
     desc: "dig replacement"
 
   gping:
-    tier: 1
+    tags: [dev]
     desc: "ping with graph"
 
   tealdeer:
-    tier: 1
+    tags: [core]
     desc: "tldr pages client"
 
   yazi:
-    tier: 1
+    tags: [core]
     desc: "Terminal file manager"
 
   superfile:
-    tier: 1
+    tags: [experiment]
     desc: "Terminal file manager TUI"
 
   pv:
-    tier: 1
+    tags: [dev]
     desc: "Pipe viewer / progress monitor"
 
   # ===========================================================================
-  # Tier 1: Git Tools
+  # Git Tools
   # ===========================================================================
   git:
-    tier: 1
+    tags: [core]
     desc: "Version control"
 
   git-lfs:
-    tier: 1
+    tags: [core]
     desc: "Git Large File Storage"
 
   gh:
-    tier: 1
+    tags: [core]
     desc: "GitHub CLI"
     pacman: github-cli
 
   lazygit:
-    tier: 1
+    tags: [core]
     desc: "Terminal UI for git"
 
   # ===========================================================================
-  # Tier 1: Essential Utilities
+  # Essential Utilities
   # ===========================================================================
   chezmoi:
-    tier: 1
+    tags: [core]
     desc: "Dotfile manager"
 
   fzf:
-    tier: 1
+    tags: [core]
     desc: "Fuzzy finder"
 
   jq:
-    tier: 1
+    tags: [core]
     desc: "JSON processor"
 
   yq:
-    tier: 1
+    tags: [core]
     desc: "YAML processor"
     pacman: go-yq
 
   tmux:
-    tier: 1
+    tags: [core]
     desc: "Terminal multiplexer"
 
   zellij:
-    tier: 1
+    tags: [experiment]
     desc: "Terminal workspace/multiplexer"
 
   wget:
-    tier: 1
+    tags: [core]
     desc: "Network downloader"
 
   gnupg:
-    tier: 1
+    tags: [core]
     desc: "GnuPG encryption"
     dnf: gnupg2
 
   tree:
-    tier: 1
+    tags: [core]
     desc: "Directory tree listing"
 
   # ===========================================================================
-  # Tier 1: macOS GNU Tools
+  # macOS GNU Tools
   # ===========================================================================
   coreutils:
-    tier: 1
+    tags: [core]
     os: darwin
     desc: "GNU coreutils"
 
   findutils:
-    tier: 1
+    tags: [core]
     os: darwin
     desc: "GNU findutils"
 
   gnu-sed:
-    tier: 1
+    tags: [core]
     os: darwin
     desc: "GNU sed"
 
   grep:
-    tier: 1
+    tags: [core]
     os: darwin
     desc: "GNU grep"
 
   moreutils:
-    tier: 1
+    tags: [core]
     os: darwin
     desc: "Additional Unix utilities"
 
   # ===========================================================================
-  # Tier 2: Containers
+  # Containers
   # ===========================================================================
   docker:
-    tier: 2
+    tags: [container]
     desc: "Container platform"
     brew_cask: true
 
   docker-compose:
-    tier: 2
+    tags: [container]
     desc: "Multi-container orchestration"
     os: linux
 
   docker-buildx:
-    tier: 2
+    tags: [container]
     desc: "Extended Docker builds"
     os: linux
 
   podman:
-    tier: 2
+    tags: [container]
     desc: "Daemonless container engine"
 
   distrobox:
-    tier: 2
+    tags: [container]
     desc: "Container dev environments"
     os: linux
 
   lazydocker:
-    tier: 2
+    tags: [container]
     desc: "Terminal UI for Docker/Podman"
 
   # ===========================================================================
-  # Tier 3: Development SDKs & Package Managers
+  # Development SDKs & Package Managers
   # ===========================================================================
   mise:
-    tier: 3
+    tags: [dev]
     desc: "Polyglot runtime version manager"
 
   uv:
-    tier: 3
+    tags: [dev]
     desc: "Python package manager"
 
   # ===========================================================================
-  # Tier 3: Build & Image Tools
+  # Build & Image Tools
   # ===========================================================================
   imagemagick:
-    tier: 3
+    tags: [dev]
     desc: "Image manipulation"
     dnf: ImageMagick
 
   7zip:
-    tier: 3
+    tags: [dev]
     desc: "Archive tool"
     brew: p7zip
     apt: p7zip-full
     dnf: p7zip
 
   # ===========================================================================
-  # Tier 3: Development Utilities
+  # Development Utilities
   # ===========================================================================
   shellcheck:
-    tier: 3
+    tags: [dev]
     desc: "Shell script linter"
     dnf: ShellCheck
 
   tokei:
-    tier: 3
+    tags: [dev]
     desc: "Code statistics"
 
   hyperfine:
-    tier: 3
+    tags: [dev]
     desc: "Command benchmarking"
 
   grex:
-    tier: 3
+    tags: [dev]
     desc: "Regex generator"
 
   gum:
-    tier: 3
+    tags: [dev]
     desc: "TUI toolkit for shell scripts"
 
   tree-sitter-cli:
-    tier: 3
+    tags: [dev]
     desc: "Parser generator for editors"
 
   usage:
-    tier: 3
+    tags: [dev]
     desc: "CLI spec and completions tool"
 
   # ===========================================================================
-  # Tier 3: AI Tools
+  # AI Tools
   # ===========================================================================
   llm:
-    tier: 3
+    tags: [ai]
     desc: "LLM CLI tool"
     pacman: python-llm
 
   gemini-cli:
-    tier: 3
+    tags: [ai]
     desc: "Google Gemini CLI"
 
   opencode:
-    tier: 3
+    tags: [ai]
     desc: "AI coding agent"
 
   claude-code:
-    tier: 3
+    tags: [ai]
     desc: "Anthropic Claude Code"
     brew_cask: true
 
   codex:
-    tier: 3
+    tags: [ai]
     desc: "OpenAI Codex"
     brew_cask: true
     pacman: openai-codex
 
 
   # ===========================================================================
-  # Tier 4: Hardware
+  # Hardware
   # ===========================================================================
   bluetui:
-    tier: 4
+    tags: [hardware]
     desc: "Bluetooth manager TUI"
     os: linux
     brew: false
 
   # ===========================================================================
-  # Tier 5: Basic UI — Fonts
+  # Basic UI — Fonts
   # ===========================================================================
   font-hack-nerd-font:
-    tier: 5
+    tags: [ui]
     desc: "Hack Nerd Font"
     brew_cask: true
     pacman: ttf-hack-nerd
 
   # ===========================================================================
-  # Tier 5: Basic UI — Editor
+  # Basic UI — Editor
   # ===========================================================================
   visual-studio-code-insiders:
-    tier: 5
+    tags: [ui]
     desc: "Code editor (Insiders)"
     brew: "visual-studio-code@insiders"
     brew_cask: true
@@ -415,38 +407,38 @@ packages:
 
 
   # ===========================================================================
-  # Tier 5: Basic UI — Desktop Environment
+  # Basic UI — Desktop Environment
   # ===========================================================================
   hypr-dock:
-    tier: 5
+    tags: [ui]
     de: hyprland-omarchy
     desc: "Interactive dock panel for Hyprland"
     enabled: false  # re-enable after 1.2.1 release
 
   quickshell-overview:
-    tier: 5
+    tags: [ui]
     de: hyprland-omarchy
     desc: "Quickshell-based overview for Hyprland"
     pacman: quickshell-overview-git
 
   # ===========================================================================
-  # Tier 5: Basic UI — Terminal
+  # Basic UI — Terminal
   # ===========================================================================
   ghostty:
-    tier: 5
+    tags: [ui]
     desc: "Modern terminal emulator"
     brew_cask: true
 
   kitty:
-    tier: 5
+    tags: [ui]
     desc: "GPU-accelerated terminal emulator"
     brew_cask: true
 
   # ===========================================================================
-  # Tier 5: Basic UI — Productivity
+  # Basic UI — Productivity
   # ===========================================================================
   1password:
-    tier: 5
+    tags: [ui]
     desc: "Password manager"
     brew_cask: true
     pacman: 1password-beta
@@ -454,161 +446,161 @@ packages:
     flatpak: com.onepassword.OnePassword
 
   1password-cli:
-    tier: 5
+    tags: [ui]
     desc: "1Password CLI (op)"
     brew_cask: true
     rpm_ostree: true
 
   brave-browser:
-    tier: 5
+    tags: [ui]
     desc: "Privacy-focused browser"
     brew_cask: true
     pacman: brave-bin
     flatpak: com.brave.Browser
 
   obsidian:
-    tier: 5
+    tags: [ui]
     desc: "Knowledge base / note-taking"
     brew_cask: true
     flatpak: md.obsidian.Obsidian
 
   zen-browser:
-    tier: 5
+    tags: [ui]
     desc: "Firefox-based privacy browser"
     brew: false
     pacman: zen-browser-bin
 
   meld:
-    tier: 5
+    tags: [ui]
     desc: "Visual diff/merge tool"
     brew_cask: true
 
   # ===========================================================================
-  # Tier 6: Extended UI — Development
+  # Extended UI — Development
   # ===========================================================================
   jetbrains-toolbox:
-    tier: 6
+    tags: [ui-extra]
     desc: "JetBrains IDE manager"
     brew_cask: true
 
   # ===========================================================================
-  # Tier 6: Extended UI — Terminals
+  # Extended UI — Terminals
   # ===========================================================================
 
   warp-terminal:
-    tier: 6
+    tags: [ui-extra]
     desc: "AI-powered terminal"
     brew: warp
     brew_cask: true
 
   # ===========================================================================
-  # Tier 6: Extended UI — Communication
+  # Extended UI — Communication
   # ===========================================================================
 
   vesktop:
-    tier: 6
+    tags: [ui-extra]
     desc: "Enhanced Discord client"
     flatpak: dev.vencord.Vesktop
     brew_cask: true
 
   beeper:
-    tier: 6
+    tags: [ui-extra]
     desc: "Unified messaging"
     brew_cask: true
     pacman: beeper-v4-bin
     appimage: nickvdp/beeper
 
   # ===========================================================================
-  # Tier 6: Extended UI — Media & Utilities
+  # Extended UI — Media & Utilities
   # ===========================================================================
   vlc:
-    tier: 6
+    tags: [ui-extra]
     desc: "Media player"
     brew_cask: true
     pacman: vlc-plugins-all
     flatpak: org.videolan.VLC
 
   mpv:
-    tier: 6
+    tags: [ui-extra]
     desc: "Media player"
 
   deskflow:
-    tier: 6
+    tags: [ui-extra]
     desc: "Software KVM"
     brew_tap: "deskflow/tap"
     brew_cask: true
     flatpak: org.deskflow.deskflow
 
   localsend:
-    tier: 6
+    tags: [ui-extra]
     desc: "Cross-device file sharing"
     brew_cask: true
     flatpak: org.localsend.localsend_app
 
   spotify:
-    tier: 6
+    tags: [ui-extra]
     desc: "Music streaming"
     brew_cask: true
     flatpak: com.spotify.Client
 
   # ===========================================================================
-  # Tier 6: Extended UI — macOS Apps (cask + Mac App Store)
+  # Extended UI — macOS Apps (cask + Mac App Store)
   # ===========================================================================
   iterm2:
-    tier: 6
+    tags: [ui-extra]
     os: darwin
     desc: "macOS terminal"
     brew_cask: true
 
   alfred:
-    tier: 6
+    tags: [ui-extra]
     os: darwin
     desc: "Launcher/automation"
     brew_cask: true
 
   moom:
-    tier: 6
+    tags: [ui-extra]
     os: darwin
     desc: "Window manager"
     brew_cask: true
 
   soundsource:
-    tier: 6
+    tags: [ui-extra]
     os: darwin
     desc: "Audio control"
     brew_cask: true
 
   the-unarchiver:
-    tier: 6
+    tags: [ui-extra]
     os: darwin
     desc: "Archive extraction"
     brew_cask: true
 
   app-cleaner:
-    tier: 6
+    tags: [ui-extra]
     os: darwin
     desc: "App uninstaller"
     brew_cask: true
 
   amphetamine:
-    tier: 6
+    tags: [ui-extra]
     os: darwin
     desc: "Keep Mac awake"
     brew: false
     mas: 937984704
 
   velja:
-    tier: 6
+    tags: [ui-extra]
     os: darwin
     desc: "Browser/app picker"
     brew: false
     mas: 1607635845
 
  # ===========================================================================
-  # Tier 7: Gaming
+  # Gaming
   # ===========================================================================
   steam:
-    tier: 7
+    tags: [gaming]
     desc: "Gaming platform"
     brew_cask: true
     flatpak: com.valvesoftware.Steam

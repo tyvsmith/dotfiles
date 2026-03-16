@@ -43,7 +43,7 @@
 
 {{- /* Read profile properties from profiles.yaml */ -}}
 {{- $profileData := index $profiles $profile -}}
-{{- $tier := $profileData.tier -}}
+{{- $tags := $profileData.tags -}}
 {{- $wantsDecrypt := or (get $profileData "decrypt") false -}}
 {{- $work := or (get $profileData "work") false -}}
 {{- $de := "" -}}
@@ -60,7 +60,7 @@ encryption = "age"
 [data]
     distro = "{{ $distro }}"
     profile = "{{ $profile }}"
-    tier = {{ $tier }}
+    tags = "{{ $tags }}"
     work = {{ $work }}
     decrypt = {{ $wantsDecrypt }}
     de = "{{ $de }}"
