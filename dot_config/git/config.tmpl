@@ -61,8 +61,10 @@
 	autoupdate = true
 [url "git@github.com:"]
 	followRedirects = true
+{{ if not .work -}}
 [include]
-	path = ~/.config/git/conf.d/config
+	path = ~/.config/git/conf.d/oss
+{{ end -}}
 [include]
 	path = ~/.gitconfig.local
 [include]
