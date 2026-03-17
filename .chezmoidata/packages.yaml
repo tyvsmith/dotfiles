@@ -564,6 +564,31 @@ packages:
     desc: "Window manager"
     brew_cask: true
 
+  aerospace:
+    tags: [ui]
+    os: darwin
+    desc: "i3-like tiling window manager"
+    brew_tap: "nikitabobko/tap"
+    brew_cask: true
+
+  sketchybar:
+    tags: [ui]
+    os: darwin
+    desc: "Customizable macOS status bar"
+    brew_tap: "FelixKratz/formulae"
+
+  borders:
+    tags: [ui]
+    os: darwin
+    desc: "Window border highlights"
+    brew_tap: "FelixKratz/formulae"
+
+  raycast:
+    tags: [ui]
+    os: darwin
+    desc: "App Launcher"
+    brew_cask: true
+
   soundsource:
     tags: [ui-extra]
     os: darwin

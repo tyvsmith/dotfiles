@@ -49,6 +49,7 @@ sketchybar --add item apple_menu left \
   --set apple_menu \
     icon="⌘" \
     icon.font="JetBrainsMono Nerd Font:Bold:16.0" \
+    icon.padding_right=10 \
     label.drawing=off \
     padding_left=8 \
     padding_right=4 \
@@ -95,6 +96,9 @@ for i in {1..9}; do
       script="$CONFIG_DIR/plugins/space.sh" \
     --subscribe space.$i aerospace_workspace_change
 done
+
+# Extra gap between apple icon and first workspace
+sketchybar --set space.1 padding_left=10
 
 # Clock — right on laptop (single display), centered on external
 HAS_EXTERNAL=$(cat /tmp/sketchybar_has_external 2>/dev/null || echo 0)

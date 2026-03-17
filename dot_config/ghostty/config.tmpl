@@ -14,7 +14,11 @@ window-padding-x = 14
 window-padding-y = 14
 confirm-close-surface=false
 resize-overlay = never
+{{ if eq .chezmoi.os "darwin" -}}
+macos-titlebar-style = hidden
+{{ else -}}
 gtk-toolbar-style = flat
+{{ end -}}
 
 # Cursor styling
 cursor-style = "bar"

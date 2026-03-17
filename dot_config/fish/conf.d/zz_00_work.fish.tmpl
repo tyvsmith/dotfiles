@@ -47,8 +47,17 @@ end
 # Alias
 # =============================================================================
 
-alias opencode='aifx agent run opencode'
-alias claude='aifx agent run claude'
+function opencode --wraps='aifx agent run opencode' --description 'Run opencode via aifx'
+    set -q TMUX; and tmux rename-window opencode
+    aifx agent run opencode $argv
+    set -q TMUX; and tmux set-option -w automatic-rename on
+end
+
+function claude --wraps='aifx agent run claude' --description 'Run claude via aifx'
+    set -q TMUX; and tmux rename-window claude
+    aifx agent run claude $argv
+    set -q TMUX; and tmux set-option -w automatic-rename on
+end
 
 # =============================================================================
 # Vars
