@@ -21,7 +21,7 @@ else
   if [ "$BT_STATUS" = "0" ]; then
     ICON="󰂲"
   else
-    CONNECTED=$(system_profiler SPBluetoothDataType 2>/dev/null | grep -c "Connected: Yes" || echo "0")
+    CONNECTED=$(system_profiler SPBluetoothDataType 2>/dev/null | grep -c "Connected: Yes" || true)
     if [ "$CONNECTED" -gt 0 ]; then
       ICON="󰂱"
     else

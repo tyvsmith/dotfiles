@@ -34,16 +34,20 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 ]
 
 after-startup-command = [
-  'exec-and-forget borders'
+  'exec-and-forget borders',
+  'exec-and-forget sketchybar'
 ]
 
 # Gaps — matches Omarchy (gaps_in=5, gaps_out=10)
+# outer.top: built-in notched display already reserves space for the bar via
+# the notch, so only a small gap is needed. External displays have no notch,
+# so outer.top must include the full bar height.
 [gaps]
 inner.horizontal = 10
 inner.vertical   = 10
 outer.left       = 10
 outer.bottom     = 10
-outer.top        = 38
+outer.top        = [{ monitor."built-in" = 10 }, 47]
 outer.right      = 10
 
 # -------------------------------------------------------
