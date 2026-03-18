@@ -11,21 +11,19 @@ set -gx SUDO_EDITOR $EDITOR
 # Bat — use ansi theme so terminal colors aren't overridden
 set -gx BAT_THEME ansi
 
-{{ if eq .de "hyprland-omarchy" -}}
-# Omarchy
-set -gx OMARCHY_PATH $HOME/.local/share/omarchy
-fish_add_path --path $OMARCHY_PATH/bin
-{{ end -}}
-
 # Podman — point Docker-compatible tools (lazydocker, etc.) at podman socket
 {{ if ne .chezmoi.os "darwin" -}}
 set -gx DOCKER_HOST "unix:///run/user/"(id -u)"/podman/podman.sock"
 {{ end -}}
 
-# Mise — polyglot runtime version manager (Java, Python, Node, etc.)
-if command -q mise
-    mise activate fish | source
-end
 
-# Clean up any duplicate PATH entries from replayed shell configs
-dedup_path
+# SSH agent — inside tmux, use a stable symlink updated by tmux's
+# client-attached hook (see tmux-custom.conf). Outside tmux, use the
+# platform default (launchctl on macOS, inherited env on Linux).
+if set -q TMUX
+    set -gx SSH_AUTH_SOCK ~/.ssh/ssh_auth_sock
+{{ if eq .chezmoi.os "darwin" -}}
+else
+    set -gx SSH_AUTH_SOCK (launchctl getenv SSH_AUTH_SOCK)
+{{ end -}}
+end

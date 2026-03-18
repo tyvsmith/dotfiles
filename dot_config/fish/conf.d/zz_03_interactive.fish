@@ -21,6 +21,9 @@ if status is-interactive
 
     # Set simple hostname for prompt display
     set -gx HOST (string split -f1 '.' $hostname)
+    
+    # Mise — polyglot runtime version manager (Java, Python, Node, etc.)
+    __cached_source mise activate fish
 
     # Reset cursor to bar on each prompt inside tmux. Tmux doesn't restore
     # cursor shape after apps (neovim, opencode, etc.) change it, unlike

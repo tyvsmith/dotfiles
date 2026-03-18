@@ -59,6 +59,11 @@ bind -T root DoubleClick1Status new-window -c "#{pane_current_path}"
 bind -T root MouseDown2Status kill-window -t=
 unbind -T root MouseDown1StatusRight
 
+# ── SSH Agent Socket ───────────────────────────────────────────────
+# On attach, symlink the fresh SSH_AUTH_SOCK to a stable path.
+# Fish shells inside tmux use the symlink, avoiding per-prompt polling.
+set-hook -g client-attached 'run-shell "ln -snf #{SSH_AUTH_SOCK} ~/.ssh/ssh_auth_sock"'
+
 # ── Plugins ──────────────────────────────────────────────────────────
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
 
