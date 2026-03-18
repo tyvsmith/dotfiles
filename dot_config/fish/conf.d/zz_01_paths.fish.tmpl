@@ -1,17 +1,6 @@
 # =============================================================================
 # PATH & Environment Bootstrap
-# =============================================================================
-
-# SSH agent — inside tmux, use a stable symlink updated by tmux's
-# client-attached hook (see tmux-custom.conf). Outside tmux, use the
-# platform default (launchctl on macOS, inherited env on Linux).
-if set -q TMUX
-    set -gx SSH_AUTH_SOCK ~/.ssh/ssh_auth_sock
-{{ if eq .chezmoi.os "darwin" -}}
-else
-    set -gx SSH_AUTH_SOCK (launchctl getenv SSH_AUTH_SOCK)
-{{ end -}}
-end
+# =============================================================================()
 
 {{ $p := index .profiles .profile -}}
 {{ if and (hasKey $p "brew") $p.brew -}}
@@ -24,3 +13,9 @@ end
 
 # Custom bins
 fish_add_path --path ~/.local/bin
+
+{{ if eq .de "hyprland-omarchy" -}}
+# Omarchy
+set -gx OMARCHY_PATH $HOME/.local/share/omarchy
+fish_add_path --path $OMARCHY_PATH/bin
+{{ end -}}
