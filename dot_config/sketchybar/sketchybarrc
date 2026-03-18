@@ -100,12 +100,8 @@ done
 # Extra gap between apple icon and first workspace
 sketchybar --set space.1 padding_left=10
 
-# Clock — right on laptop (single display), centered on external
-HAS_EXTERNAL=$(cat /tmp/sketchybar_has_external 2>/dev/null || echo 0)
-[ "$HAS_EXTERNAL" -eq 1 ] && CLOCK_POS=center || CLOCK_POS=right
-echo "$CLOCK_POS" > /tmp/sketchybar_clock_pos
-
-sketchybar --add item clock $CLOCK_POS \
+# Clock — always centered
+sketchybar --add item clock center \
   --set clock \
     update_freq=5 \
     icon.drawing=off \

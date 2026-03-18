@@ -14,7 +14,7 @@ set -gx BAT_THEME ansi
 {{ if eq .de "hyprland-omarchy" -}}
 # Omarchy
 set -gx OMARCHY_PATH $HOME/.local/share/omarchy
-fish_add_path $OMARCHY_PATH/bin
+fish_add_path --path $OMARCHY_PATH/bin
 {{ end -}}
 
 # Podman — point Docker-compatible tools (lazydocker, etc.) at podman socket
@@ -26,3 +26,6 @@ set -gx DOCKER_HOST "unix:///run/user/"(id -u)"/podman/podman.sock"
 if command -q mise
     mise activate fish | source
 end
+
+# Clean up any duplicate PATH entries from replayed shell configs
+dedup_path

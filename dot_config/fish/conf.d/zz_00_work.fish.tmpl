@@ -20,7 +20,12 @@ end
 # Replay corporate-provisioned shell configs (managed by Chef/IT)
 # /etc/zsh/cpe: SSL certs, UBER identity, USSH settings, /opt/uber/bin
 # ~/.profile_lda: UBER_BINARIES_PATH and LDA path
-replay "source /etc/zsh/cpe 2>/dev/null; source ~/.profile_lda 2>/dev/null"
+replay "source /etc/zsh/cpe 2>/dev/null"
+replay "source ~/.profile_lda 2>/dev/null"
+
+# Skip devpod-sshwrapper.sh pre-flight checks (ussh cert refresh + devpod wait API call)
+# Saves ~1.5s on cold SSH connections to devpods
+set -gx DEVPOD_NO_SSHWRAP 1
 {{- else }}
 # =============================================================================
 # Devpod
