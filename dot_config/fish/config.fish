@@ -1,3 +1,3 @@
 if status is-interactive
-    starship init fish | source
+    __cached_source starship init fish
 end

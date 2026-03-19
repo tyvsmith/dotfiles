@@ -79,4 +79,16 @@ for attempt in $(seq 1 "$MAX_RETRIES"); do
 done
 
 log "Homebrew formula installation complete!"
+
+# =============================================================================
+# Disable vendor fish conf.d files we handle ourselves with caching
+# (mise uses MISE_FISH_AUTO_ACTIVATE=0 env var; direnv has no disable mechanism)
+# =============================================================================
+vendor_dir="$(brew --prefix)/share/fish/vendor_conf.d"
+for f in direnv.fish; do
+    if [ -s "$vendor_dir/$f" ]; then
+        log "Emptying vendor conf.d/$f (handled by dotfiles with caching)"
+        : > "$vendor_dir/$f"
+    fi
+done
 {{ end -}}
