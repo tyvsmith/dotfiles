@@ -2,7 +2,7 @@
 # fish process, and generate a sync config (no git_status) for the loading indicator.
 # Only re-runs when starship binary or config changes (mtime checks).
 function __starship_async_setup
-    __cached_source starship init fish
+    __cached_source starship init fish --print-full-init
 
     set -l starship_bin (command -s starship)
     test -n "$starship_bin"; or return
