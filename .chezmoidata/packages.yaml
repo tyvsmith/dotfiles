@@ -509,6 +509,7 @@ packages:
     brew_cask: true
     pacman: beeper-v4-bin
     appimage: nickvdp/beeper
+    work: false
 
   # ===========================================================================
   # Extended UI — Media & Utilities

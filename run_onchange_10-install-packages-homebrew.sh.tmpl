@@ -24,17 +24,10 @@ ensure_brew_in_path
 require_cmd brew
 
 # =============================================================================
-# Repair any packages installed but not linked from previous interrupted runs
-# =============================================================================
-if brew list --formula &>/dev/null 2>&1; then
-    log "Re-linking any unlinked formulas..."
-    brew list --formula | xargs -r brew link --overwrite 2>/dev/null || true
-fi
-
-# =============================================================================
 # Install formulas via brew bundle
 # =============================================================================
 log "Running brew bundle (formulas)..."
+export HOMEBREW_NO_AUTO_UPDATE=1
 
 BREWFILE_CONTENT=$(cat <<'BREWFILE'
 {{- range $key, $pkg := .packages }}
@@ -67,7 +60,7 @@ BREWFILE
 # on first pass that resolve after an explicit relink)
 MAX_RETRIES=3
 for attempt in $(seq 1 "$MAX_RETRIES"); do
-  if brew bundle --verbose --file=- <<<"$BREWFILE_CONTENT"; then
+  if brew bundle --file=- <<<"$BREWFILE_CONTENT"; then
     break
   fi
   if [ "$attempt" -eq "$MAX_RETRIES" ]; then

@@ -5,111 +5,117 @@
 # =============================================================================
 
 if status is-interactive
-    # --- Core: Compatible syntax (flags mostly work the same) ---
+    function __deferred_abbr_init --on-event fish_prompt
+    #Delete the function after it runs the first time
+    functions --erase __deferred_abbr_init 
+        # --- Core: Compatible syntax (flags mostly work the same) ---
 
-    # Eza for ls
-    abbr --add ls eza
-    abbr --add ll 'eza -l --icons=auto --group-directories-first'
-    abbr --add l. 'eza -d .*'
-    abbr --add l1 'eza -1'
-    abbr --add la 'eza -la --icons=auto --group-directories-first'
-    abbr --add lt 'eza --tree --level=2'
+        # Eza for ls
+        abbr --add ls eza
+        abbr --add ll 'eza -l --icons=auto --group-directories-first'
+        abbr --add l. 'eza -d .*'
+        abbr --add l1 'eza -1'
+        abbr --add la 'eza -la --icons=auto --group-directories-first'
+        abbr --add lt 'eza --tree --level=2'
 
-    # Bat for cat
-    abbr --add cat bat
+        # Bat for cat
+        abbr --add cat bat
 
-    # Trash for rm (safer delete)
-    abbr --add rm trash
+        # Trash for rm (safer delete)
+        abbr --add rm trash
 
-    # Duf for df (beautiful disk free)
-    abbr --add df duf
+        # Duf for df (beautiful disk free)
+        abbr --add df duf
 
-    # Dust for du (visual disk usage)
-    abbr --add du dust
+        # Dust for du (visual disk usage)
+        abbr --add du dust
 
-    # Ripgrep for grep
-    abbr --add grep rg
+        # Ripgrep for grep
+        abbr --add grep rg
 
-    # fd for find
-    abbr --add find fd
+        # fd for find
+        abbr --add find fd
 
-    # sd for sed
-    abbr --add sed sd
+        # sd for sed
+        abbr --add sed sd
 
-    # xh for curl
-    abbr --add curl xh
+        # xh for curl
+        abbr --add curl xh
 
-    # Editor (force neovim)
-    abbr --add vim nvim
-    abbr --add vi nvim
+        # Editor (force neovim)
+        abbr --add vim nvim
+        abbr --add vi nvim
 
-    # Chezmoi
-    abbr --add cz chezmoi
-    abbr --add cza chezmoi apply
+        # Chezmoi
+        abbr --add cz chezmoi
+        abbr --add cza chezmoi apply
 
-    # Lazygit
-    abbr --add lg lazygit
+        # Lazygit
+        abbr --add lg lazygit
 
-    # tmux
-    abbr --add t 'tmux attach || tmux new -s Work'
+        # tmux
+        abbr --add t 'tmux attach || tmux new -s Work'
 
-    # fzf file finder + open in editor
-    abbr --add ff "fzf --preview 'bat --style=numbers --color=always {}'"
+        # fzf file finder + open in editor
+        abbr --add ff "fzf --preview 'bat --style=numbers --color=always {}'"
 
-    # Directory navigation
-    abbr --add .. 'cd ..'
-    abbr --add ... 'cd ../..'
-    abbr --add .... 'cd ../../..'
+        # Directory navigation
+        abbr --add .. 'cd ..'
+        abbr --add ... 'cd ../..'
+        abbr --add .... 'cd ../../..'
 
-    # Git
-    abbr --add g git
-    abbr --add gst git status
-    abbr --add gco git checkout
-    abbr --add gbr git branch
-    abbr --add gp git push
-    abbr --add gcm 'git commit -m'
-    abbr --add gcam 'git commit -a -m'
-    abbr --add gcad 'git commit -a --amend'
-    abbr -a --position anywhere --command git st status
-    abbr -a --position anywhere --command git co checkout
-    abbr -a --position anywhere --command git cm commit
-    abbr -a --position anywhere --command git br branch
-    abbr -a --position anywhere --command git aa add --all
-    abbr -a --position anywhere --command git ap add --patch
-    abbr -a --position anywhere --command git pf push --force-with-lease
+        # Git
+        abbr --add g git
+        abbr --add gst git status
+        abbr --add gco git checkout
+        abbr --add gbr git branch
+        abbr --add gp git push
+        abbr --add gcm 'git commit -m'
+        abbr --add gcam 'git commit -a -m'
+        abbr --add gcad 'git commit -a --amend'
+        abbr -a --position anywhere --command git st status
+        abbr -a --position anywhere --command git co checkout
+        abbr -a --position anywhere --command git cm commit
+        abbr -a --position anywhere --command git br branch
+        abbr -a --position anywhere --command git aa add --all
+        abbr -a --position anywhere --command git ap add --patch
+        abbr -a --position anywhere --command git pf push --force-with-lease
 
-{{ if contains "dev" .tags -}}
-    # --- Dev tools ---
-    # Difftastic for diff
-    abbr --add diff difft
+        {{ if contains "dev" .tags -}}
+            # --- Dev tools ---
+            # Difftastic for diff
+            abbr --add diff difft
 
-    # Gping for ping (graph visualization)
-    abbr --add ping gping
+            # Gping for ping (graph visualization)
+            abbr --add ping gping
 
-    # Broot
-    abbr --add br broot
-{{ end -}}
+            # Broot
+            abbr --add br broot
+        {{ end -}}
 
-{{ if contains "container" .tags -}}
-    # --- Container management ---
-    abbr --add d docker
-    abbr --add p podman
-    abbr --add db distrobox
-    abbr --add dbe 'distrobox enter'
-    abbr --add dbl 'distrobox list'
-    abbr --add dbs 'distrobox stop'
-    abbr --add dbrm 'distrobox rm'
-    abbr --add dbc 'distrobox create'
-{{ end -}}
+        {{ if contains "container" .tags -}}
+            # --- Container management ---
+            abbr --add d docker
+            abbr --add p podman
+            abbr --add db distrobox
+            abbr --add dbe 'distrobox enter'
+            abbr --add dbl 'distrobox list'
+            abbr --add dbs 'distrobox stop'
+            abbr --add dbrm 'distrobox rm'
+            abbr --add dbc 'distrobox create'
+        {{ end -}}
 
-{{ if contains "ai" .tags -}}
-    # --- AI tools ---
-    abbr --add c opencode
-    abbr --add cx 'claude --allow-dangerously-skip-permissions'
-{{ end -}}
+        {{ if contains "ai" .tags -}}
+            # --- AI tools ---
+            abbr --add c opencode
+            abbr --add cx 'claude --allow-dangerously-skip-permissions'
+        {{ end -}}
 
-{{ if contains "experiment" .tags -}}
-    # --- Experimental ---
-    abbr --add zj zellij
-{{ end -}}
+        {{ if contains "experiment" .tags -}}
+            # --- Experimental ---
+            abbr --add zj zellij
+        {{ end -}}
+
+        __abbr_tips_init
+    end
 end

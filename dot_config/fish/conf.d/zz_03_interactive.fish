@@ -7,23 +7,34 @@
 # =============================================================================
 
 if status is-interactive
-    # fzf.fish — disable history binding (atuin owns Ctrl+R)
-    fzf_configure_bindings --history=
 
-    # Atuin — shell history search (binds Ctrl+R and Up)
-    __cached_source atuin init fish
-    
-    # Zoxide — smart directory jumping
-    __cached_source zoxide init fish
+    # Starship — prompt generator (eager for fish-async-prompt compatibility)
+    __starship_async_setup
 
-    complete --erase --command __zoxide_z
-    complete --command __zoxide_z --no-files --arguments '(__hybrid_zoxide_z_complete)'
+    function __deferred_init --on-event fish_prompt
+        functions --erase __deferred_init
 
-    # Set simple hostname for prompt display
-    set -gx HOST (string split -f1 '.' $hostname)
-    
-    # Mise — polyglot runtime version manager (Java, Python, Node, etc.)
-    __cached_source mise activate fish
+        # fzf.fish — disable history binding (atuin owns Ctrl+R)
+        fzf_configure_bindings --history=
+
+        # Atuin — shell history search (binds Ctrl+R and Up)
+        __cached_source atuin init fish
+
+        # Zoxide — smart directory jumping
+        __cached_source zoxide init fish
+
+        complete --erase --command __zoxide_z
+        complete --command __zoxide_z --no-files --arguments '(__hybrid_zoxide_z_complete)'
+
+        # Set simple hostname for prompt display
+        set -gx HOST (string split -f1 '.' $hostname)
+
+        # Mise — polyglot runtime version manager (Java, Python, Node, etc.)
+        __cached_source mise activate fish
+
+        # direnv — per-directory environment loading (.envrc files)
+        __cached_source direnv hook fish
+    end
 
     # Reset cursor to bar on each prompt inside tmux. Tmux doesn't restore
     # cursor shape after apps (neovim, opencode, etc.) change it, unlike
@@ -33,5 +44,4 @@ if status is-interactive
             printf '\e[6 q'
         end
     end
-
 end

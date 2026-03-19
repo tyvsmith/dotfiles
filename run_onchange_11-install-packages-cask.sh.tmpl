@@ -26,7 +26,8 @@ require_cmd brew
 # Install casks via brew bundle
 # =============================================================================
 log "Running brew bundle (casks)..."
-brew bundle --verbose --file=/dev/stdin <<'BREWFILE'
+export HOMEBREW_NO_AUTO_UPDATE=1
+brew bundle --file=/dev/stdin <<'BREWFILE'
 {{- range $key, $pkg := .packages }}
 {{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "brew_cask" "fmt" "cask \"%s\"  # %s") }}
 {{- end }}

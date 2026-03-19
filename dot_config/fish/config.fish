@@ -1,3 +1,3 @@
 if status is-interactive
-    __cached_source starship init fish
+    # Fish configuration for interactive shells. This file is sourced by all interactive
 end
