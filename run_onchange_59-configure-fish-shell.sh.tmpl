@@ -27,13 +27,7 @@ if [[ -z "$FISH_PATH" || ! -x "$FISH_PATH" ]]; then
     exit 0
 fi
 
-# Add fish to /etc/shells if not already present (needs sudo)
-if ! grep -qxF "$FISH_PATH" /etc/shells 2>/dev/null; then
-    log "Adding $FISH_PATH to /etc/shells"
-    echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
-fi
-
-# Set fish as login shell — try chsh (no sudo), fall back to sudo usermod
+# Check current login shell early — nothing to do if already fish
 current_shell() {
 {{ if eq .chezmoi.os "darwin" -}}
     dscl . -read /Users/"$(whoami)" UserShell | awk '{print $2}'
@@ -42,11 +36,30 @@ current_shell() {
 {{ end -}}
 }
 
+if grep -qxF "$FISH_PATH" /etc/shells 2>/dev/null && [[ "$(current_shell)" == "$FISH_PATH" ]]; then
+    log "fish is already the login shell — nothing to do"
+    exit 0
+fi
+
+# Add fish to /etc/shells if not already present (needs sudo)
+if ! grep -qxF "$FISH_PATH" /etc/shells 2>/dev/null; then
+    if sudo -n true 2>/dev/null; then
+        log "Adding $FISH_PATH to /etc/shells"
+        echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
+    else
+        warn "$FISH_PATH is not in /etc/shells — run manually:"
+        warn "  echo '$FISH_PATH' | sudo tee -a /etc/shells"
+        exit 0
+    fi
+fi
+
+# Set fish as login shell
 if [[ "$(current_shell)" != "$FISH_PATH" ]]; then
-    log "Setting login shell to $FISH_PATH"
-    chsh -s "$FISH_PATH" 2>/dev/null || true
-    # Verify it took — chsh can return 0 but silently fail
-    if [[ "$(current_shell)" != "$FISH_PATH" ]]; then
+    if sudo -n true 2>/dev/null; then
+        log "Setting login shell to $FISH_PATH"
         sudo usermod -s "$FISH_PATH" "$(whoami)"
+    else
+        warn "Login shell is not $FISH_PATH — run manually:"
+        warn "  sudo usermod -s '$FISH_PATH' $(whoami)"
     fi
 fi

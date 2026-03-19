@@ -26,7 +26,7 @@ profiles:
   # --- macOS ---
   macos-work:
     desc: "Work Mac — full dev setup with corporate config"
-    tags: core, container, dev, experiment, ai, experiment, ui, ui-extra
+    tags: core, container, dev, experiment, ai, ui, ui-extra
     brew: true
     work: true
     decrypt: true
@@ -34,7 +34,7 @@ profiles:
   # --- Arch Linux ---
   arch-desktop:
     desc: "Arch Linux desktop — full setup with paru + flatpak"
-    tags: core, container, dev, experiment, ai, experiment, hardware, ui, ui-extra, gaming
+    tags: core, container, dev, experiment, ai, hardware, ui, ui-extra, gaming
     de: hyprland-omarchy
     pacman: true
     flatpak: true
