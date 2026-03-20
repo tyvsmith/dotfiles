@@ -7,13 +7,11 @@
 # =============================================================================
 
 if status is-interactive
-
-    # Starship — prompt generator (eager for fish-async-prompt compatibility)
-    __starship_async_setup
+    
+    __init_async_starship
 
     function __deferred_init --on-event fish_prompt
         functions --erase __deferred_init
-
         # fzf.fish — disable history binding (atuin owns Ctrl+R)
         fzf_configure_bindings --history=
 
