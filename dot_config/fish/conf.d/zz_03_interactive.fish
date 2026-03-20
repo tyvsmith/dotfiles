@@ -7,9 +7,6 @@
 # =============================================================================
 
 if status is-interactive
-    
-    __init_async_starship
-
     function __deferred_init --on-event fish_prompt
         functions --erase __deferred_init
         # fzf.fish — disable history binding (atuin owns Ctrl+R)
