@@ -5,7 +5,7 @@ function fish_prompt_loading_indicator
     if test "$PWD" = "$__fish_prompt_last_dir"
         echo -n $argv[1]
     else
-        STARSHIP_CONFIG=~/.cache/fish/starship-sync.toml /opt/homebrew/bin/starship prompt --terminal-width="$COLUMNS" --status=0 --cmd-duration=0 --jobs=0
+        STARSHIP_CONFIG=~/.cache/fish/starship-sync.toml command starship prompt --terminal-width="$COLUMNS" --status=0 --cmd-duration=0 --jobs=0
     end
     set -g __fish_prompt_last_dir $PWD
 end
