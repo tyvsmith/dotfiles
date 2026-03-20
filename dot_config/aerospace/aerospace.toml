@@ -113,7 +113,7 @@ alt-shift-minus = 'resize height -50'
 alt-shift-equal = 'resize height +50'
 
 # App launchers
-alt-enter       = 'exec-and-forget open -na Ghostty' # Omarchy: SUPER + RETURN
+alt-enter       = 'exec-and-forget $HOME/.config/aerospace/new-ghostty-window.sh' # Omarchy: SUPER + RETURN
 alt-shift-enter = 'exec-and-forget open -na "Google Chrome Canary"' # Omarchy: SUPER + SHIFT + RETURN
 alt-shift-n     = 'exec-and-forget open -na Zed' # Omarchy: SUPER + SHIFT + N
 alt-shift-c     = 'exec-and-forget open -b "com.google.Chrome.app.kjbdgfilnfhdoflbpgamdcdgpehopbep"' # Omarchy: SUPER+SHIFT+C → Google Calendar
