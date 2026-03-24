@@ -231,6 +231,11 @@ packages:
     tags: [core]
     desc: "Directory tree listing"
 
+  socat:
+    tags: [core]
+    desc: "Multipurpose relay for bidirectional data transfer"
+    brew: false
+
   # ===========================================================================
   # macOS GNU Tools
   # ===========================================================================
