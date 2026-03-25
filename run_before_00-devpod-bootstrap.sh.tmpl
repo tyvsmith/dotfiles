@@ -19,4 +19,13 @@ sudo install -d -o "$(whoami)" -g "$(id -gn)" /home/linuxbrew 2>/dev/null || tru
 mkdir -p "$HOME/.linuxbrew"
 ln -sfn "$HOME/.linuxbrew" /home/linuxbrew/.linuxbrew
 sudo ln -sfn /home/linuxbrew /linuxbrew 2>/dev/null || true
+
+# Migrate ~/.devpod directory to ~/.config/devpod so chezmoi can replace it with a symlink
+if [ -d "$HOME/.devpod" ] && [ ! -L "$HOME/.devpod" ]; then
+  log "Migrating ~/.devpod to ~/.config/devpod..."
+  mkdir -p "$HOME/.config/devpod"
+  sudo cp -an "$HOME/.devpod/." "$HOME/.config/devpod/"
+  sudo chown -R "$(whoami):$(id -gn)" "$HOME/.config/devpod"
+  sudo rm -rf "$HOME/.devpod"
+fi
 {{ end -}}
