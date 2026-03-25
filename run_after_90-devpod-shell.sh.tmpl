@@ -1,0 +1,41 @@
+{{- if eq .profile "devpod" -}}
+#!/usr/bin/env bash
+# Devpods reset /etc/shells on restart, so re-register fish on every apply.
+
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+
+# Find fish binary — check well-known install paths, then fall back to PATH
+FISH_PATH=""
+for p in /home/linuxbrew/.linuxbrew/bin/fish "$HOME/.linuxbrew/bin/fish" \
+         /usr/local/bin/fish /usr/bin/fish; do
+    if [[ -x "$p" ]]; then
+        FISH_PATH="$p"
+        break
+    fi
+done
+
+if [[ -z "$FISH_PATH" ]]; then
+    FISH_PATH="$(command -v fish 2>/dev/null || true)"
+fi
+
+if [[ -z "$FISH_PATH" || ! -x "$FISH_PATH" ]]; then
+    warn "fish not found — skipping shell setup"
+    exit 0
+fi
+
+# Add fish to /etc/shells if missing (devpods wipe this on restart)
+if ! grep -qxF "$FISH_PATH" /etc/shells 2>/dev/null; then
+    log "Adding $FISH_PATH to /etc/shells"
+    echo "$FISH_PATH" | sudo tee -a /etc/shells >/dev/null
+fi
+
+# Set fish as login shell if not already
+CURRENT_SHELL="$(getent passwd "$(whoami)" | cut -d: -f7)"
+if [[ "$CURRENT_SHELL" != "$FISH_PATH" ]]; then
+    log "Setting login shell to $FISH_PATH"
+    sudo usermod -s "$FISH_PATH" "$(whoami)"
+fi
+{{ end -}}
