@@ -11,6 +11,7 @@ set-option -g default-shell ${SHELL}
 # Without this, TERM_PROGRAM is unset inside tmux and image preview fails.
 set -ga update-environment "TERM_PROGRAM"
 set -ga update-environment "TERM_PROGRAM_VERSION"
+set -ga update-environment "SSH_AUTH_SOCK"
 
 # ── Cursor ───────────────────────────────────────────────────────────
 # Set default cursor for new panes. Actual restore after apps exit is
@@ -62,7 +63,9 @@ unbind -T root MouseDown1StatusRight
 # ── SSH Agent Socket ───────────────────────────────────────────────
 # On attach, symlink the fresh SSH_AUTH_SOCK to a stable path.
 # Fish shells inside tmux use the symlink, avoiding per-prompt polling.
-set-hook -g client-attached 'run-shell "ln -snf #{SSH_AUTH_SOCK} ~/.ssh/ssh_auth_sock"'
+# Note: use tmux show-environment (not #{SSH_AUTH_SOCK} format) to get the
+# value updated by update-environment, which reflects the attaching client.
+set-hook -g client-attached 'run-shell "if sock=$(tmux show-environment SSH_AUTH_SOCK 2>/dev/null); then sock=${sock#SSH_AUTH_SOCK=}; ln -snf \"$sock\" ~/.ssh/ssh_auth_sock; fi"'
 
 # ── Plugins ──────────────────────────────────────────────────────────
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
