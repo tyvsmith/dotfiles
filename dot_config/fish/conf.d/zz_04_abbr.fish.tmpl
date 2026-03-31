@@ -111,6 +111,13 @@ if status is-interactive
             abbr --add cx 'claude --allow-dangerously-skip-permissions'
         {{ end -}}
 
+        {{ if .work -}}
+            # --- DevPod (work) ---
+            abbr --add dv devpod
+            abbr -a --position anywhere --command devpod rm delete
+            abbr -a --position anywhere --command devpod ls ps
+        {{ end -}}
+
         {{ if contains "experiment" .tags -}}
             # --- Experimental ---
             abbr --add zj zellij
