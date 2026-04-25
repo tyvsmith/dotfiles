@@ -71,6 +71,7 @@ set_linux() {
   log "Switching to Linux mode (cursor X=$CURRENT_X)"
   if $NATURAL_SCROLL; then
     hyprctl keyword device[razer-razer-mouse-dock-pro]:natural_scroll false > /dev/null
+    hyprctl keyword device[razer-razer-mouse-dock-pro-1]:natural_scroll false > /dev/null
   fi
   if $SWAP_KEYS; then
     hyprctl keyword device[keychron-keychron-k6-pro]:kb_options "" > /dev/null
@@ -83,6 +84,7 @@ set_mac() {
   log "Switching to Mac mode (cursor X=$CURRENT_X)"
   if $NATURAL_SCROLL; then
     hyprctl keyword device[razer-razer-mouse-dock-pro]:natural_scroll true > /dev/null
+    hyprctl keyword device[razer-razer-mouse-dock-pro-1]:natural_scroll true > /dev/null
   fi
   if $SWAP_KEYS; then
     hyprctl keyword device[keychron-keychron-k6-pro]:kb_options "altwin:swap_alt_win" > /dev/null

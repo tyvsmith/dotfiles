@@ -65,7 +65,7 @@ unbind -T root MouseDown1StatusRight
 # Fish shells inside tmux use the symlink, avoiding per-prompt polling.
 # Note: use tmux show-environment (not #{SSH_AUTH_SOCK} format) to get the
 # value updated by update-environment, which reflects the attaching client.
-set-hook -g client-attached 'run-shell "if sock=$(tmux show-environment SSH_AUTH_SOCK 2>/dev/null); then sock=${sock#SSH_AUTH_SOCK=}; ln -snf \"$sock\" ~/.ssh/ssh_auth_sock; fi"'
+set-hook -g client-attached 'run-shell "sock=$(tmux show-environment SSH_AUTH_SOCK 2>/dev/null | cut -d= -f2-) && [ -n \"$sock\" ] && ln -snf \"$sock\" ~/.ssh/ssh_auth_sock"'
 
 # ── Plugins ──────────────────────────────────────────────────────────
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'

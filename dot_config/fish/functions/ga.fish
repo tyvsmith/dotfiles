@@ -6,9 +6,9 @@ function ga --description 'Create git worktree + branch'
 
     set -l branch $argv[1]
     set -l base (basename $PWD)
-    set -l path "../$base--$branch"
+    set -l wt_path "../$base--$branch"
 
-    git worktree add -b $branch $path
-    mise trust $path
-    cd $path
+    git worktree add -b $branch $wt_path
+    mise trust $wt_path
+    cd $wt_path
 end

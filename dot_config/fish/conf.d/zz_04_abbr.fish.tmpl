@@ -56,8 +56,12 @@ if status is-interactive
         # tmux
         abbr --add t 'tmux attach || tmux new -s Work'
 
-        # fzf file finder + open in editor
-        abbr --add ff "fzf --preview 'bat --style=numbers --color=always {}'"
+        # fzf file finder + open in editor (kitty gets image preview)
+        if test "$TERM" = xterm-kitty
+            abbr --add ff "fzf --preview 'case \$(file --mime-type -b {}) in image/*) kitty icat --clear --transfer-mode=memory --stdin=no --place=\${FZF_PREVIEW_COLUMNS}x\${FZF_PREVIEW_LINES}@0x0 {} ;; *) bat --style=numbers --color=always {} ;; esac'"
+        else
+            abbr --add ff "fzf --preview 'bat --style=numbers --color=always {}'"
+        end
 
         # Directory navigation
         abbr --add .. 'cd ..'
@@ -108,7 +112,8 @@ if status is-interactive
         {{ if contains "ai" .tags -}}
             # --- AI tools ---
             abbr --add c opencode
-            abbr --add cx 'claude --allow-dangerously-skip-permissions'
+            abbr --add cx 'printf "\033[2J\033[3J\033[H"; and claude --permission-mode bypassPermissions'
+            abbr --add i 'tdl c cx'
         {{ end -}}
 
         {{ if .work -}}
