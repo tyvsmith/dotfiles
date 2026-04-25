@@ -112,7 +112,7 @@ if status is-interactive
         {{ if contains "ai" .tags -}}
             # --- AI tools ---
             abbr --add c opencode
-            abbr --add cx 'printf "\033[2J\033[3J\033[H"; and claude --permission-mode bypassPermissions'
+            abbr --add cx 'clear-all; and claude --permission-mode bypassPermissions'
             abbr --add i 'tdl c cx'
         {{ end -}}
 
