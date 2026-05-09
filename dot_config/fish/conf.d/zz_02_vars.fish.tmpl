@@ -11,6 +11,10 @@ set -gx SUDO_EDITOR $EDITOR
 # Bat — use ansi theme so terminal colors aren't overridden
 set -gx BAT_THEME ansi
 
+# Color man pages with bat
+set -gx MANROFFOPT -c
+set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
+
 # Disable Homebrew vendor conf.d auto-activation — we handle these ourselves
 # with caching and interactive guards (see zz_03_interactive.fish, zz_06_direnv.fish)
 set -gx MISE_FISH_AUTO_ACTIVATE 0
