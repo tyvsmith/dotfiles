@@ -2,6 +2,7 @@
 # PATH & Environment Bootstrap
 # =============================================================================()
 
+
 {{ $p := index .profiles .profile -}}
 {{ if and (hasKey $p "brew") $p.brew -}}
 # Homebrew
@@ -11,11 +12,17 @@ if test -x $brew_prefix/bin/brew
 end
 {{ end -}}
 
-# Custom bins
-fish_add_path --path ~/.local/bin
-
 {{ if eq .de "hyprland-omarchy" -}}
 # Omarchy
 set -gx OMARCHY_PATH $HOME/.local/share/omarchy
-fish_add_path --path $OMARCHY_PATH/bin
+fish_add_path -a --path $OMARCHY_PATH/bin
 {{ end -}}
+
+# Mise - polyglot runtime version manager (Java, Python, Node, etc.)
+__cached_source mise activate --shims fish
+
+# Custom bins
+fish_add_path -a --path ~/.local/bin
+
+# Override bins (Should come first on path)
+fish_add_path --move --path ~/.local/share/overrides/bin

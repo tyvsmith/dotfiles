@@ -24,9 +24,6 @@ if status is-interactive
         # Set simple hostname for prompt display
         set -gx HOST (string split -f1 '.' $hostname)
 
-        # Mise — polyglot runtime version manager (Java, Python, Node, etc.)
-        __cached_source mise activate fish
-
         # direnv — per-directory environment loading (.envrc files)
         __cached_source direnv hook fish
     end
