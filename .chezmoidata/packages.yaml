@@ -372,6 +372,7 @@ packages:
   claude-code:
     tags: [ai]
     desc: "Anthropic Claude Code"
+    brew: "claude-code@latest"
     brew_cask: true
 
   codex:
