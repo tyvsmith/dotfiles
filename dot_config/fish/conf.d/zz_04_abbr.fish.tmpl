@@ -123,6 +123,8 @@ if status is-interactive
             abbr --add dv devpod
             abbr -a --position anywhere --command devpod rm delete
             abbr -a --position anywhere --command devpod ls ps
+            abbr -a --position anywhere --command devpod c create
+            abbr -a --position anywhere --command devpod r restart
         {{ end -}}
 
         {{ if contains "experiment" .tags -}}

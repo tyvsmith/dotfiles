@@ -15,13 +15,6 @@ GITCONFIG="$HOME/.gitconfig"
 INCLUDE_PATH="~/.config/git/config"
 INCLUDE_LINE="	path = $INCLUDE_PATH"
 
-# If ~/.gitconfig is a symlink (from previous chezmoi setup), remove it
-# so we can create a real file with the include
-if [[ -L "$GITCONFIG" ]]; then
-    log "Removing old ~/.gitconfig symlink"
-    rm "$GITCONFIG"
-fi
-
 # Create ~/.gitconfig if it doesn't exist
 touch "$GITCONFIG"
 

@@ -360,6 +360,7 @@ packages:
     tags: [ai]
     desc: "LLM CLI tool"
     pacman: python-llm
+    enabled: false
 
   gemini-cli:
     tags: [ai]
@@ -439,6 +440,7 @@ packages:
     tags: [ui]
     desc: "GPU-accelerated terminal emulator"
     brew_cask: true
+    enabled: false
 
   # ===========================================================================
   # Basic UI — Productivity
@@ -463,6 +465,7 @@ packages:
     brew_cask: true
     pacman: brave-bin
     flatpak: com.brave.Browser
+    enabled: false
 
   obsidian:
     tags: [ui]
@@ -537,6 +540,7 @@ packages:
     brew_tap: "deskflow/tap"
     brew_cask: true
     flatpak: org.deskflow.deskflow
+    enabled: false
 
   localsend:
     tags: [ui-extra]
@@ -570,6 +574,7 @@ packages:
     os: darwin
     desc: "Window manager"
     brew_cask: true
+    enabled: false
 
   aerospace:
     tags: [ui]
