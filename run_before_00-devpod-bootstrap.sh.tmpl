@@ -20,12 +20,11 @@ mkdir -p "$HOME/.linuxbrew"
 ln -sfn "$HOME/.linuxbrew" /home/linuxbrew/.linuxbrew
 sudo ln -sfn /home/linuxbrew /linuxbrew 2>/dev/null || true
 
-# Migrate provisioned ~/.gitconfig to ~/.gitconfig.local on first run.
-# DevPod provisions ~/.gitconfig with user identity, signing config, etc.
-# Moving it to .gitconfig.local lets chezmoi's ~/.config/git/config include it.
-if [ ! -f "$HOME/.gitconfig.local" ] && [ -f "$HOME/.gitconfig" ]; then
-  log "Moving ~/.gitconfig to ~/.gitconfig.local..."
-  mv "$HOME/.gitconfig" "$HOME/.gitconfig.local"
+# Setup Devpod Gitconfig
+if [ -f "/etc/gitconfig" ]; then
+  log "symlink system gitconfig to linuxbrew location"
+  mkdir -p /home/linuxbrew/.linuxbrew/etc
+  ln -sfn "/etc/gitconfig" /home/linuxbrew/.linuxbrew/etc/gitconfig
 fi
 
 # Migrate ~/.devpod directory to ~/.config/devpod so chezmoi can replace it with a symlink
