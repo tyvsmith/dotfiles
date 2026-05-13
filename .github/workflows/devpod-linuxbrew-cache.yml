@@ -73,7 +73,7 @@ jobs:
           set -eux
           sudo -u builder -H \
             SKIP_LINUXBREW_FETCH=1 \
-            bash -lc 'curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh | bash -s -- --profile devpod'
+            bash -lc 'cd ~ && curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh | bash -s -- --profile devpod'
 
       - name: Verify brew is usable
         run: |
