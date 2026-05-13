@@ -114,19 +114,47 @@ main() {
         return 0
     fi
 
-    if [ -d "$HOME/.linuxbrew" ] && [ -n "$(ls -A "$HOME/.linuxbrew" 2>/dev/null)" ]; then
-        log "wiping existing ~/.linuxbrew before extract"
-        rm -rf "$HOME/.linuxbrew"
-    fi
-    mkdir -p "$HOME/.linuxbrew"
+    # Extract into a sibling staging dir, then swap atomically. A simple
+    # wipe-then-extract leaves a ~30-60s window where brew binaries don't
+    # exist; an interactive fish shell (or background atuin/starship hook)
+    # hitting that gap fails. Staging + rename collapses the window to two
+    # mv calls, microseconds on the same filesystem.
+    local stage_parent
+    stage_parent=$(mktemp -d -p "$HOME" .linuxbrew-stage.XXXXXX) || {
+        warn "could not create staging dir; skipping"
+        rm -f "$tmp"
+        return 0
+    }
 
-    log "extracting"
-    if ! tar -C "$HOME" --use-compress-program="$ZSTD -d -T0" -xf "$tmp"; then
-        warn "extract failed; ~/.linuxbrew may be incomplete (brew bundle will recover)"
+    log "extracting to $stage_parent"
+    if ! tar -C "$stage_parent" --use-compress-program="$ZSTD -d -T0" -xf "$tmp"; then
+        warn "extract failed; leaving existing ~/.linuxbrew in place"
+        rm -rf "$stage_parent"
         rm -f "$tmp"
         return 0
     fi
     rm -f "$tmp"
+
+    if [ ! -d "$stage_parent/.linuxbrew" ]; then
+        warn "archive did not contain .linuxbrew/ at root; skipping"
+        rm -rf "$stage_parent"
+        return 0
+    fi
+
+    local old="$HOME/.linuxbrew.old.$$"
+    if [ -d "$HOME/.linuxbrew" ]; then
+        log "swapping in new ~/.linuxbrew"
+        mv "$HOME/.linuxbrew" "$old"
+    fi
+    mv "$stage_parent/.linuxbrew" "$HOME/.linuxbrew"
+    rmdir "$stage_parent" 2>/dev/null || true
+
+    if [ -d "$old" ]; then
+        # Async cleanup — rm -rf of an 800MB brew tree takes seconds we don't
+        # need to block on. Detached so it survives this script exiting.
+        setsid -f sh -c "rm -rf '$old'" </dev/null >/dev/null 2>&1 || \
+            rm -rf "$old" &
+    fi
 
     printf '%s\n' "$rmanifest" > "$LOCAL_MANIFEST"
     if [ -x "$HOME/.linuxbrew/bin/brew" ]; then
