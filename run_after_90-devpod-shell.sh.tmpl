@@ -38,21 +38,4 @@ if [[ "$CURRENT_SHELL" != "$FISH_PATH" ]]; then
     log "Setting login shell to $FISH_PATH"
     sudo usermod -s "$FISH_PATH" "$(whoami)"
 fi
-
-# Async snapshot ~/.linuxbrew → terrablob if brew state drifted from local marker.
-# Detached via setsid so it survives this script (and chezmoi/install.sh) exiting;
-# flock prevents overlap if a previous restart's upload is still in flight.
-SYNC="$HOME/.local/bin/devpod-linuxbrew-sync"
-if [[ -x "$SYNC" ]]; then
-    LOG_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/devpod-linuxbrew-sync"
-    mkdir -p "$LOG_DIR"
-    log "Kicking off async linuxbrew snapshot (log: $LOG_DIR/up.log)"
-    setsid -f sh -c "
-        flock -n '$LOG_DIR/up.lock' sh -c '
-            echo \"=== \$(date -u +%FT%TZ) up start (pid \$\$) ===\"
-            \"$SYNC\" up
-            echo \"=== \$(date -u +%FT%TZ) up end (exit \$?) ===\"
-        ' >> '$LOG_DIR/up.log' 2>&1
-    " </dev/null >/dev/null 2>&1 || true
-fi
 {{ end -}}

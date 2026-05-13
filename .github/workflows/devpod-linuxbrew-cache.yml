@@ -1,0 +1,175 @@
+name: Build devpod linuxbrew cache
+
+# Builds a prebuilt ~/.linuxbrew tarball for the devpod profile and publishes
+# it as a GitHub Release asset under a rolling tag. Devpods fetch this with
+# unauthenticated curl during their on-create hook (no ussh token required),
+# avoiding the 10-minute timeout from a cold `brew bundle`.
+#
+# The build runs the full `chezmoi apply` for profile=devpod, so any chezmoi
+# template, package, or run_* script regression also fails this workflow.
+
+on:
+  schedule:
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.chezmoidata/**'
+      - 'run_*.sh.tmpl'
+      - 'run_*.sh'
+      - 'dot_*/**'
+      - 'install.sh'
+      - 'scripts/**'
+      - '.chezmoi.toml.tmpl'
+      - '.chezmoiignore.tmpl'
+      - '.chezmoitemplates/**'
+      - '.github/workflows/devpod-linuxbrew-cache.yml'
+
+permissions:
+  contents: write
+
+env:
+  PLATFORM: debian12-x86_64
+  RELEASE_TAG: linuxbrew-cache-debian12-x86_64
+  ARCHIVE: linuxbrew-debian12-x86_64.tar.zst
+
+jobs:
+  build:
+    name: Build linuxbrew tarball (debian:12)
+    runs-on: ubuntu-latest
+    container:
+      image: debian:12
+      options: --user root
+    steps:
+      - name: Install container prerequisites
+        run: |
+          set -eux
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            curl ca-certificates git sudo build-essential procps \
+            zstd jq file age openssh-client locales
+          locale-gen en_US.UTF-8 || true
+
+      - name: Create unprivileged runner user
+        run: |
+          set -eux
+          useradd -m -s /bin/bash builder
+          install -d -m 0755 -o builder -g builder /home/builder/work
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+          chmod 0440 /etc/sudoers.d/builder
+
+      - name: Checkout dotfiles (for manifest hashing only)
+        uses: actions/checkout@v4
+        with:
+          path: checkout
+
+      - name: Apply dotfiles via install.sh (profile=devpod)
+        # Mirrors the literal command in personal.devpod.yaml on-create.
+        # SKIP_LINUXBREW_FETCH=1 stops the bootstrap from trying to download
+        # the cache we are currently building.
+        run: |
+          set -eux
+          sudo -u builder -H \
+            SKIP_LINUXBREW_FETCH=1 \
+            bash -lc 'curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh | bash -s -- --profile devpod'
+
+      - name: Verify brew is usable
+        run: |
+          set -eux
+          sudo -u builder -H bash -lc '
+            export PATH="$HOME/.linuxbrew/bin:$HOME/bin:$PATH"
+            brew --version
+            brew list --formula --versions | sort > /tmp/brew-versions.txt
+            wc -l /tmp/brew-versions.txt
+          '
+
+      - name: Build tarball
+        run: |
+          set -eux
+          sudo -u builder -H bash -lc "
+            cd \$HOME
+            tar --use-compress-program='zstd -T0 -10' \
+              --exclude='.linuxbrew/Caskroom' \
+              --exclude='.linuxbrew/var/homebrew/locks' \
+              --exclude='.linuxbrew/Library/Logs' \
+              -cf /tmp/${ARCHIVE} \
+              .linuxbrew
+            ls -lh /tmp/${ARCHIVE}
+          "
+
+      - name: Build manifest
+        run: |
+          set -eux
+          PKG_SHA=$(sha256sum checkout/.chezmoidata/packages.yaml | awk '{print $1}')
+          export PKG_SHA
+          sudo -u builder -H -E bash -lc "
+            FP=\$(sha256sum /tmp/brew-versions.txt | awk '{print \$1}')
+            SZ=\$(stat -c%s /tmp/${ARCHIVE})
+            jq -n \
+              --arg archive '${ARCHIVE}' \
+              --arg brew_fingerprint \"\$FP\" \
+              --arg built_at \"\$(date -u +%Y-%m-%dT%H:%M:%SZ)\" \
+              --arg built_from_sha '${{ github.sha }}' \
+              --arg packages_yaml_sha256 \"\$PKG_SHA\" \
+              --arg platform '${PLATFORM}' \
+              --argjson archive_size \"\$SZ\" \
+              '{archive:\$archive, brew_fingerprint:\$brew_fingerprint, built_at:\$built_at, built_from_sha:\$built_from_sha, packages_yaml_sha256:\$packages_yaml_sha256, platform:\$platform, archive_size:\$archive_size}' \
+              > /tmp/manifest.json
+            cat /tmp/manifest.json
+          "
+
+      - name: Stage release artifacts
+        run: |
+          set -eux
+          mkdir -p /tmp/release
+          cp /tmp/${ARCHIVE} /tmp/manifest.json /tmp/release/
+          ls -lh /tmp/release
+
+      - name: Upload artifact for publish job
+        uses: actions/upload-artifact@v4
+        with:
+          name: linuxbrew-cache
+          path: /tmp/release/
+          retention-days: 7
+          if-no-files-found: error
+
+  publish:
+    name: Publish to GitHub Release
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout (for gh CLI repo context)
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linuxbrew-cache
+          path: ./release
+
+      - name: Ensure rolling release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eux
+          if ! gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release create "${RELEASE_TAG}" \
+              --title "Linuxbrew cache (debian 12, x86_64)" \
+              --notes "Rolling cache of \`~/.linuxbrew\` for the devpod profile. Asset and manifest are replaced on every successful workflow run. Consumed by \`dot_local/bin/executable_devpod-linuxbrew-fetch\`."
+          fi
+
+      - name: Upload assets (replace existing)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eux
+          gh release upload "${RELEASE_TAG}" \
+            "./release/${ARCHIVE}" \
+            "./release/manifest.json" \
+            --clobber
+          gh release view "${RELEASE_TAG}"

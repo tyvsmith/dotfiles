@@ -19,7 +19,7 @@ scripts/
 
 {{ if ne .profile "devpod" }}
 # Devpod-only tooling
-dot_local/bin/executable_devpod-linuxbrew-sync
+dot_local/bin/executable_devpod-linuxbrew-fetch
 {{ end }}
 
 {{ if ne .chezmoi.os "darwin" }}

@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+# devpod-linuxbrew-fetch — restore ~/.linuxbrew from a public GitHub Release.
+#
+# Devpod on-create has no ussh token, so we can't use tb-cli. The companion
+# workflow .github/workflows/devpod-linuxbrew-cache.yml builds a tarball of a
+# fully-populated ~/.linuxbrew for the devpod profile and publishes it as a
+# rolling GitHub Release asset. This script downloads and extracts it before
+# brew bundle runs, turning the bundle into a fast no-op (or tiny delta).
+#
+# Idempotent: a local marker stores the manifest of the last extract; when the
+# remote manifest matches and brew is usable, no download happens.
+#
+# All errors are non-fatal — this is an optimization. The brew bundle in
+# run_onchange_10 is the source of truth and will install whatever is missing.
+#
+# Bypass with: SKIP_LINUXBREW_FETCH=1 (used by CI when *building* the cache).
+
+set -uo pipefail
+
+if [ "${SKIP_LINUXBREW_FETCH:-0}" = "1" ]; then
+    printf '>> %s\n' "SKIP_LINUXBREW_FETCH=1; not fetching"
+    exit 0
+fi
+
+REPO_OWNER="${DEVPOD_LINUXBREW_REPO_OWNER:-tyvsmith}"
+REPO_NAME="${DEVPOD_LINUXBREW_REPO_NAME:-dotfiles}"
+TAG="${DEVPOD_LINUXBREW_TAG:-linuxbrew-cache-debian12-x86_64}"
+ARCHIVE="${DEVPOD_LINUXBREW_ARCHIVE:-linuxbrew-debian12-x86_64.tar.zst}"
+RELEASE_BASE="https://github.com/${REPO_OWNER}/${REPO_NAME}/releases/download/${TAG}"
+
+LOCAL_STATE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/devpod-linuxbrew-fetch"
+LOCAL_MANIFEST="${LOCAL_STATE_DIR}/manifest.json"
+
+mkdir -p "$LOCAL_STATE_DIR"
+
+log()  { printf '>> %s\n' "$*"; }
+warn() { printf '!! %s\n' "$*" >&2; }
+
+# Validate by execing --version because a half-restored brew tree can leave
+# dangling INTERPs that pass `[ -x ]` but fail exec.
+ensure_zstd() {
+    local p
+    for p in "$(command -v zstd 2>/dev/null)" \
+             /home/linuxbrew/.linuxbrew/bin/zstd \
+             "$HOME/.linuxbrew/bin/zstd" \
+             /usr/bin/zstd; do
+        [ -n "$p" ] && [ -x "$p" ] && "$p" --version >/dev/null 2>&1 \
+            && { ZSTD="$p"; return 0; }
+    done
+    if command -v apt-get >/dev/null 2>&1; then
+        log "zstd missing/unusable; installing via apt"
+        sudo apt-get update -qq && sudo apt-get install -y zstd
+        if [ -x /usr/bin/zstd ] && /usr/bin/zstd --version >/dev/null 2>&1; then
+            ZSTD=/usr/bin/zstd
+            return 0
+        fi
+    fi
+    warn "zstd not available; cannot extract"
+    return 1
+}
+
+ensure_jq() {
+    local p
+    for p in "$(command -v jq 2>/dev/null)" \
+             /home/linuxbrew/.linuxbrew/bin/jq \
+             "$HOME/.linuxbrew/bin/jq" \
+             /usr/bin/jq; do
+        [ -n "$p" ] && [ -x "$p" ] && "$p" --version >/dev/null 2>&1 \
+            && { JQ="$p"; return 0; }
+    done
+    if command -v apt-get >/dev/null 2>&1; then
+        log "jq missing; installing via apt"
+        sudo apt-get update -qq && sudo apt-get install -y jq \
+            && { JQ=/usr/bin/jq; return 0; }
+    fi
+    warn "jq not available; cannot parse manifest"
+    return 1
+}
+
+manifest_field() {  # <json-string-or-empty> <field>
+    [ -z "$1" ] && { echo ""; return; }
+    printf '%s' "$1" | "$JQ" -r ".$2 // empty"
+}
+
+main() {
+    ensure_jq || return 0
+
+    log "fetching remote manifest from $RELEASE_BASE/manifest.json"
+    local rmanifest
+    rmanifest=$(curl -fsSL --retry 3 --max-time 60 "$RELEASE_BASE/manifest.json" 2>/dev/null) || {
+        warn "could not fetch remote manifest; skipping"
+        return 0
+    }
+
+    local r_archive
+    r_archive=$(manifest_field "$rmanifest" archive)
+    [ -z "$r_archive" ] && { warn "remote manifest missing 'archive' field"; return 0; }
+
+    local l_archive=""
+    if [ -f "$LOCAL_MANIFEST" ]; then
+        l_archive=$(manifest_field "$(cat "$LOCAL_MANIFEST")" archive)
+    fi
+
+    if [ "$l_archive" = "$r_archive" ] && [ -x "$HOME/.linuxbrew/bin/brew" ]; then
+        log "in sync ($r_archive); no download"
+        return 0
+    fi
+
+    ensure_zstd || return 0
+
+    log "downloading $RELEASE_BASE/$r_archive"
+    local tmp="/tmp/${r_archive}"
+    if ! curl -fL --retry 3 --max-time 1800 -o "$tmp" "$RELEASE_BASE/$r_archive"; then
+        warn "download failed; skipping (brew bundle will install from scratch)"
+        rm -f "$tmp"
+        return 0
+    fi
+
+    if [ -d "$HOME/.linuxbrew" ] && [ -n "$(ls -A "$HOME/.linuxbrew" 2>/dev/null)" ]; then
+        log "wiping existing ~/.linuxbrew before extract"
+        rm -rf "$HOME/.linuxbrew"
+    fi
+    mkdir -p "$HOME/.linuxbrew"
+
+    log "extracting"
+    if ! tar -C "$HOME" --use-compress-program="$ZSTD -d -T0" -xf "$tmp"; then
+        warn "extract failed; ~/.linuxbrew may be incomplete (brew bundle will recover)"
+        rm -f "$tmp"
+        return 0
+    fi
+    rm -f "$tmp"
+
+    printf '%s\n' "$rmanifest" > "$LOCAL_MANIFEST"
+    if [ -x "$HOME/.linuxbrew/bin/brew" ]; then
+        log "brew --prefix: $("$HOME/.linuxbrew/bin/brew" --prefix 2>/dev/null || echo unknown)"
+    fi
+}
+
+main "$@"
+exit 0
