@@ -20,6 +20,17 @@ mkdir -p "$HOME/.linuxbrew"
 ln -sfn "$HOME/.linuxbrew" /home/linuxbrew/.linuxbrew
 sudo ln -sfn /home/linuxbrew /linuxbrew 2>/dev/null || true
 
+# Restore ~/.linuxbrew from terrablob if a snapshot is available. Idempotent:
+# no-op when local marker matches remote manifest. Sourced from CHEZMOI_SOURCE_DIR
+# because dot_local/bin/devpod-linuxbrew-sync isn't applied to ~/.local/bin yet
+# on the first run. Failure is non-fatal — the brew install script will install
+# from scratch (slow but correct).
+SYNC="${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/dot_local/bin/executable_devpod-linuxbrew-sync"
+if [ -f "$SYNC" ]; then
+  log "Pre-fetching ~/.linuxbrew from terrablob (if available)..."
+  bash "$SYNC" down || log "linuxbrew restore failed; continuing without it"
+fi
+
 # Setup Devpod Gitconfig
 if [ -f "/etc/gitconfig" ]; then
   log "symlink system gitconfig to linuxbrew location"
@@ -35,4 +46,5 @@ if [ -d "$HOME/.devpod" ] && [ ! -L "$HOME/.devpod" ]; then
   sudo chown -R "$(whoami):$(id -gn)" "$HOME/.config/devpod"
   sudo rm -rf "$HOME/.devpod"
 fi
+
 {{ end -}}

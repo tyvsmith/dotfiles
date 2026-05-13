@@ -17,6 +17,11 @@ scripts/
 **/*.age
 {{ end }}
 
+{{ if ne .profile "devpod" }}
+# Devpod-only tooling
+dot_local/bin/executable_devpod-linuxbrew-sync
+{{ end }}
+
 {{ if ne .chezmoi.os "darwin" }}
 # macOS-only apps — skip on Linux
 dot_config/aerospace/
