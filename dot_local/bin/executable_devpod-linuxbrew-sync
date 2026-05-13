@@ -23,7 +23,7 @@
 
 set -euo pipefail
 
-REMOTE_DIR=/prod/personal/${USER}/linuxbrew-devpod-archive
+REMOTE_DIR=/prod/personal/${UBER_LDAP_UID}/linuxbrew-devpod-archive
 OS_TAG="$(. /etc/os-release; echo "${ID}${VERSION_ID%%.*}")"   # e.g. debian12
 ARCH_TAG="$(uname -m)"                                          # e.g. x86_64
 PLATFORM="${OS_TAG}-${ARCH_TAG}"
