@@ -38,12 +38,13 @@ warn() { printf '!! %s\n' "$*" >&2; }
 
 # Validate by execing --version because a half-restored brew tree can leave
 # dangling INTERPs that pass `[ -x ]` but fail exec.
+#
+# IMPORTANT: prefer system paths over $HOME/.linuxbrew because we wipe the
+# brew tree before extracting. A cached path inside the soon-to-be-deleted
+# tree will exec-fail mid-tar.
 ensure_zstd() {
     local p
-    for p in "$(command -v zstd 2>/dev/null)" \
-             /home/linuxbrew/.linuxbrew/bin/zstd \
-             "$HOME/.linuxbrew/bin/zstd" \
-             /usr/bin/zstd; do
+    for p in /usr/bin/zstd "$(command -v zstd 2>/dev/null)"; do
         [ -n "$p" ] && [ -x "$p" ] && "$p" --version >/dev/null 2>&1 \
             && { ZSTD="$p"; return 0; }
     done
@@ -61,10 +62,7 @@ ensure_zstd() {
 
 ensure_jq() {
     local p
-    for p in "$(command -v jq 2>/dev/null)" \
-             /home/linuxbrew/.linuxbrew/bin/jq \
-             "$HOME/.linuxbrew/bin/jq" \
-             /usr/bin/jq; do
+    for p in /usr/bin/jq "$(command -v jq 2>/dev/null)"; do
         [ -n "$p" ] && [ -x "$p" ] && "$p" --version >/dev/null 2>&1 \
             && { JQ="$p"; return 0; }
     done
