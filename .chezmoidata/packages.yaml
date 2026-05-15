@@ -356,11 +356,7 @@ packages:
   # ===========================================================================
   # AI Tools
   # ===========================================================================
-  llm:
-    tags: [ai]
-    desc: "LLM CLI tool"
-    pacman: python-llm
-    enabled: false
+ 
 
   gemini-cli:
     tags: [ai]
@@ -436,11 +432,7 @@ packages:
     desc: "Modern terminal emulator"
     brew_cask: true
 
-  kitty:
-    tags: [ui]
-    desc: "GPU-accelerated terminal emulator"
-    brew_cask: true
-    enabled: false
+
 
   # ===========================================================================
   # Basic UI — Productivity
@@ -465,7 +457,6 @@ packages:
     brew_cask: true
     pacman: brave-bin
     flatpak: com.brave.Browser
-    enabled: false
 
   obsidian:
     tags: [ui]
@@ -479,10 +470,6 @@ packages:
     brew: false
     pacman: zen-browser-bin
 
-  meld:
-    tags: [ui]
-    desc: "Visual diff/merge tool"
-    brew_cask: true
 
   # ===========================================================================
   # Extended UI — Development
@@ -511,6 +498,7 @@ packages:
     desc: "Enhanced Discord client"
     flatpak: dev.vencord.Vesktop
     brew_cask: true
+    work: false
 
   beeper:
     tags: [ui-extra]
@@ -562,19 +550,6 @@ packages:
     os: darwin
     desc: "macOS terminal"
     brew_cask: true
-
-  alfred:
-    tags: [ui-extra]
-    os: darwin
-    desc: "Launcher/automation"
-    brew_cask: true
-
-  moom:
-    tags: [ui-extra]
-    os: darwin
-    desc: "Window manager"
-    brew_cask: true
-    enabled: false
 
   aerospace:
     tags: [ui]

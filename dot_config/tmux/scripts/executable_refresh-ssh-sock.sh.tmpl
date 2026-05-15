@@ -1,0 +1,16 @@
+#!/bin/sh
+# Refresh ~/.ssh/ssh_auth_sock to point at the live ssh-agent socket.
+# Driven by tmux client-attached and session-created hooks so the symlink
+# stays current across reboots (when launchd's socket path changes) without
+# requiring per-shell or per-command polling.
+#
+# Why a fresh lookup each time: tmux's own SSH_AUTH_SOCK env is cached at
+# server start and only refreshed on attach via update-environment, which
+# can race with hooks. The OS-native source below is always live.
+
+{{ if eq .chezmoi.os "darwin" -}}
+sock=$(launchctl getenv SSH_AUTH_SOCK 2>/dev/null)
+{{- else -}}
+sock=$(tmux show-environment SSH_AUTH_SOCK 2>/dev/null | cut -d= -f2-)
+{{- end }}
+[ -n "$sock" ] && [ -S "$sock" ] && ln -snf "$sock" "$HOME/.ssh/ssh_auth_sock"
