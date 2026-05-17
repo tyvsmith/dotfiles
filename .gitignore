@@ -2,13 +2,10 @@
 *.local.json
 !create_*.local
 vim/bundle/*
-.DS_Store
-*~
-*.swp
-.vscode/
-.claude/
-.idea/
 .env
+# Most editor/OS/AI-agent noise is handled by ~/.config/git/ignore (global).
+# Keep only repo-specific overrides here.
+.claude/settings.local.json
 # Decrypted plaintext copies for editing; encrypted .age files are committed
 **/decrypted_*
 .mcp.json
