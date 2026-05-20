@@ -16,6 +16,18 @@ QUIET=false
 NATURAL_SCROLL=false
 SWAP_KEYS=false
 
+# --- Device lists ---
+# Base device names to act on. Hyprland appends a numeric suffix
+# (-1, -2, ...) to duplicate device names after port changes or
+# reboots, and one physical device can register under several names.
+# Each base is matched against the live device list at runtime, so
+# every current variant is covered without hardcoding suffixes.
+NATURAL_SCROLL_DEVICES=(razer-razer-mouse-dock-pro)
+SWAP_KEYS_DEVICES=(
+  keychron-keychron-ultra-link-8k-keyboard
+  keychron-keychron-k6-pro
+)
+
 # --- Parse flags ---
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -66,15 +78,44 @@ IS_LINUX=true
 CURRENT_X=999
 
 # --- Input setting functions ---
+
+# Print the live device names matching any of the given base names.
+# A base matches itself exactly or with a numeric -N suffix that
+# Hyprland appends to duplicates. Both the mice and keyboards lists
+# are searched, since one physical device can appear in either.
+resolve_devices() {
+  local bases=("$@") name base
+  hyprctl devices -j 2>/dev/null \
+    | jq -r '.mice[].name, .keyboards[].name' \
+    | while IFS= read -r name; do
+        [ -n "$name" ] || continue
+        for base in "${bases[@]}"; do
+          if [[ "$name" == "$base" || "$name" =~ ^${base}-[0-9]+$ ]]; then
+            echo "$name"
+            break
+          fi
+        done
+      done \
+    | sort -u || true
+}
+
+# Apply a hyprctl device keyword to every device matching the bases.
+apply_to_devices() {
+  local property="$1" value="$2"; shift 2
+  local dev
+  for dev in $(resolve_devices "$@"); do
+    hyprctl keyword "device[$dev]:$property" "$value" > /dev/null
+  done
+}
+
 set_linux() {
   if $IS_LINUX; then return; fi
   log "Switching to Linux mode (cursor X=$CURRENT_X)"
   if $NATURAL_SCROLL; then
-    hyprctl keyword device[razer-razer-mouse-dock-pro]:natural_scroll false > /dev/null
-    hyprctl keyword device[razer-razer-mouse-dock-pro-1]:natural_scroll false > /dev/null
+    apply_to_devices natural_scroll false "${NATURAL_SCROLL_DEVICES[@]}"
   fi
   if $SWAP_KEYS; then
-    hyprctl keyword device[keychron-keychron-k6-pro]:kb_options "" > /dev/null
+    apply_to_devices kb_options "" "${SWAP_KEYS_DEVICES[@]}"
   fi
   IS_LINUX=true
 }
@@ -83,11 +124,10 @@ set_mac() {
   if ! $IS_LINUX; then return; fi
   log "Switching to Mac mode (cursor X=$CURRENT_X)"
   if $NATURAL_SCROLL; then
-    hyprctl keyword device[razer-razer-mouse-dock-pro]:natural_scroll true > /dev/null
-    hyprctl keyword device[razer-razer-mouse-dock-pro-1]:natural_scroll true > /dev/null
+    apply_to_devices natural_scroll true "${NATURAL_SCROLL_DEVICES[@]}"
   fi
   if $SWAP_KEYS; then
-    hyprctl keyword device[keychron-keychron-k6-pro]:kb_options "altwin:swap_alt_win" > /dev/null
+    apply_to_devices kb_options "altwin:swap_alt_win" "${SWAP_KEYS_DEVICES[@]}"
   fi
   IS_LINUX=false
 }
