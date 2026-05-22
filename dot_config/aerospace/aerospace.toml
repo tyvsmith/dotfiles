@@ -8,7 +8,7 @@
 # Fallback value (if you omit the key): config-version = 1
 config-version = 2
 
-start-at-login = true
+start-at-login = false
 
 # Dwindle/Fibonacci tiling — matches Hyprland's "layout = dwindle"
 # opposite-orientation: nested containers alternate H/V automatically

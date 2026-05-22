@@ -1,84 +1,20 @@
-# Global gitignore — applies to every repo on this machine.
-# Patterns with slashes need ** prefix to match at any depth.
-
-# ─── AI agent CLIs ─────────────────────────────────────────────────────────
-
-# Claude Code — keep settings.json, agents/, commands/, CLAUDE.md
-**/.claude/settings.local.json
-**/CLAUDE.local.md
-
-# OpenAI Codex CLI — AGENTS.md is shared; only override is per-user
-**/AGENTS.override.md
-
-# opencode (sst/opencode) — opencode.json and config subdirs are shared
-**/.opencode/plans/
-
-# oh-my-claudecode — keep .omc/skills/
-**/.omc/*
-!**/.omc/skills/
-!**/.omc/skills/**
-**/.tmp/
-**/.omx/
-
-# oh-my-openagent — keep .omo/rules/ and .sisyphus/rules/
-**/.omo/*
-!**/.omo/rules/
-!**/.omo/rules/**
-**/.sisyphus/*
-!**/.sisyphus/rules/
-!**/.sisyphus/rules/**
-**/notepad.md
-**/.dori/
-**/.dori-sync/
-**/.playwright-mcp/
-
-# ─── Editors ───────────────────────────────────────────────────────────────
-
-# VS Code — github/gitignore Global/VisualStudioCode.gitignore
-**/.vscode/*
-!**/.vscode/settings.json
-!**/.vscode/tasks.json
-!**/.vscode/launch.json
-!**/.vscode/extensions.json
-!**/.vscode/*.code-snippets
-!**/*.code-workspace
-*.vsix
-
-# Cline — .clinerules/ is committed team rules; only ignore local cache
-**/.cline/
-
-# JetBrains — github/gitignore Global/JetBrains.gitignore (subset)
-**/.idea/**/workspace.xml
-**/.idea/**/tasks.xml
-**/.idea/**/usage.statistics.xml
-**/.idea/**/dataSources.local.xml
-**/.idea/**/dynamic.xml
-**/.idea/**/gradle.xml
-**/.idea/**/libraries
-**/.idea/httpRequests
-**/.idea/sonarlint/
-*.iws
-cmake-build-*/
-out/
-
-# Vim / generic editor swap files
-*.swp
-*.swo
-*~
-
-# ─── Environment / direnv ──────────────────────────────────────────────────
-.env.local
-.direnv/
-
-# ─── OS noise ──────────────────────────────────────────────────────────────
+# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
 ._*
-.Spotlight-V100
-.Trashes
-Thumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-.fuse_hidden*
-.nfs*
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Environment
+.env.local
+
+# direnv
+.direnv/
+
+**/.claude/settings.local.json

@@ -65,9 +65,9 @@ margin = 1
 monitorOrder = ["Built-in Retina Display", "LG ULTRAGEAR+", "DELL U2719DC"]
 
 [niri]
-alwaysCenterSingleColumn = false
+alwaysCenterSingleColumn = true
 centerFocusedColumn = "never"
-columnWidthPresets = [0.3333333333333333, 0.5, 0.6666666666666666]
+columnWidthPresets = [0.33, 0.5, 0.66, 1.0]
 defaultColumnWidth = 0.5
 infiniteLoop = false
 maxVisibleColumns = 2
@@ -87,7 +87,7 @@ widthPercent = 50.0
 
 [state]
 commandPaletteLastMode = "windows"
-hiddenBarIsCollapsed = false
+hiddenBarIsCollapsed = true
 
 [statusBar]
 showAppNames = false
@@ -101,13 +101,13 @@ enabled = true
 height = 24.0
 hideEmptyWorkspaces = false
 labelFontSize = 12.0
-notchAware = true
+notchAware = false
 position = "overlappingMenuBar"
 reserveLayoutSpace = false
 showFloatingWindows = false
-showLabels = true
-windowLevel = "popup"
-xOffset = 0.0
+showLabels = false
+windowLevel = "status"
+xOffset = 300.0
 yOffset = 0.0
 
 [workspaceBar.accentColor]
@@ -764,7 +764,7 @@ binding = "Control+Option+M"
 id = "openMenuAnywhere"
 
 [[hotkeys]]
-binding = "Unassigned"
+binding = "Option+Shift+Space"
 id = "toggleWorkspaceBarVisibility"
 
 [[hotkeys]]
