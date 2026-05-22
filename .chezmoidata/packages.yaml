@@ -567,8 +567,9 @@ packages:
   skhd:
     tags: [ui]
     os: darwin
-    desc: "Simple hotkey daemon for macOS (app launches alongside OmniWM)"
-    brew_tap: "koekeishiya/formulae"
+    desc: "Simple hotkey daemon for macOS — skhd.zig fork with stable bundle ID so TCC permissions survive brew upgrades"
+    brew: skhd-zig
+    brew_tap: "jackielii/tap"
 
   sketchybar:
     tags: [ui]
