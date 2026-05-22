@@ -1,0 +1,42 @@
+# ~/.config/skhd/skhdrc
+# Pairs with OmniWM. Window mgmt lives in ~/.config/omniwm/settings.toml.
+# Modifier legend:  alt = Option (= SUPER in Omarchy),  cmd = Command
+#
+# NOTE: use /usr/bin/open (not bare `open`) because skhd runs commands via
+# the user's login shell (fish), which has an `open` function override that
+# wraps xdg-open. /usr/bin/open bypasses the shell function entirely.
+
+# --- Window close (no closeWindow action in OmniWM; forward Cmd+W) ---
+alt - w : osascript -e 'tell application "System Events" to keystroke "w" using command down'
+
+# --- App launches: Omarchy Super+Shift+letter pattern ---
+alt - return                  : ~/.config/skhd/new-ghostty-window.sh
+alt + cmd - return            : /usr/bin/open -na Ghostty --args -e tmux new-session -A -s main
+alt + shift - return          : /usr/bin/open -b "$(defaults read com.sindresorhus.velja defaultBrowser 2>/dev/null)" --args --new-window
+alt + shift + cmd - b         : /usr/bin/open -b "$(defaults read com.sindresorhus.velja defaultBrowser 2>/dev/null)" --args --incognito --new-window
+alt + shift - n               : /usr/bin/open -na Ghostty --args -e nvim
+alt + shift - c               : /usr/bin/open -b "com.google.Chrome.app.kjbdgfilnfhdoflbpgamdcdgpehopbep"   # Calendar PWA (Chrome Canary bundle — adjust)
+alt + shift - e               : /usr/bin/open -b "com.google.Chrome.app.fmgjjmmmlfnkbppncabfkddbjimcfncm"   # Gmail PWA (Chrome Canary bundle — adjust)
+alt + shift - g               : /usr/bin/open -b "net.whatsapp.WhatsApp"
+alt + shift - m               : /usr/bin/open -b "com.spotify.client"
+alt + shift - o               : /usr/bin/open -b "md.obsidian"
+alt + shift - f               : /usr/bin/open -a Finder
+alt + shift - a               : /usr/bin/open -b "com.anthropic.claudefordesktop"
+alt + shift - d               : /usr/bin/open -na Ghostty --args -e lazydocker
+alt + shift - 0x2C            : /usr/bin/open -b "com.1password.1password"   # 0x2C = '/'
+
+# --- System shortcuts (Omarchy Super+Ctrl+letter pattern) ---
+alt + ctrl - c : /usr/bin/open "cleanshot://all-in-one"
+alt + ctrl - l : pmset displaysleepnow
+alt + ctrl - t : /usr/bin/open -na Ghostty --args -e btop
+alt + ctrl - v : /usr/bin/open "raycast://extensions/raycast/clipboard-history/clipboard-history"
+alt + ctrl - a : /usr/bin/open "x-apple.systempreferences:com.apple.preference.sound"
+alt + ctrl - b : /usr/bin/open "x-apple.systempreferences:com.apple.preferences.Bluetooth"
+alt + ctrl - w : /usr/bin/open "x-apple.systempreferences:com.apple.wifi-settings-extension"
+
+# --- Voice input (Voxtype push-to-talk) ---
+# F13 = keycode 0x69; bind by keycode because skhd's `f13` keyword can miss
+# events arriving via lan-mouse's CGEventPost synthesis.
+# Fn key on Mac keyboard arrives as keycode 0xB3.
+0x69 : /opt/homebrew/bin/voxtype record toggle
+0xB3 : /opt/homebrew/bin/voxtype record toggle

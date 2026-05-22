@@ -25,10 +25,17 @@ set -gx DOCKER_HOST "unix:///run/user/"(id -u)"/podman/podman.sock"
 {{ end -}}
 
 
-# SSH agent — inside tmux, use a stable symlink updated by tmux's
-# client-attached hook (see tmux-custom.conf). Outside tmux, use the
-# platform default (launchctl on macOS, inherited env on Linux).
+# SSH agent — inside tmux, use a stable symlink maintained by tmux's
+# client-attached hook (see tmux-custom.conf). The hook only fires on
+# attach/new-session, so self-heal here for the in-between cases: first
+# attach raced launchd, target socket died (sleep/wake, launchd restart),
+# symlink got removed. test -S follows the symlink and verifies the
+# target is a live socket, so it covers both "missing" and "dangling".
+# Outside tmux, use the platform default.
 if set -q TMUX
+    if not test -S ~/.ssh/ssh_auth_sock
+        ~/.config/tmux/scripts/refresh-ssh-sock.sh
+    end
     set -gx SSH_AUTH_SOCK ~/.ssh/ssh_auth_sock
 {{ if eq .chezmoi.os "darwin" -}}
 else

@@ -558,6 +558,18 @@ packages:
     brew_tap: "nikitabobko/tap"
     brew_cask: true
 
+  omniwm:
+    tags: [ui]
+    os: darwin
+    desc: "macOS window manager"
+    brew_cask: true
+
+  skhd:
+    tags: [ui]
+    os: darwin
+    desc: "Simple hotkey daemon for macOS (app launches alongside OmniWM)"
+    brew_tap: "koekeishiya/formulae"
+
   sketchybar:
     tags: [ui]
     os: darwin
@@ -607,6 +619,18 @@ packages:
     desc: "Browser/app picker"
     brew: false
     mas: 1607635845
+
+  betterdisplay:
+    tags: [ui-extra]
+    os: darwin
+    desc: "Display resolution and brightness management"
+    brew_cask: true
+
+  voxtype:
+    tags: [ui-extra]
+    os: darwin
+    desc: "Voice typing"
+    brew_cask: true
 
  # ===========================================================================
   # Gaming
