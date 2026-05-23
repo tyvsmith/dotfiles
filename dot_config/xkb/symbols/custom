@@ -1,0 +1,8 @@
+// printscreen_f13: remap Print Screen to F13. Enabled via the
+// custom:printscreen_f13 kb_option by ~/.local/bin/lan-mouse-extended
+// when the cursor is on the macOS client (macOS has no Print Screen
+// key but recognizes F13).
+partial
+xkb_symbols "printscreen_f13" {
+    replace key <PRSC> { [ F13 ] };
+};

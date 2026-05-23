@@ -10,6 +10,7 @@ The helper is a workaround that monitors cursor position to toggle Hyprland inpu
 |---|---|
 | `--natural-scroll` | Toggle natural scrolling on Razer mouse dock when cursor moves to Mac client |
 | `--swap-keys` | Swap alt/win on Keychron keyboard when cursor moves to Mac client |
+| `--remap-printscreen` | Remap PrtScr to F13 on Keychron keyboard when cursor moves to Mac client (macOS has no PrtScr key) |
 | `--sync-streamdeck` | Auto-detect lan-mouse button in StreamController and sync state (green=idle, red=active) |
 | `-q` / `--quiet` | Suppress log output |
 
@@ -31,8 +32,15 @@ lan-mouse needs per-client scroll direction configuration so natural scrolling c
 
 General macOS support tracker: [feschber/lan-mouse#36 — Tracking issue for MacOS support](https://github.com/feschber/lan-mouse/issues/36)
 
+### Remap PrtScr to F13 per client
+
+lan-mouse needs per-client key remapping so Print Screen can be sent as F13 to a macOS client (macOS has no Print Screen key), eliminating the custom XKB `kb_options` workaround. The remap is implemented as a `custom:printscreen_f13` XKB option defined in `~/.config/xkb/rules/evdev` and `~/.config/xkb/symbols/custom`, toggled on the Keychron via `hyprctl keyword ... kb_options`.
+
+**Tracking:** No dedicated issue; covered by the general per-client remapping need. Related: [feschber/lan-mouse#361 — [Feature Request] Swap alt/meta](https://github.com/feschber/lan-mouse/issues/361)
+
 ## What to remove when ready
 
 1. Delete `~/.local/bin/lan-mouse-extended`
 2. Remove `exec-once = ~/.local/bin/lan-mouse-extended ...` from `~/.config/hypr/autostart.conf`
-3. Delete this file
+3. Delete `~/.config/xkb/rules/evdev` and `~/.config/xkb/symbols/custom` (the `custom:printscreen_f13` option)
+4. Delete this file

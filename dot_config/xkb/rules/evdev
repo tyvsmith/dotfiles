@@ -1,0 +1,6 @@
+// User XKB rules. Adds the custom:printscreen_f13 option (consumed by
+// ~/.local/bin/lan-mouse-extended) and includes the system rules unchanged.
+! option = symbols
+  custom:printscreen_f13 = +custom(printscreen_f13)
+
+! include %S/evdev
