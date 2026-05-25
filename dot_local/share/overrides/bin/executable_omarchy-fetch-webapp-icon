@@ -1,0 +1,173 @@
+#!/bin/bash
+# Fetch the best available icon for a webapp.
+# Cascades through multiple sources to get high-quality app-specific icons.
+#
+# Usage: omarchy-fetch-webapp-icon [--force] NAME DOMAIN DEST_DIR
+# Output: prints the path to the downloaded icon on success
+#
+# Strategies (in order):
+#   1. Dashboard Icons (walkxcode/dashboard-icons) - 512x512 curated PNGs
+#   2. Web app manifest - extracts the largest icon from the site's PWA manifest
+#   3. Apple Touch Icon - usually 180x180, good quality
+#   4. icon.horse - aggregator, better than Google for many sites
+#   5. Google favicon API - last resort, often returns generic brand icons
+
+set -euo pipefail
+
+FORCE=false
+if [[ "${1:-}" == "--force" ]]; then
+  FORCE=true
+  shift
+fi
+
+NAME="$1"
+DOMAIN="$2"
+DEST_DIR="$3"
+DEST="$DEST_DIR/$NAME.png"
+
+if [[ "$FORCE" == false && -s "$DEST" ]]; then
+  echo "$DEST"
+  exit 0
+fi
+
+mkdir -p "$DEST_DIR"
+
+DASHICONS="https://raw.githubusercontent.com/walkxcode/dashboard-icons/main/png"
+
+_valid_image() {
+  local f="$1"
+  [[ -s "$f" ]] || return 1
+  head -c 20 "$f" | grep -qi '<!doctype\|<html' && return 1
+  return 0
+}
+
+_resize() {
+  if command -v magick &>/dev/null; then
+    magick "$DEST" -resize 128x128\> "$DEST" 2>/dev/null || true
+  fi
+}
+
+_try_dashboard_icons() {
+  local slug=""
+  case "$DOMAIN" in
+    gmail.com|mail.google.com)            slug="gmail" ;;
+    calendar.google.com)                  slug="google-calendar" ;;
+    photos.google.com)                    slug="google-photos" ;;
+    messages.google.com)                  slug="google-messages" ;;
+    drive.google.com)                     slug="google-drive" ;;
+    docs.google.com)                      slug="google-docs" ;;
+    meet.google.com)                      slug="google-meet" ;;
+    maps.google.com)                      slug="google-maps" ;;
+    youtube.com|www.youtube.com)          slug="youtube" ;;
+    music.youtube.com)                    slug="youtube-music" ;;
+    web.whatsapp.com|whatsapp.com)        slug="whatsapp" ;;
+    chatgpt.com|chat.openai.com)          slug="chatgpt" ;;
+    x.com|twitter.com)                    slug="x" ;;
+    github.com)                           slug="github" ;;
+    grok.com)                             slug="grok" ;;
+    claude.ai)                            slug="claude" ;;
+    reddit.com|www.reddit.com)            slug="reddit" ;;
+    discord.com)                          slug="discord" ;;
+    slack.com)                            slug="slack" ;;
+    notion.so|www.notion.so)              slug="notion" ;;
+    linear.app)                           slug="linear" ;;
+    figma.com|www.figma.com)              slug="figma" ;;
+    spotify.com|open.spotify.com)         slug="spotify" ;;
+    netflix.com|www.netflix.com)          slug="netflix" ;;
+    twitch.tv|www.twitch.tv)             slug="twitch" ;;
+    *)
+      slug="${DOMAIN#www.}"
+      slug="${slug%%.*}"
+      ;;
+  esac
+
+  curl -fsSL --max-time 5 -o "$DEST" "$DASHICONS/${slug}.png" 2>/dev/null
+  _valid_image "$DEST" && return 0
+
+  local name_slug
+  name_slug=$(echo "$NAME" | tr '[:upper:] ' '[:lower:]-')
+  [[ "$name_slug" != "$slug" ]] && curl -fsSL --max-time 5 -o "$DEST" "$DASHICONS/${name_slug}.png" 2>/dev/null
+  _valid_image "$DEST" && return 0
+
+  rm -f "$DEST"
+  return 1
+}
+
+_try_manifest() {
+  local page manifest_url manifest
+
+  page=$(curl -fsSL --max-time 5 "https://$DOMAIN/" 2>/dev/null) || return 1
+  manifest_url=$(echo "$page" | grep -oP '(?:rel="manifest"[^>]*href="|href="[^"]*"[^>]*rel="manifest")[^"]*' 2>/dev/null | grep -oP 'href="\K[^"]+' | head -1)
+  [[ -z "$manifest_url" ]] && return 1
+
+  case "$manifest_url" in
+    http*) ;;
+    //*) manifest_url="https:$manifest_url" ;;
+    /*) manifest_url="https://$DOMAIN$manifest_url" ;;
+    *) manifest_url="https://$DOMAIN/$manifest_url" ;;
+  esac
+
+  manifest=$(curl -fsSL --max-time 5 "$manifest_url" 2>/dev/null) || return 1
+
+  local best_url
+  best_url=$(echo "$manifest" | python3 -c "
+import json, sys, re
+try:
+    m = json.loads(sys.stdin.read())
+    best, best_size = '', 0
+    for icon in m.get('icons', []):
+        s = re.search(r'(\d+)', icon.get('sizes', '0x0'))
+        size = int(s.group(1)) if s else 0
+        if size > best_size:
+            best_size, best = size, icon.get('src', '')
+    print(best)
+except: pass
+" 2>/dev/null)
+
+  [[ -z "$best_url" ]] && return 1
+
+  case "$best_url" in
+    http*) ;;
+    //*) best_url="https:$best_url" ;;
+    /*) best_url="https://$DOMAIN$best_url" ;;
+    *) best_url="https://$DOMAIN/$best_url" ;;
+  esac
+
+  curl -fsSL --max-time 5 -o "$DEST" "$best_url" 2>/dev/null
+  _valid_image "$DEST" && return 0
+  rm -f "$DEST"
+  return 1
+}
+
+_try_apple_touch_icon() {
+  curl -fsSL --max-time 3 -o "$DEST" "https://$DOMAIN/apple-touch-icon.png" 2>/dev/null
+  _valid_image "$DEST" && return 0
+  curl -fsSL --max-time 3 -o "$DEST" "https://$DOMAIN/apple-touch-icon-precomposed.png" 2>/dev/null
+  _valid_image "$DEST" && return 0
+  rm -f "$DEST"
+  return 1
+}
+
+_try_icon_horse() {
+  curl -fsSL --max-time 5 -o "$DEST" "https://icon.horse/icon/$DOMAIN" 2>/dev/null
+  _valid_image "$DEST" && return 0
+  rm -f "$DEST"
+  return 1
+}
+
+_try_google_favicon() {
+  curl -fsSL --max-time 5 -o "$DEST" "https://www.google.com/s2/favicons?domain=$DOMAIN&sz=128" 2>/dev/null
+  _valid_image "$DEST" && return 0
+  rm -f "$DEST"
+  return 1
+}
+
+for strategy in _try_dashboard_icons _try_manifest _try_apple_touch_icon _try_icon_horse _try_google_favicon; do
+  if $strategy 2>/dev/null; then
+    _resize
+    echo "$DEST"
+    exit 0
+  fi
+done
+
+exit 1

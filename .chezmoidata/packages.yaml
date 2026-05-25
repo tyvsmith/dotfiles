@@ -137,6 +137,7 @@ packages:
   choose:
     tags: [dev]
     desc: "cut/awk replacement"
+    brew: choose-rust
 
   broot:
     tags: [dev]
@@ -271,6 +272,7 @@ packages:
     tags: [container]
     desc: "Container platform"
     brew_cask: true
+    brew: docker-desktop
 
   docker-compose:
     tags: [container]
@@ -522,14 +524,6 @@ packages:
     tags: [ui-extra]
     desc: "Media player"
 
-  deskflow:
-    tags: [ui-extra]
-    desc: "Software KVM"
-    brew_tap: "deskflow/tap"
-    brew_cask: true
-    flatpak: org.deskflow.deskflow
-    enabled: false
-
   localsend:
     tags: [ui-extra]
     desc: "Cross-device file sharing"
@@ -551,17 +545,11 @@ packages:
     desc: "macOS terminal"
     brew_cask: true
 
-  aerospace:
-    tags: [ui]
-    os: darwin
-    desc: "i3-like tiling window manager"
-    brew_tap: "nikitabobko/tap"
-    brew_cask: true
-
   omniwm:
     tags: [ui]
     os: darwin
     desc: "macOS window manager"
+    brew_tap: "BarutSRB/tap"
     brew_cask: true
 
   skhd:
@@ -570,12 +558,6 @@ packages:
     desc: "Simple hotkey daemon for macOS — skhd.zig fork with stable bundle ID so TCC permissions survive brew upgrades"
     brew: skhd-zig
     brew_tap: "jackielii/tap"
-
-  sketchybar:
-    tags: [ui]
-    os: darwin
-    desc: "Customizable macOS status bar"
-    brew_tap: "FelixKratz/formulae"
 
   borders:
     tags: [ui]
@@ -631,6 +613,7 @@ packages:
     tags: [ui-extra]
     os: darwin
     desc: "Voice typing"
+    brew_tap: "peteonrails/voxtype"
     brew_cask: true
 
  # ===========================================================================

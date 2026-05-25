@@ -1,0 +1,26 @@
+#!/bin/bash
+# Source upstream so its own $APP_NAME, $APP_URL, $DESKTOP_FILE persist for
+# our post-processing. Then:
+#   1. Replace favicon with a higher-quality icon via omarchy-fetch-webapp-icon
+#   2. Add StartupWMClass=brave-<host>__-Default so hypr-dock can match the
+#      window class Brave generates for --app= mode (its window-class matcher
+#      has no `brave-` prefix; falls back to the StartupWMClass→file map)
+#   3. Restart hypr-dock — its StartupWMClass map is built once via sync.Once
+source /home/ty/.local/share/omarchy/bin/omarchy-webapp-install "$@"
+
+host="${APP_URL#*://}"; host="${host%%/*}"
+[[ -z $host ]] && exit 0
+
+ICON_DIR="$HOME/.local/share/applications/icons"
+if command -v omarchy-fetch-webapp-icon >/dev/null; then
+  new_icon=$(omarchy-fetch-webapp-icon --force "$APP_NAME" "$host" "$ICON_DIR" 2>/dev/null) || true
+  [[ -n $new_icon && -s $new_icon ]] && sed -i "s|^Icon=.*|Icon=$new_icon|" "$DESKTOP_FILE"
+fi
+
+expected="StartupWMClass=brave-${host}__-Default"
+grep -qFx "$expected" "$DESKTOP_FILE" || {
+  sed -i '/^StartupWMClass=/d' "$DESKTOP_FILE"
+  printf '%s\n' "$expected" >> "$DESKTOP_FILE"
+}
+
+pgrep -x hypr-dock >/dev/null && omarchy-restart-app hypr-dock
