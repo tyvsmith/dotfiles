@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# voxtype-smart-toggle — Hyprland keybind target. Detect category, start recording with matching profile.
+set -euo pipefail
+category=$(voxtype-detect-category 2>/dev/null || echo "general")
+exec voxtype record toggle --profile "$category"

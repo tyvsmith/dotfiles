@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# voxtype-detect-category — print the matching category name based on active Hyprland window.
+# Usage: voxtype-detect-category   (no args; prints to stdout)
+# Exits 0 always. On any failure (no hyprctl, no config, no match) prints default_category.
+set -uo pipefail
+
+CONFIG="${VOXTYPE_CATEGORIES:-${XDG_CONFIG_HOME:-$HOME/.config}/voxtype/categories.yaml}"
+
+default=$(yq -r '.default_category // "general"' "$CONFIG" 2>/dev/null || echo "general")
+
+if ! win=$(hyprctl activewindow -j 2>/dev/null); then
+  echo "$default"; exit 0
+fi
+
+class=$(jq -r '(.class // "") | ascii_downcase' <<<"$win")
+title=$(jq -r '(.title // "") | ascii_downcase' <<<"$win")
+
+match=$(CLS="$class" TTL="$title" yq -r '
+  [.categories[] | select(
+    ((.apps // [])         | any_c(. as $a | strenv(CLS) | contains($a | downcase))) or
+    ((.url_patterns // []) | any_c(. as $u | strenv(TTL) | contains($u | downcase)))
+  )] | .[0].name // ""
+' "$CONFIG" 2>/dev/null)
+
+if [[ -z "$match" || "$match" == "null" ]]; then
+  echo "$default"
+else
+  echo "$match"
+fi

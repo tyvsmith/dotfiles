@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# voxtype-cleanup — Voxtype post_process target.
+# stdin: raw transcript. stdout: cleaned transcript (or raw on any failure).
+# Usage in Voxtype config: command = "voxtype-cleanup --hint <category>"
+set -uo pipefail
+
+CONFIG="${VOXTYPE_CATEGORIES:-${XDG_CONFIG_HOME:-$HOME/.config}/voxtype/categories.yaml}"
+SECRETS="${VOXTYPE_SECRETS:-${XDG_CONFIG_HOME:-$HOME/.config}/voxtype/secrets.env}"
+
+hint=""
+if [[ "${1:-}" == "--hint" && -n "${2:-}" ]]; then
+  hint="$2"
+fi
+
+# Load env vars: prefer pre-existing values; otherwise parse secrets.env safely.
+# Self-sufficient — no global fish sourcing or systemd EnvironmentFile needed.
+# Only matches uppercase KEY=VALUE lines, no shell eval. Per-var env wins over file.
+if [[ -r "$SECRETS" ]]; then
+  while IFS='=' read -r _key _val; do
+    [[ "$_key" =~ ^[A-Z_][A-Z0-9_]*$ ]] || continue
+    [[ -n "${!_key:-}" ]] && continue
+    _val="${_val%\"}"; _val="${_val#\"}"
+    _val="${_val%\'}"; _val="${_val#\'}"
+    export "$_key=$_val"
+  done < "$SECRETS"
+fi
+
+# Re-detect at completion time (handles alt-tab during recording)
+current=$(voxtype-detect-category 2>/dev/null || echo "")
+
+# Prefer current focus; fall back to upfront hint; fall back to default
+category="${current:-${hint:-$(yq -r '.default_category // "general"' "$CONFIG")}}"
+
+transcript=$(cat)
+[[ -z "$transcript" ]] && exit 0
+
+# Graceful fallback if any required LLM var is missing — pass through original text
+if [[ -z "${VOXTYPE_LLM_BASE_URL:-}" || -z "${VOXTYPE_LLM_API_KEY:-}" || -z "${VOXTYPE_LLM_MODEL:-}" ]]; then
+  printf '%s' "$transcript"
+  exit 0
+fi
+
+# Pull category config
+read_cat() { CAT="$category" yq -r ".categories[] | select(.name == strenv(CAT)) | $1 // \"\"" "$CONFIG" 2>/dev/null; }
+tone=$(read_cat '.tone')
+extra=$(read_cat '.extra_instructions')
+jargon=$(CAT="$category" yq -r '
+  ((.shared.jargon // []) + (.categories[] | select(.name == strenv(CAT)) | (.jargon // [])))
+  | unique | join(", ")
+' "$CONFIG" 2>/dev/null)
+preserve=$(CAT="$category" yq -r '
+  ((.shared.preserve // []) + (.categories[] | select(.name == strenv(CAT)) | (.preserve // [])))
+  | unique | join(", ")
+' "$CONFIG" 2>/dev/null)
+
+# Build system prompt — aggressively restrictive so small models (Llama 8B etc.)
+# don't treat the jargon list as topics to elaborate on.
+sys="Your ONLY job is to clean up the user's dictated text. You MUST NOT add content, examples, code, or explanations. The cleaned text MUST be the same length or shorter than the input."
+sys+=$'\n\n'"Context: ${tone:-neutral writing — fix obvious errors, stay close to original wording}"
+[[ -n "$jargon" ]]   && sys+=$'\n\n'"If any of these terms appear in the input, preserve their exact spelling and capitalization. Do NOT introduce or mention them if they are not present in the input: ${jargon}."
+[[ -n "$preserve" ]] && sys+=$'\n\n'"If any of these literal markers appear, leave them exactly as-is: ${preserve}."
+[[ -n "$extra" ]]    && sys+=$'\n\n'"${extra}"
+sys+=$'\n\n'"Remove filler words (um, uh, like, you know). Fix grammar and punctuation. Preserve meaning and tone."
+sys+=$'\n'"Output ONLY the cleaned text. No preamble, no quotes, no emojis, no code examples, no explanations, no commentary."
+
+# Optional prior-utterance continuity from Voxtype
+user_msg="$transcript"
+if [[ -n "${VOXTYPE_CONTEXT:-}" ]]; then
+  user_msg=$'Previous utterance (for context, do not repeat it):\n'"$VOXTYPE_CONTEXT"$'\n\nClean up this:\n'"$transcript"
+fi
+
+# Build OpenAI-compatible request body
+base_body=$(jq -n \
+  --arg model "$VOXTYPE_LLM_MODEL" \
+  --arg sys "$sys" \
+  --arg msg "$user_msg" \
+  '{
+    model: $model,
+    max_tokens: 1000,
+    messages: [{role:"system", content:$sys}, {role:"user", content:$msg}]
+  }')
+
+# Merge optional provider-specific extras (e.g. OpenRouter `provider:{order:[...]}`).
+# jq's `*` operator does a recursive merge. If EXTRA_BODY is missing or invalid, skip it.
+if [[ -n "${VOXTYPE_LLM_EXTRA_BODY:-}" ]] && body=$(jq -n \
+    --argjson base "$base_body" \
+    --argjson extra "$VOXTYPE_LLM_EXTRA_BODY" \
+    '$base * $extra' 2>/dev/null); then
+  :
+else
+  body="$base_body"
+fi
+
+# Strip any trailing slash from base URL so we always hit /chat/completions cleanly
+url="${VOXTYPE_LLM_BASE_URL%/}/chat/completions"
+
+# Call the endpoint. HTTP-Referer / X-Title are OpenRouter analytics headers;
+# harmless to other endpoints (extra headers are ignored).
+resp=$(curl --silent --fail-with-body --max-time 8 \
+  "$url" \
+  -H "Authorization: Bearer $VOXTYPE_LLM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "HTTP-Referer: https://voxtype.io" \
+  -H "X-Title: voxtype-cleanup" \
+  -d "$body" 2>/dev/null) || { printf '%s' "$transcript"; exit 0; }
+
+out=$(jq -r '.choices[0].message.content // empty' <<<"$resp")
+
+if [[ -n "$out" ]]; then
+  printf '%s' "$out"
+else
+  printf '%s' "$transcript"
+fi

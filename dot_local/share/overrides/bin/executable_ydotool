@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# ydotool wrapper — adds fast key timing for `type` subcommand by default.
+#
+# /usr/bin/ydotool defaults to --key-delay=20 --key-hold=20 (~40 ms/char),
+# which is too slow for dictation UX. This wrapper substitutes 0+1 (~1 ms/char)
+# UNLESS the caller already specified those flags (so callers that intentionally
+# set their own timing still win — e.g. apps that need slower input).
+# Other ydotool subcommands (key, click, mousemove…) pass through unchanged.
+#
+# Reason this lives here: Voxtype's `--driver=ydotool,...` invokes `ydotool`
+# by command name. ~/.local/share/overrides/bin is first in PATH (via
+# `fish_add_path --move --path` in zz_01_paths.fish.tmpl) and also present
+# early in systemd user PATH, so this wrapper wins lookup transparently.
+#
+# Why ydotool at all: wtype injects via Wayland's virtual-keyboard-v1
+# protocol, which races with Ghostty's kitty-keyboard-protocol handling
+# and drops trailing chars of words ending in 'm' or 'n' before a space.
+# ydotool uses uinput (kernel-level), no Wayland protocol involved.
+#
+# Bypass entirely: invoke /usr/bin/ydotool directly.
+set -euo pipefail
+
+# Non-`type` subcommands: pass through unchanged.
+if [[ "${1:-}" != "type" ]]; then
+  exec /usr/bin/ydotool "$@"
+fi
+shift
+
+# Detect whether caller already specified key-delay / key-hold (any form:
+# -d, -H, --key-delay, --key-delay=N, --key-hold, --key-hold=N).
+have_key_delay=false
+have_key_hold=false
+for arg in "$@"; do
+  case "$arg" in
+    -d|--key-delay|--key-delay=*) have_key_delay=true ;;
+    -H|--key-hold|--key-hold=*)   have_key_hold=true  ;;
+  esac
+done
+
+# Inject only the defaults the caller omitted.
+defaults=()
+$have_key_delay || defaults+=(--key-delay=0)
+$have_key_hold  || defaults+=(--key-hold=1)
+
+exec /usr/bin/ydotool type "${defaults[@]}" "$@"

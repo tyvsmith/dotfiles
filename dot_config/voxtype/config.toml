@@ -1,0 +1,235 @@
+# Voxtype Configuration
+#
+# Location: ~/.config/voxtype/config.toml
+# All settings can be overridden via CLI flags
+#
+# State file for external integrations (Waybar, polybar, etc.)
+# Use "auto" for default location ($XDG_RUNTIME_DIR/voxtype/state),
+# a custom path, or "disabled" to turn off. The daemon writes state
+# ("idle", "recording", "transcribing") to this file whenever it changes.
+# Required for `voxtype record toggle` and `voxtype status` commands.
+engine = "parakeet"
+
+state_file = "auto"
+
+[hotkey]
+# Hotkey is configured in Hyprland. Default is Super + Ctrl + X
+enabled = false
+key = "HOME"
+mode = "push_to_talk"
+
+[audio]
+# Audio input device ("default" uses system default)
+# List devices with: pactl list sources short
+device = "default"
+
+# Sample rate in Hz (whisper expects 16000)
+sample_rate = 16000
+
+# Maximum recording duration in seconds (safety limit)
+max_duration_secs = 60
+
+# Pause MPRIS media players during recording
+pause_media = true
+
+[audio.feedback]
+# Enable audio feedback sounds (beeps when recording starts/stops)
+enabled = true
+#
+# Sound theme: "default", "subtle", "mechanical", or path to custom theme directory
+#theme = "subtle"
+#
+# Volume level (0.0 to 1.0)
+# volume = 0.7
+
+[whisper]
+# Model to use for transcription
+# Options: tiny, tiny.en, base, base.en, small, small.en, medium, medium.en, large-v3, large-v3-turbo
+# .en models are English-only but faster and more accurate for English
+# large-v3-turbo is faster than large-v3 with minimal accuracy loss (recommended for GPU)
+# Or provide absolute path to a custom .bin model file
+model = "base.en"
+
+# Language for transcription
+# Use "en" for English, "auto" for auto-detection
+# See: https://github.com/openai/whisper#available-models-and-languages
+language = "en"
+
+# Translate non-English speech to English
+translate = false
+mode = "local"
+flash_attention = false
+on_demand_loading = false
+gpu_isolation = false
+eager_processing = false
+
+# Number of CPU threads for inference (omit for auto-detection)
+# threads = 4
+
+[output]
+# Primary output mode: "type" or "clipboard"
+# - type: Simulates keyboard input at cursor position (requires ydotool)
+# - clipboard: Copies text to clipboard (requires wl-copy)
+mode = "type"
+
+# Fall back to clipboard if typing fails
+fallback_to_clipboard = true
+
+# Delay between typed characters in milliseconds
+# 0 = fastest possible, increase if characters are dropped
+type_delay_ms = 1
+auto_submit = false
+shift_enter_newlines = false
+pre_type_delay_ms = 0
+
+# Post-processing command (optional)
+# Pipe transcribed text through an external command for cleanup before output.
+# The command receives text on stdin and outputs processed text on stdout.
+# Useful for LLM-based text cleanup, grammar correction, filler word removal.
+# On any failure (timeout, error), falls back to original transcription.
+#
+# [output.post_process]
+# command = "ollama run llama3.2:1b 'Clean up this dictation. Fix grammar, remove filler words. Output only the cleaned text:'"
+# timeout_ms = 30000  # 30 second timeout (generous for LLM)
+
+[output.notification]
+# Show notification when recording starts (hotkey pressed)
+on_recording_start = false
+
+# Show notification when recording stops (transcription beginning)
+on_recording_stop = false
+
+# Show notification with transcribed text after transcription completes
+on_transcription = false
+show_engine_icon = false
+
+[text]
+spoken_punctuation = false
+smart_auto_submit = false
+
+[text.replacements]
+# Omarchy / Hyprland ecosystem
+"oh marchy" = "Omarchy"
+"a marky" = "Omarchy"
+"omaki" = "Omarchy"
+"oh mah key" = "Omarchy"
+"hyperland" = "Hyprland"
+"hyper control" = "hyprctl"
+"hyper c t l" = "hyprctl"
+"hyper idle" = "hypridle"
+"hyper lock" = "hyprlock"
+"hyper sunset" = "hyprsunset"
+"way bar" = "Waybar"
+"way land" = "Wayland"
+"macko" = "Mako"
+"vox type" = "Voxtype"
+"fox type" = "Voxtype"
+"sway o s d" = "SwayOSD"
+
+# Arch / system tooling
+"pac man" = "pacman"
+"peru" = "paru"
+"par roo" = "paru"
+"butter f s" = "btrfs"
+"arch install" = "archinstall"
+"make init cpio" = "mkinitcpio"
+"system control" = "systemctl"
+"system c t l" = "systemctl"
+"journal control" = "journalctl"
+"journal c t l" = "journalctl"
+"y dot tool" = "ydotool"
+"w l copy" = "wl-copy"
+"w l clipboard" = "wl-clipboard"
+"a u r" = "AUR"
+"t mux" = "tmux"
+"n vim" = "Neovim"
+"neo vim" = "Neovim"
+
+# Agent / AI lingo
+"clawed" = "Claude"
+"cloud code" = "Claude Code"
+"clawed code" = "Claude Code"
+"an thropic" = "Anthropic"
+"m c p" = "MCP"
+"elm" = "LLM"
+"l l m" = "LLM"
+"a gentic" = "agentic"
+"sub agent" = "subagent"
+"oh my clawed" = "oh-my-claudecode"
+"o m c" = "OMC"
+"codecs" = "Codex"
+"gemeni" = "Gemini"
+
+# Dev / formats
+"tom el" = "TOML"
+"yamil" = "YAML"
+"j son see" = "JSONC"
+"j s o n" = "JSON"
+"rejects" = "regex"
+"work tree" = "worktree"
+"mono repo" = "monorepo"
+"hear doc" = "heredoc"
+
+[parakeet]
+model = "parakeet-tdt-0.6b-v3"
+#model = "parakeet-unified-en-0.6b" #uses for streaming
+on_demand_loading = false
+streaming = false
+
+streaming_chunk_secs = 0.32
+streaming_left_context_secs = 5.6
+streaming_right_context_secs = 0.32
+
+[meeting]
+enabled = false
+
+[meeting.diarization]
+enabled = false
+
+[meeting.audio]
+source = "mic"
+
+[osd]
+enabled = true
+frontend = "gtk4"
+position = "bottom-center"
+width_px = 400
+height_px = 48
+margin_px = 24
+top_margin = 0.85
+opacity = 0.95
+waveform_window_secs = 3.0
+peak_decay_db_per_sec = 6.0
+waveform_gain = 10.0
+
+[status]
+icon_theme = "emoji"
+
+# ---- voxtype-context-cleanup additions ----
+
+# Global fallback when no profile is selected
+[output.post_process]
+command = "voxtype-cleanup"
+timeout_ms = 10000
+
+# One profile per category in categories.yaml.
+# Each calls the same script with a category hint; the script re-detects
+# the active window at completion time and may override the hint.
+
+[profiles.chat]
+post_process_command = "voxtype-cleanup --hint chat"
+
+[profiles.email]
+post_process_command = "voxtype-cleanup --hint email"
+
+[profiles.code]
+post_process_command = "voxtype-cleanup --hint code"
+
+[profiles.docs]
+post_process_command = "voxtype-cleanup --hint docs"
+
+[profiles.browser]
+post_process_command = "voxtype-cleanup --hint browser"
+
+[profiles.general]
+post_process_command = "voxtype-cleanup --hint general"

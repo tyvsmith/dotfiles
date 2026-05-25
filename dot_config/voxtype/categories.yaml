@@ -1,0 +1,225 @@
+# ~/.config/voxtype/categories.yaml
+# Categories are evaluated in order; first match wins.
+# Each entry's `apps` (window class substring match) and `url_patterns`
+# (window title substring match) are OR'd; any match selects the category.
+
+default_category: general
+
+# Provider (endpoint, key, model) is configured via env vars sourced from
+# ~/.config/voxtype/secrets.env — VOXTYPE_LLM_{BASE_URL,API_KEY,MODEL,EXTRA_BODY}.
+# Swap by editing that file; this YAML stays provider-agnostic.
+
+# ---------------------------------------------------------------------------
+# Shared vocabulary applied to every category.
+# voxtype-cleanup unions `shared.jargon + category.jargon` (deduped) at
+# prompt-build time, and same for `preserve`. Put cross-cutting terms here;
+# put per-context terms in the category. The `[text.replacements]` block in
+# Voxtype's config.toml already fixes acoustic mishears upstream; this list
+# tells the LLM to not re-mangle the already-correct canonical forms.
+# ---------------------------------------------------------------------------
+shared:
+  jargon:
+    # Hyprland / Wayland ecosystem
+    - Hyprland
+    - Wayland
+    - hyprctl
+    - Waybar
+    - hypridle
+    - hyprlock
+    - hyprsunset
+    - Mako
+    - SwayOSD
+    - Omarchy
+    - wtype
+    - dotool
+    - ydotool
+    - wl-copy
+    - wl-clipboard
+    # Arch / system
+    - pacman
+    - paru
+    - btrfs
+    - archinstall
+    - mkinitcpio
+    - systemctl
+    - journalctl
+    - AUR
+    - tmux
+    - Neovim
+    - chezmoi
+    # Voice / dictation
+    - Voxtype
+    - Whisper
+    - Parakeet
+    - SenseVoice
+    # Languages
+    - TypeScript
+    - JavaScript
+    - Python
+    - Rust
+    - Go
+    - Bash
+    - Kotlin
+    # AI / agent tooling
+    - Claude
+    - Claude Code
+    - Anthropic
+    - OpenAI
+    - Gemini
+    - Codex
+    - MCP
+    - LLM
+    - agentic
+    - subagent
+    - oh-my-claudecode
+    - OMC
+    - OpenRouter
+    - Groq
+    - Cerebras
+    - Ollama
+    # Formats / concepts
+    - TOML
+    - YAML
+    - JSONC
+    - JSON
+    - Markdown
+    - regex
+    - worktree
+    - monorepo
+    - heredoc
+
+  preserve:
+    # Conventional code markers — never paraphrase or expand these
+    - TODO
+    - FIXME
+    - XXX
+    - NOTE
+    - HACK
+    - WIP
+    - DRAFT
+
+# ---------------------------------------------------------------------------
+# Categories
+# ---------------------------------------------------------------------------
+categories:
+  - name: chat
+    apps: [slack, discord, telegram, signal, element, beeper]
+    tone: |
+      Casual real-time chat message. Short sentences, contractions OK, light
+      tone. No formal greeting or sign-off. Don't formalize abbreviations
+      the speaker used. Emojis only if the speaker actually spoke one.
+    jargon: []
+    preserve: [lol, tbh, wfh, eod, idk, btw, fyi, imo, imho, afk, ttyl]
+    extra_instructions: ""
+
+  - name: email
+    apps: [thunderbird, evolution, mailspring, geary]
+    url_patterns: [gmail, outlook, fastmail, proton, hey.com]
+    tone: |
+      Professional email body. Complete sentences, standard punctuation,
+      neutral-to-warm register. If the speaker dictated a salutation or
+      sign-off, preserve it verbatim; never invent one they didn't speak.
+    jargon: []
+    preserve: []
+    extra_instructions: "Don't add 'Hi <name>,' or 'Best,' unless the speaker dictated them."
+
+  - name: code
+    apps: [code, code-insiders, codium, cursor, neovide, alacritty, foot, kitty, ghostty, wezterm]
+    tone: |
+      Technical text intended for a code comment, commit message, PR
+      description, or terminal input. Concise, imperative mood, no fluff.
+      Prefer present tense ("add X", not "added X") for commit messages.
+    jargon:
+      # Build / package tooling
+      - Cargo
+      - npm
+      - pnpm
+      - yarn
+      - uv
+      - pip
+      - mise
+      - Docker
+      - Podman
+      # Editor / dev
+      - LSP
+      - Treesitter
+      - Neovide
+      - Ghostty
+      # Web / network
+      - HTTP
+      - HTTPS
+      - HTTP/2
+      - gRPC
+      - REST
+      - WebSocket
+      - WebRTC
+      - TCP
+      - UDP
+      - TLS
+      - DNS
+      # Streams / shell concepts
+      - stdin
+      - stdout
+      - stderr
+      # Language semantics
+      - async
+      - await
+      - struct
+      - trait
+      - enum
+      - impl
+      - generics
+      - pub/sub
+      # Git
+      - HEAD
+      - rebase
+      - cherry-pick
+      - upstream
+    preserve: []
+    extra_instructions: "Wrap inline code identifiers in backticks when context makes it obvious (e.g., function names, file paths, env var names)."
+
+  - name: docs
+    apps: [obsidian, logseq, zettlr]
+    url_patterns: [notion.so, linear.app, github.com, gitlab.com, confluence, docs.google.com, sheets.google.com]
+    tone: |
+      Structured technical writing for documentation, RFC, design doc,
+      or issue/task description. Clear paragraphs. Bullet lists when
+      enumerating. Headers when the speaker indicated section breaks.
+    jargon:
+      - PR
+      - MR
+      - RFC
+      - ADR
+      - SLO
+      - SLA
+      - SRE
+      - API
+      - SDK
+      - CLI
+      - GraphQL
+      - OpenAPI
+      - Swagger
+      - Notion
+      - Linear
+      - Jira
+      - Confluence
+      - Asana
+    preserve: []
+    extra_instructions: "Use Markdown formatting where natural: **bold**, *italic*, `inline code`, fenced code blocks, numbered lists for sequence, bullet lists otherwise."
+
+  - name: browser
+    apps: [firefox, chromium, brave, zen, librewolf]
+    tone: |
+      General writing for a web form, search box, or unknown destination.
+      Clear, neutral. Avoid both casual abbreviations and formal flourishes.
+    jargon: []
+    preserve: []
+    extra_instructions: ""
+
+  - name: general
+    tone: |
+      Neutral, clear writing. Fix only obvious errors. Stay close to the
+      original wording — when in doubt, change less.
+    jargon: []
+    preserve: []
+    extra_instructions: ""
