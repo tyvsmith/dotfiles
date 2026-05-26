@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Block until org.kde.StatusNotifierWatcher appears on the user bus, then exec.
+# Lets SNI-tray clients (Electron apps, 1Password) launch after waybar so
+# their tray-icon registration doesn't silently miss the watcher.
+deadline=$(( $(date +%s) + 10 ))
+while ! busctl --user list 2>/dev/null | grep -q org.kde.StatusNotifierWatcher; do
+    [ "$(date +%s)" -ge "$deadline" ] && break
+    sleep 0.2
+done
+exec "$@"
