@@ -43,6 +43,7 @@ shared:
     - tmux
     - Neovim
     - chezmoi
+    - dotfiles
     # Voice / dictation
     - Voxtype
     # Languages
@@ -79,6 +80,8 @@ shared:
     - worktree
     - monorepo
     - heredoc
+    - Github
+    - Gitlab
     # Homelab
     - Proxmox
     - OPNSense

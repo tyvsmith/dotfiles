@@ -9,8 +9,14 @@ docs/
 # Ignore scripts directory (run_* scripts are in repo root)
 scripts/
 
+# Test harness — repo tooling, not deployed dotfiles
+tests/
+
 # Plaintext versions of encrypted files are for local editing only, never deployed
 **/decrypted_*
+
+# Sample/template files exist as in-repo documentation only, never deployed
+**/*.sample
 
 {{ if not .decrypt }}
 # Encryption not configured for this profile — skip encrypted files

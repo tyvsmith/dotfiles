@@ -124,6 +124,8 @@ smart_auto_submit = false
 "macko" = "Mako"
 "vox type" = "Voxtype"
 "fox type" = "Voxtype"
+"box type" = "Voxtype"
+
 
 # Arch / system tooling
 "pac man" = "pacman"
@@ -138,6 +140,12 @@ smart_auto_submit = false
 "a u r" = "AUR"
 "t mux" = "tmux"
 "neo vim" = "Neovim"
+"dot files" = "dotfiles"
+"shay moi" = "chezmoi"
+"shay mwa" = "chezmoi"
+"shay moy" = "chezmoi"
+"shea moi" = "chezmoi"
+"chez moi" = "chezmoi"
 
 # Agent / AI lingo
 "clawed" = "Claude"
@@ -163,6 +171,8 @@ smart_auto_submit = false
 "work tree" = "worktree"
 "mono repo" = "monorepo"
 "hear doc" = "heredoc"
+"Get up" = "Github"
+"Get lab" = "Gitlab"
 
 # Network
 "Land" = "LAN"

@@ -141,6 +141,16 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_61-configure-tide.sh.tmpl` | Configures Tide prompt |
 
+## Tests
+
+Regression suite for `voxtype-cleanup` — runs the live LLM script against known inputs and checks outputs with M-of-N pass logic to handle non-determinism.
+
+```bash
+./tests/run.sh
+```
+
+Skips cleanly when `~/.config/voxtype/secrets.env` is missing or any required env var is absent. To test the skip path: `VOXTYPE_LLM_API_KEY="" ./tests/run.sh`. Tuning: `VOXTYPE_TEST_RUNS=5 VOXTYPE_TEST_THRESHOLD=3 ./tests/run.sh`.
+
 ### Philosophy
 - All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→trash`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.
 - Shorthand abbreviations for longer tool names: `lg→lazygit`, `br→broot`
