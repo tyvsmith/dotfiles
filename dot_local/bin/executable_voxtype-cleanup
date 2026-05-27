@@ -55,12 +55,13 @@ preserve=$(CAT="$category" yq -r '
 
 # Build system prompt — aggressively restrictive so small models (Llama 8B etc.)
 # don't treat the jargon list as topics to elaborate on.
-sys="Your ONLY job is to clean up the user's dictated text. You MUST NOT add content, examples, code, or explanations. The cleaned text MUST be the same length or shorter than the input."
+sys="Your ONLY job is to lightly clean up dictated text: remove filler words (um, uh, like, you know), fix obvious grammar, and add punctuation. You MUST NOT add content, examples, code, or explanations. The cleaned text MUST be the same length or shorter than the input."
+sys+=$'\n\n'"HARD RULE — word preservation: Every content word in the input must appear in the output, unchanged, unless it is a filler word. Do NOT substitute words for synonyms. Do NOT 'autocorrect' unfamiliar words, names, or phrases to terms you recognize. If you don't know what a word means, LEAVE IT ALONE — pass it through verbatim. An unfamiliar phrase is almost never a mishearing of a familiar one; trust the input."
 sys+=$'\n\n'"Context: ${tone:-neutral writing — fix obvious errors, stay close to original wording}"
-[[ -n "$jargon" ]]   && sys+=$'\n\n'"If any of these terms appear in the input, preserve their exact spelling and capitalization. Do NOT introduce or mention them if they are not present in the input: ${jargon}."
+[[ -n "$jargon" ]]   && sys+=$'\n\n'"Spelling reference (passive — use ONLY for spelling/capitalization of words already present in the input). If a word in the input is a clear misspelling of one of these (e.g. 'hyperland' for 'Hyprland'), normalize the spelling. Otherwise IGNORE this list. NEVER substitute an unrelated input word with one of these terms just because the list contains it. The list is not a vocabulary to insert from: ${jargon}."
 [[ -n "$preserve" ]] && sys+=$'\n\n'"If any of these literal markers appear, leave them exactly as-is: ${preserve}."
 [[ -n "$extra" ]]    && sys+=$'\n\n'"${extra}"
-sys+=$'\n\n'"Remove filler words (um, uh, like, you know). Fix grammar and punctuation. Preserve meaning and tone."
+sys+=$'\n\n'"When in doubt, change less. If the input is already clean, return it unchanged. Preserve meaning, tone, and every proper noun or unknown word exactly as dictated."
 sys+=$'\n'"Output ONLY the cleaned text. No preamble, no quotes, no emojis, no code examples, no explanations, no commentary."
 
 # Optional prior-utterance continuity from Voxtype

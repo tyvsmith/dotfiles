@@ -21,6 +21,7 @@ shared:
   jargon:
     # Hyprland / Wayland ecosystem
     - Hyprland
+    - Niri
     - Wayland
     - hyprctl
     - Waybar
@@ -28,19 +29,14 @@ shared:
     - hyprlock
     - hyprsunset
     - Mako
-    - SwayOSD
     - Omarchy
-    - wtype
-    - dotool
-    - ydotool
-    - wl-copy
-    - wl-clipboard
+    - lan-mouse
+    - Voxtype
     # Arch / system
     - pacman
     - paru
     - btrfs
     - archinstall
-    - mkinitcpio
     - systemctl
     - journalctl
     - AUR
@@ -49,9 +45,6 @@ shared:
     - chezmoi
     # Voice / dictation
     - Voxtype
-    - Whisper
-    - Parakeet
-    - SenseVoice
     # Languages
     - TypeScript
     - JavaScript
@@ -75,7 +68,6 @@ shared:
     - OMC
     - OpenRouter
     - Groq
-    - Cerebras
     - Ollama
     # Formats / concepts
     - TOML
@@ -87,6 +79,11 @@ shared:
     - worktree
     - monorepo
     - heredoc
+    # Homelab
+    - Proxmox
+    - OPNSense
+    - Tailscale
+    - Wireguard
 
   preserve:
     # Conventional code markers — never paraphrase or expand these
@@ -103,7 +100,7 @@ shared:
 # ---------------------------------------------------------------------------
 categories:
   - name: chat
-    apps: [slack, discord, telegram, signal, element, beeper]
+    apps: [slack, discord, vesktop, steam, beeper]
     tone: |
       Casual real-time chat message. Short sentences, contractions OK, light
       tone. No formal greeting or sign-off. Don't formalize abbreviations
@@ -113,8 +110,8 @@ categories:
     extra_instructions: ""
 
   - name: email
-    apps: [thunderbird, evolution, mailspring, geary]
-    url_patterns: [gmail, outlook, fastmail, proton, hey.com]
+    apps: [thunderbird]
+    url_patterns: [gmail, proton]
     tone: |
       Professional email body. Complete sentences, standard punctuation,
       neutral-to-warm register. If the speaker dictated a salutation or
@@ -124,7 +121,7 @@ categories:
     extra_instructions: "Don't add 'Hi <name>,' or 'Best,' unless the speaker dictated them."
 
   - name: code
-    apps: [code, code-insiders, codium, cursor, neovide, alacritty, foot, kitty, ghostty, wezterm]
+    apps: [code, zed, android, intellij, codium, cursor, neovide, alacritty, foot, kitty, ghostty, wezterm]
     tone: |
       Technical text intended for a code comment, commit message, PR
       description, or terminal input. Concise, imperative mood, no fluff.
@@ -140,6 +137,7 @@ categories:
       - mise
       - Docker
       - Podman
+      - Distrobox
       # Editor / dev
       - LSP
       - Treesitter
@@ -151,6 +149,7 @@ categories:
       - HTTP/2
       - gRPC
       - REST
+      - QUIC
       - WebSocket
       - WebRTC
       - TCP
@@ -166,6 +165,7 @@ categories:
       - await
       - struct
       - trait
+      - coroutine
       - enum
       - impl
       - generics
@@ -199,16 +199,12 @@ categories:
       - GraphQL
       - OpenAPI
       - Swagger
-      - Notion
       - Linear
-      - Jira
-      - Confluence
-      - Asana
     preserve: []
     extra_instructions: "Use Markdown formatting where natural: **bold**, *italic*, `inline code`, fenced code blocks, numbered lists for sequence, bullet lists otherwise."
 
   - name: browser
-    apps: [firefox, chromium, brave, zen, librewolf]
+    apps: [firefox, chromium, brave, zen]
     tone: |
       General writing for a web form, search box, or unknown destination.
       Clear, neutral. Avoid both casual abbreviations and formal flourishes.

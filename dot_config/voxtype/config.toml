@@ -51,7 +51,7 @@ enabled = true
 model = "base.en"
 
 # Language for transcription
-# Use "en" for English, "auto" for auto-detection
+# Use "en" for English, "auto" for auto-detectionq
 # See: https://github.com/openai/whisper#available-models-and-languages
 language = "en"
 
@@ -124,7 +124,6 @@ smart_auto_submit = false
 "macko" = "Mako"
 "vox type" = "Voxtype"
 "fox type" = "Voxtype"
-"sway o s d" = "SwayOSD"
 
 # Arch / system tooling
 "pac man" = "pacman"
@@ -132,17 +131,12 @@ smart_auto_submit = false
 "par roo" = "paru"
 "butter f s" = "btrfs"
 "arch install" = "archinstall"
-"make init cpio" = "mkinitcpio"
 "system control" = "systemctl"
 "system c t l" = "systemctl"
 "journal control" = "journalctl"
 "journal c t l" = "journalctl"
-"y dot tool" = "ydotool"
-"w l copy" = "wl-copy"
-"w l clipboard" = "wl-clipboard"
 "a u r" = "AUR"
 "t mux" = "tmux"
-"n vim" = "Neovim"
 "neo vim" = "Neovim"
 
 # Agent / AI lingo
@@ -169,6 +163,12 @@ smart_auto_submit = false
 "work tree" = "worktree"
 "mono repo" = "monorepo"
 "hear doc" = "heredoc"
+
+# Network
+"Land" = "LAN"
+"Wand" = "WAN"
+"Opensense" = "OPNSense"
+
 
 [parakeet]
 model = "parakeet-tdt-0.6b-v3"
