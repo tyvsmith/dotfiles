@@ -2,6 +2,14 @@
 # voxtype-detect-category — print the matching category name based on active Hyprland window.
 # Usage: voxtype-detect-category   (no args; prints to stdout)
 # Exits 0 always. On any failure (no hyprctl, no config, no match) prints default_category.
+#
+# Matching priority:
+#   1. Category whose `apps` list contains a substring of the window class.
+#   2. Category whose `url_patterns` list contains a substring of the window title.
+#   3. Category whose `processes` list contains a substring of the foreground
+#      process running inside the active window (for terminals — walks the
+#      process tree from the window's PID and skips known shells).
+#   4. default_category.
 set -uo pipefail
 
 CONFIG="${VOXTYPE_CATEGORIES:-${XDG_CONFIG_HOME:-$HOME/.config}/voxtype/categories.yaml}"
@@ -14,6 +22,7 @@ fi
 
 class=$(jq -r '(.class // "") | ascii_downcase' <<<"$win")
 title=$(jq -r '(.title // "") | ascii_downcase' <<<"$win")
+pid=$(jq -r  '(.pid   // 0)'                    <<<"$win")
 
 match=$(CLS="$class" TTL="$title" yq -r '
   [.categories[] | select(
@@ -21,6 +30,57 @@ match=$(CLS="$class" TTL="$title" yq -r '
     ((.url_patterns // []) | any_c(. as $u | strenv(TTL) | contains($u | downcase)))
   )] | .[0].name // ""
 ' "$CONFIG" 2>/dev/null)
+
+# Process-tree fallback: walk down from the active window's PID looking for
+# the deepest descendant that isn't a known shell. This lets a terminal pick
+# a category based on what's actually running (nvim, lazygit, claude, ...)
+# instead of treating every terminal the same.
+#
+# Terminal emulators commonly spawn multiple children — interactive shells
+# (attached to a pts), plus detached helpers like `xdg-open` (no controlling
+# tty). To pick the right branch, we filter to children on a pts and prefer
+# the most recently started one (closest proxy to "active tab").
+if [[ ( -z "$match" || "$match" == "null" ) && "$pid" =~ ^[0-9]+$ && "$pid" -gt 0 ]]; then
+  best_shell=""
+  best_etime=""
+  for c in $(pgrep -P "$pid" 2>/dev/null); do
+    ctty=$(ps -p "$c" -o tty= 2>/dev/null | tr -d '[:space:]')
+    [[ "$ctty" == pts/* ]] || continue
+    etime=$(ps -p "$c" -o etimes= 2>/dev/null | tr -d '[:space:]')
+    [[ "$etime" =~ ^[0-9]+$ ]] || continue
+    if [[ -z "$best_etime" ]] || (( etime < best_etime )); then
+      best_etime="$etime"
+      best_shell="$c"
+    fi
+  done
+
+  # Walk down from the shell until we hit a non-shell child — that's the
+  # foreground command the user invoked. Stop there: descending further
+  # would yield implementation details (e.g. claude → node-MainThread).
+  fg_cmd=""
+  if [[ -n "$best_shell" ]]; then
+    walk_pid="$best_shell"
+    for _ in 1 2 3 4 5 6 7 8; do
+      child=$(pgrep -P "$walk_pid" 2>/dev/null | head -n1)
+      [[ -z "$child" ]] && break
+      walk_pid="$child"
+      cmd=$(ps -p "$walk_pid" -o comm= 2>/dev/null | tr -d '[:space:]')
+      case "$cmd" in
+        ''|fish|bash|zsh|sh|dash|ksh|tcsh) continue ;;  # still in a shell wrapper
+        *) fg_cmd="$cmd"; break ;;
+      esac
+    done
+  fi
+
+  if [[ -n "$fg_cmd" ]]; then
+    fg_lower=$(printf '%s' "$fg_cmd" | tr '[:upper:]' '[:lower:]')
+    match=$(CMD="$fg_lower" yq -r '
+      [.categories[] | select(
+        (.processes // []) | any_c(. as $p | strenv(CMD) | contains($p | downcase))
+      )] | .[0].name // ""
+    ' "$CONFIG" 2>/dev/null)
+  fi
+fi
 
 if [[ -z "$match" || "$match" == "null" ]]; then
   echo "$default"

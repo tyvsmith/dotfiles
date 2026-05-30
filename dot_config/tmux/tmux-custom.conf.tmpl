@@ -86,16 +86,42 @@ set -g @resurrect-capture-pane-contents 'on'
 set -g @continuum-restore 'off'
 set -g @resurrect-strategy-nvim 'session'
 
+# Sourced by 10-tmux.sh when an omarchy theme ships a tmux.conf override.
+# -q means no error when the current theme doesn't ship one.
+source-file -q ~/.config/tmux/omarchy-theme.conf
+
+set -g @plugin fabioluciano/tmux-powerkit
+
+set -g @powerkit_plugins "group(cpu,memory,loadavg),group(git,github),hostname"
+#set -g @powerkit_plugin_group_coloring "true"
+
+set -g @powerkit_pane_border_unified "true"
+set -g @powerkit_pane_border_color "pane-border-active"
+
+set -g @powerkit_pane_border_status "off"
+set -g @powerkit_pane_border_status_bg "none"
+set -g @powerkit_pane_border_format "{command}"
+
+
+# Separator style (normal, rounded, flame, pixel, honeycomb, none)
+set -g @powerkit_separator_style "normal"
+set -g @powerkit_edge_separator_style "rounded:all"
+
+# Show plugins only when above threshold
+set -g @powerkit_plugin_cpu_show_only_on_threshold "true"
+set -g @powerkit_plugin_battery_show_only_on_threshold "true"
+set -g @powerkit_transparent "true"
+
+# Powerkit always uses a single canonical theme file kept in sync with the
+# active omarchy theme by ~/.config/omarchy/hooks/theme-set.d/11-tmux-powerkit.sh.
+set -g @powerkit_theme "custom"
+set -g @powerkit_theme_variant "custom"
+set -g @powerkit_custom_theme_path "~/.config/tmux/omarchy-powerkit-theme.sh"
+
 {{ if stat "/var/home" -}}
 # Silverblue/Bazzite: /home is a symlink to /var/home, fix saved paths
 set -g @resurrect-hook-post-save-layout 'sed -i "s|/var/home|/home|g" $1'
 {{- end }}
-
-# ── Status Bar ───────────────────────────────────────────────────────
-# [omarchy override] Catppuccin theme + Zellij-style status bar.
-# Split into two files: pre-TPM config and post-TPM overrides.
-#source-file ~/.config/tmux/statusbar.conf
-#bind -T root MouseDown1StatusLeft new-window -c "#{pane_current_path}"
 
 # ── Right-click Menu Fix ─────────────────────────────────────────────
 # Patch right-click menus: add -O flag so menus stay open after release
@@ -103,6 +129,3 @@ run-shell 'tmux list-keys -T root | grep "MouseDown3.*display-menu" | sed "s/dis
 
 # Initialize TMUX plugin manager (cloned by chezmoi to ~/.config/tmux/plugins/tpm)
 run '~/.config/tmux/plugins/tpm/tpm'
-
-# Post-TPM overrides (catppuccin overwrites borders, pill styles at load time)
-#source-file ~/.config/tmux/statusbar-overrides.conf

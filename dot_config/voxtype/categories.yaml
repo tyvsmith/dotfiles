@@ -1,7 +1,11 @@
 # ~/.config/voxtype/categories.yaml
 # Categories are evaluated in order; first match wins.
-# Each entry's `apps` (window class substring match) and `url_patterns`
-# (window title substring match) are OR'd; any match selects the category.
+# Each entry's `apps` (window class substring match), `url_patterns`
+# (window title substring match), and `processes` (foreground process
+# inside the active window — for terminals) are OR'd; any match selects
+# the category. `processes` is checked only when class/title don't match,
+# letting a terminal pick a category based on what's actually running
+# (nvim → code, claude → chat, idle shell → default).
 
 default_category: general
 
@@ -19,6 +23,9 @@ default_category: general
 # ---------------------------------------------------------------------------
 shared:
   jargon:
+    # Personal
+    - Ty
+    - Ty Smith
     # Hyprland / Wayland ecosystem
     - Hyprland
     - Niri
@@ -104,6 +111,8 @@ shared:
 categories:
   - name: chat
     apps: [slack, discord, vesktop, steam, beeper]
+    # AI CLI sessions and terminal chat clients — treated as chat-style.
+    processes: [claude, codex, gemini, opencode, llm, aider, weechat, irssi]
     tone: |
       Casual real-time chat message. Short sentences, contractions OK, light
       tone. No formal greeting or sign-off. Don't formalize abbreviations
@@ -115,6 +124,7 @@ categories:
   - name: email
     apps: [thunderbird]
     url_patterns: [gmail, proton]
+    processes: [aerc, neomutt, mutt]
     tone: |
       Professional email body. Complete sentences, standard punctuation,
       neutral-to-warm register. If the speaker dictated a salutation or
@@ -124,7 +134,10 @@ categories:
     extra_instructions: "Don't add 'Hi <name>,' or 'Best,' unless the speaker dictated them."
 
   - name: code
-    apps: [code, zed, android, intellij, codium, cursor, neovide, alacritty, foot, kitty, ghostty, wezterm]
+    apps: [code, zed, android, intellij, codium, cursor, neovide]
+    # Inside a terminal, match when one of these is the foreground program.
+    # Bare shells (no command running) fall through to the default category.
+    processes: [nvim, vim, hx, helix, lazygit, gitui, tig, gh, glab, jj]
     tone: |
       Technical text intended for a code comment, commit message, PR
       description, or terminal input. Concise, imperative mood, no fluff.
@@ -184,6 +197,7 @@ categories:
   - name: docs
     apps: [obsidian, logseq, zettlr]
     url_patterns: [notion.so, linear.app, github.com, gitlab.com, confluence, docs.google.com, sheets.google.com]
+    processes: [glow, frogmouth, mdcat]
     tone: |
       Structured technical writing for documentation, RFC, design doc,
       or issue/task description. Clear paragraphs. Bullet lists when
