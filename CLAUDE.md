@@ -120,8 +120,8 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 10-19  Native package managers
 20-29  (reserved)
 30-39  Containerized/sandboxed package managers
-40-49  Custom binaries (future)
-50-59  Language stacks & deps (future)
+40-49  Custom binaries (e.g. THPM bootstrap)
+50-59  Tool configuration (e.g. hyprpm plugin sync)
 60-69  Shell configuration
 70+    Future custom
 ```
@@ -138,6 +138,8 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_15-install-packages-rpm-ostree.sh.tmpl` | Immutable Fedora packages via rpm-ostree |
 | `run_onchange_30-install-packages-flatpak.sh.tmpl` | Flatpak GUI apps (Linux, tier 4+) |
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
+| `run_onchange_40-install-thpm.sh.tmpl` | Installs THPM (theme-hook-plugin-manager) at a pinned commit; omarchy-only |
+| `run_onchange_50-configure-hyprpm.sh.tmpl` | Adds hyprpm repos and enables declared plugins; omarchy-only |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_61-configure-tide.sh.tmpl` | Configures Tide prompt |
 

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Reconcile hyprpm plugin state with the dotfiles
+# declaration. hyprpm itself comes from the pacman `hyprland` package; this
+# script only adds repos and enables plugins.
+
+{{ if ne .de "hyprland-omarchy" -}}
+# Profile '{{ .profile }}' is not omarchy — nothing to do.
+exit 0
+{{ else -}}
+set -euo pipefail
+
+command -v hyprpm >/dev/null 2>&1 || { echo "hyprpm not installed, skipping"; exit 0; }
+
+# Repos to add — hyprpm display name (left, from `hyprpm list`) → authoritative
+# URL (right, from each repo's hyprpm state.toml). URLs are lowercase even when
+# the display name isn't (hyprpm quirk).
+declare -A HYPRPM_REPOS=(
+    ["hyprland-plugins"]="https://github.com/hyprwm/hyprland-plugins"
+    ["hyprland-scroll-overview"]="https://github.com/yayuuu/hyprland-scroll-overview"
+    ["HyprGlass"]="https://github.com/hyprnux/hyprglass"
+    ["dynamic-cursors"]="https://github.com/virtcode/hypr-dynamic-cursors"
+)
+
+# Optional git rev pins per repo. Used when upstream main doesn't yet support
+# the hyprland version we run, so we lock to a branch HEAD or commit. Passed
+# as the second arg to `hyprpm add` (ignores hyprpm's own commit locks).
+declare -A HYPRPM_REVS=(
+    # scroll-overview's 0.55 support hasn't landed on main — pin to yayuuu's
+    # "initial support" commit on the 0.55 branch.
+    ["hyprland-scroll-overview"]="107f5a28fcd8fca3aa4383e322262aeec6d3bb60"
+)
+
+# Plugins to enable — limited to the ones I actually run. Each must be exposed
+# by one of the repos above.
+HYPRPM_ENABLE=(hyprfocus scrolloverview hyprglass dynamic-cursors)
+
+# `hyprpm list` includes ANSI color codes — strip for clean grepping.
+state() { hyprpm list 2>/dev/null | sed -E $'s/\x1b\\[[0-9;]*m//g'; }
+
+current=$(state)
+for name in "${!HYPRPM_REPOS[@]}"; do
+    if grep -qF "Repository $name " <<<"$current"; then
+        continue
+    fi
+    echo "hyprpm add $name"
+    rev="${HYPRPM_REVS[$name]:-}"
+    if [[ -n "$rev" ]]; then
+        hyprpm add "${HYPRPM_REPOS[$name]}" "$rev" || echo "warn: failed to add $name"
+    else
+        hyprpm add "${HYPRPM_REPOS[$name]}" || echo "warn: failed to add $name"
+    fi
+done
+
+current=$(state)
+for plugin in "${HYPRPM_ENABLE[@]}"; do
+    if ! grep -A1 -F "Plugin $plugin" <<<"$current" | grep -q "enabled: true"; then
+        echo "hyprpm enable $plugin"
+        hyprpm enable "$plugin" || echo "warn: failed to enable $plugin"
+    fi
+done
+
+# Updates plugins to match current hyprland — needs hyprland headers; skipped
+# silently if hyprland isn't usable yet (fresh install before reboot, etc.).
+hyprpm update 2>/dev/null || echo "warn: hyprpm update failed (hyprland headers missing?)"
+{{ end -}}

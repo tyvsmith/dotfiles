@@ -380,16 +380,6 @@ packages:
     brew_cask: true
     pacman: openai-codex
 
-
-  # ===========================================================================
-  # Hardware
-  # ===========================================================================
-  bluetui:
-    tags: [hardware]
-    desc: "Bluetooth manager TUI"
-    os: linux
-    brew: false
-
   # ===========================================================================
   # Basic UI — Fonts
   # ===========================================================================
@@ -420,11 +410,39 @@ packages:
     desc: "Interactive dock panel for Hyprland"
     enabled: false  # re-enable after 1.2.1 release
 
-  quickshell-overview:
-    tags: [ui]
+
+  # --- Hyprland-related additions not shipped by omarchy itself ---
+  hyprmoncfg:
+    tags: [hardware]
+    desc: "GUI monitor configuration for Hyprland"
+    os: linux
     de: hyprland-omarchy
-    desc: "Quickshell-based overview for Hyprland"
-    pacman: quickshell-overview-git
+
+  xdg-desktop-portal-gnome:
+    tags: [ui]
+    desc: "GNOME backend for xdg-desktop-portal (screencast, file picker)"
+    os: linux
+    de: hyprland-omarchy
+
+  adw-gtk-theme:
+    tags: [ui]
+    desc: "GTK3 port of the libadwaita theme"
+    os: linux
+    de: hyprland-omarchy
+
+  vicinae:
+    tags: [experiment]
+    desc: "Raycast-style launcher (evaluating)"
+    pacman: vicinae-bin
+    os: linux
+    de: hyprland-omarchy
+
+  hyprmod:
+    tags: [experiment]
+    desc: "Hyprland modding utility"
+    pacman: hyprmod
+    os: linux
+    de: hyprland-omarchy
 
   # ===========================================================================
   # Basic UI — Terminal
@@ -433,7 +451,6 @@ packages:
     tags: [ui]
     desc: "Modern terminal emulator"
     brew_cask: true
-
 
 
   # ===========================================================================
@@ -535,6 +552,18 @@ packages:
     desc: "Music streaming"
     brew_cask: true
     flatpak: com.spotify.Client
+
+  pavucontrol:
+    tags: [ui-extra]
+    desc: "PulseAudio/PipeWire volume control GUI"
+    os: linux
+    flatpak: org.pulseaudio.pavucontrol
+
+  easyeffects:
+    tags: [ui-extra]
+    desc: "Audio effects & EQ for PipeWire"
+    os: linux
+    flatpak: com.github.wwmm.easyeffects
 
   # ===========================================================================
   # Extended UI — macOS Apps (cask + Mac App Store)
