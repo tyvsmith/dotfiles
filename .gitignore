@@ -5,7 +5,8 @@ vim/bundle/*
 .env
 # Most editor/OS/AI-agent noise is handled by ~/.config/git/ignore (global).
 # Keep only repo-specific overrides here.
-.claude/
+.claude/*
+!.claude/skills/
 .omc/
 # Decrypted plaintext copies for editing; encrypted .age files are committed
 **/decrypted_*
