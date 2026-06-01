@@ -24,11 +24,7 @@ declare -A HYPRPM_REPOS=(
 # Optional git rev pins per repo. Used when upstream main doesn't yet support
 # the hyprland version we run, so we lock to a branch HEAD or commit. Passed
 # as the second arg to `hyprpm add` (ignores hyprpm's own commit locks).
-declare -A HYPRPM_REVS=(
-    # scroll-overview's 0.55 support hasn't landed on main — pin to yayuuu's
-    # "initial support" commit on the 0.55 branch.
-    ["hyprland-scroll-overview"]="107f5a28fcd8fca3aa4383e322262aeec6d3bb60"
-)
+declare -A HYPRPM_REVS=()
 
 # Plugins to enable — limited to the ones I actually run. Each must be exposed
 # by one of the repos above.
