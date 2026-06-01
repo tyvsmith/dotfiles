@@ -183,7 +183,7 @@ smart_auto_submit = false
 [parakeet]
 model = "parakeet-tdt-0.6b-v3"
 #model = "parakeet-unified-en-0.6b" #uses for streaming
-on_demand_loading = false
+on_demand_loading = true
 streaming = false
 
 streaming_chunk_secs = 0.32
