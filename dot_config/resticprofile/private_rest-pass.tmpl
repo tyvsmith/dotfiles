@@ -1,0 +1,5 @@
+{{- /* restic transport password (REST basic auth) — fetched from 1Password once, then cached
+   here. profiles.yaml reads this file to inline it into the repo URL (offline after first apply). */ -}}
+{{- includeTemplate "op-cached-secret" (list
+      ".config/resticprofile/rest-pass"
+      (printf "op://dev-keys/restic-%s/rest-key" .chezmoi.hostname)) | trim -}}

@@ -23,6 +23,14 @@ tests/
 **/*.age
 {{ end }}
 
+{{ if not .backup }}
+# restic backups only run on personal machines (profile backup: true).
+# Skipping the whole config dir keeps the decrypt() in the profile template from
+# even running on servers/containers (which lack the age key).
+.config/resticprofile
+.config/resticprofile/**
+{{ end }}
+
 {{ if ne .profile "devpod" }}
 # Devpod-only tooling
 dot_local/bin/executable_devpod-linuxbrew-fetch

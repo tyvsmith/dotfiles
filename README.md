@@ -152,7 +152,7 @@ dotfiles/
 ├── .chezmoi.toml.tmpl                  # Chezmoi config template
 ├── .chezmoiignore.tmpl                 # Ignore rules (templated)
 ├── .age-public-key                     # Age encryption public key
-├── run_before_00-decrypt.sh.tmpl       # Age key setup (if decrypt enabled)
+├── run_before_01-decrypt.sh.tmpl       # Age key from 1Password/env if missing (restic secrets use self-caching templates)
 ├── run_onchange_01-install-packages.sh.tmpl  # brew bundle
 ├── run_onchange_02-install-fisher.sh.tmpl    # Fisher plugins
 ├── run_onchange_03-configure-tide.sh.tmpl    # Tide prompt config

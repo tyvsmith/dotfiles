@@ -237,6 +237,15 @@ packages:
     desc: "Multipurpose relay for bidirectional data transfer"
     brew: false
 
+  restic:
+    tags: [core]
+    desc: "Fast, secure, deduplicating backup program"
+
+  resticprofile:
+    tags: [core]
+    desc: "Configuration profiles and scheduler for restic"
+    os: linux
+
   # ===========================================================================
   # macOS GNU Tools
   # ===========================================================================

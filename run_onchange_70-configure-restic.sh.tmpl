@@ -1,0 +1,26 @@
+{{ if and (eq .chezmoi.os "linux") .backup -}}
+#!/usr/bin/env bash
+# Register the resticprofile backup/check schedules as systemd --user timers.
+# Gated on the profile's `backup: true` flag — only personal machines run restic;
+# servers/containers (debian-server, devpod, Proxmox/LXC) are deliberately excluded.
+# Reruns automatically when the profile or this script changes (hashes below).
+#   profiles.yaml: {{ include "dot_config/resticprofile/private_profiles.yaml.tmpl" | sha256sum }}
+# (restic secrets are self-caching templates in dot_config/resticprofile/; not hashed — they don't affect schedules)
+set -euo pipefail
+
+if ! command -v resticprofile >/dev/null 2>&1; then
+    echo "resticprofile not installed yet — skipping schedule (will run on next apply)"
+    exit 0
+fi
+
+mkdir -p "${HOME}/.cache/resticprofile" "${HOME}/.local/state/restic-system"
+
+# Creates ~/.config/systemd/user/resticprofile-*.{service,timer}, reloads, and enables them.
+# Only the `default` profile (user HOME backup + check) exists / is scheduled — all
+# user_logged_on timers, so a non-root `chezmoi apply` registers them without sudo.
+# (Scoped by name so re-adding a root `system` profile later won't break this apply.)
+resticprofile --name default schedule
+
+echo "Active resticprofile timers:"
+systemctl --user list-timers 'resticprofile-*' --no-pager 2>/dev/null || true
+{{ end -}}

@@ -16,7 +16,7 @@ elif [[ -s "$AGE_KEY_FILE" ]]; then
     AGE_KEY=$(cat "$AGE_KEY_FILE")
 elif command -v op &>/dev/null && op account list &>/dev/null; then
     echo "Fetching age key from 1Password..."
-    AGE_KEY=$(op read "op://Private/dotfiles-age-key/key")
+    AGE_KEY=$(op read "op://dev-keys/dotfiles-age-key/key")
 else
     echo "Error: No age key found. Options:"
     echo "  1. Set AGE_KEY environment variable"

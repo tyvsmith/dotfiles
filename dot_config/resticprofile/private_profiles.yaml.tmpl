@@ -1,0 +1,119 @@
+{{- /* ============================================================================
+   resticprofile — fleet backup config (chezmoi-templated, renders per machine).
+
+   BACKEND: REST (rest-server on the TrueNAS storage LXC), --append-only.
+   Repo path is ty/<host> (username/host). "ty" is the rest-server htpasswd user;
+   --private-repos confines it to /ty/*, so every machine gets /ty/<host>.
+
+   MACHINES: $host namespaces the repo, so each machine has its own repo under
+   /ty/<host>. Add a machine by giving it a hostname; nothing else changes.
+   Macs use Time Machine instead and render no profiles (see guard).
+
+   SECRETS (two): self-caching .tmpl files (the op-cached-secret partial) fetch from 1Password
+   ONLY when the on-disk cache is missing — never committed to this repo. op is hit on the first
+   apply only; every later render is an offline cache hit.
+     - repo password (encrypts data): private_password.tmpl -> ~/.config/resticprofile/password (password-file below).
+     - transport password (REST basic auth): private_rest-pass.tmpl -> ~/.config/resticprofile/rest-pass,
+       read below and inlined into the repo URL (why THIS file is private_, rendered 0600).
+
+   RETENTION/PRUNE: the server is --append-only, so clients CANNOT forget/prune
+   (those delete data). Retention runs server-side against the dataset; there is
+   deliberately no `retention` block here. `check` is read-only and stays.
+   ============================================================================ */ -}}
+{{- $host := .chezmoi.hostname -}}
+{{- /* transport password: cached on disk by private_rest-pass.tmpl. The shared partial returns
+       the cached file, or fetches from 1Password when it's missing (covers the first apply,
+       before rest-pass is written). Offline on every subsequent render. */ -}}
+{{- $rest_pass := includeTemplate "op-cached-secret" (list
+      ".config/resticprofile/rest-pass"
+      (printf "op://dev-keys/restic-%s/rest-key" .chezmoi.hostname)) | trim -}}
+{{- $repo := printf "rest:https://ty:%s@restic.tysmith.app/ty/%s/" $rest_pass $host -}}
+{{- if ne .chezmoi.os "darwin" }}
+version: "1"
+
+global:
+  default-command: snapshots
+  initialize: false
+  priority: low
+
+# --- $HOME + a staged manifest of system state (user-readable, exits clean) ---
+default:
+  repository: "{{ $repo }}"
+  password-file: "{{ .chezmoi.homeDir }}/.config/resticprofile/password"
+  lock: "{{ .chezmoi.homeDir }}/.cache/resticprofile/default.lock"
+  force-inactive-lock: true
+
+  backup:
+    run-before:
+      - "mkdir -p {{ .chezmoi.homeDir }}/.local/state/restic-system"
+      - "pacman -Qqe  > {{ .chezmoi.homeDir }}/.local/state/restic-system/pacman-explicit.txt 2>/dev/null || true"
+      - "pacman -Qqem > {{ .chezmoi.homeDir }}/.local/state/restic-system/pacman-aur.txt 2>/dev/null || true"
+      - "systemctl list-unit-files --state=enabled --no-legend > {{ .chezmoi.homeDir }}/.local/state/restic-system/systemd-system-enabled.txt 2>/dev/null || true"
+      - "systemctl --user list-unit-files --state=enabled --no-legend > {{ .chezmoi.homeDir }}/.local/state/restic-system/systemd-user-enabled.txt 2>/dev/null || true"
+    source:
+      - "{{ .chezmoi.homeDir }}"
+    exclude-caches: true
+    tag:
+      - "{{ $host }}"
+      - home
+    exclude:
+      # --- re-fetchable / huge ---
+      - "{{ .chezmoi.homeDir }}/.cache"
+      - "{{ .chezmoi.homeDir }}/Dropbox"                       # mirrored separately on the NAS
+      - "{{ .chezmoi.homeDir }}/.local/share/Trash"
+      - "{{ .chezmoi.homeDir }}/.local/share/containers"       # 3.4T of podman images
+      - "{{ .chezmoi.homeDir }}/.var/app/*/cache"
+      - "{{ .chezmoi.homeDir }}/.var/app/*/.cache"
+      # --- dev toolchains/registries (reproducible) ---
+      - "{{ .chezmoi.homeDir }}/.rustup"
+      - "{{ .chezmoi.homeDir }}/.cargo/registry"
+      - "{{ .chezmoi.homeDir }}/.cargo/git"
+      - "{{ .chezmoi.homeDir }}/.npm"
+      - "{{ .chezmoi.homeDir }}/go/pkg"
+      - "{{ .chezmoi.homeDir }}/.local/share/mise/installs"
+      - "**/node_modules"
+      - "**/.venv"
+      - "**/__pycache__"
+      - "**/target/debug"
+      - "**/target/release"
+      # --- Steam: drop installs/caches, KEEP saves (compatdata prefixes + Cloud userdata) ---
+      - "{{ .chezmoi.homeDir }}/.local/share/Steam/steamapps/common"
+      - "{{ .chezmoi.homeDir }}/.local/share/Steam/steamapps/downloading"
+      - "{{ .chezmoi.homeDir }}/.local/share/Steam/steamapps/temp"
+      - "{{ .chezmoi.homeDir }}/.local/share/Steam/steamapps/shadercache"
+      - "{{ .chezmoi.homeDir }}/.local/share/Steam/appcache"
+      - "{{ .chezmoi.homeDir }}/.local/share/Steam/depotcache"
+      # --- app caches/indexes (state kept, rebuildables dropped) ---
+      - "{{ .chezmoi.homeDir }}/.local/share/voxtype/models"   # whisper models; meetings/ kept
+      - "{{ .chezmoi.homeDir }}/.local/share/vicinae/favicon-data"
+      - "{{ .chezmoi.homeDir }}/.local/share/vicinae/file-indexer.db*"
+      # --- never-back-up disk images ---
+      - "**/*.qcow2"
+      - "**/*.iso"
+    schedule: "*-*-* 13:00"
+    # `user` (run while logged out) needs systemd lingering; without it resticprofile
+    # falls back to a system job and a non-root `chezmoi apply` can't create it.
+    # `user_logged_on` is a pure --user timer (Persistent=true catches up missed runs).
+    schedule-permission: user_logged_on
+    schedule-lock-wait: 30m
+
+  # NOTE: no `retention` block — server is --append-only (clients can't forget/prune).
+  # Retention is enforced server-side against tank/backups/machines/ty/<host>.
+
+  check:
+    schedule: "*-*-01 04:00"
+    schedule-permission: user_logged_on   # see backup note above
+    schedule-lock-wait: 1h
+    read-data-subset: "1/12"
+
+# NOTE: a root-owned `system` profile (backing up /etc, NetworkManager secrets, /boot, etc.)
+# was intentionally dropped for now — only the user HOME backup runs. The `default` run-before
+# above still stages a user-readable manifest of system state (explicit/AUR package lists,
+# enabled systemd units) into ~/.local/state/restic-system, so a record of system config is
+# captured without a root timer. Re-add a `system:` profile here if/when full /etc backup is wanted.
+{{- else }}
+# macOS ({{ $host }}): no resticprofile — this machine uses Time Machine to the NAS.
+version: "1"
+global:
+  default-command: version
+{{- end }}

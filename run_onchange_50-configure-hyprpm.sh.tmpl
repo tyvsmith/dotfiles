@@ -57,5 +57,22 @@ done
 
 # Updates plugins to match current hyprland — needs hyprland headers; skipped
 # silently if hyprland isn't usable yet (fresh install before reboot, etc.).
+# NB: never run hyprpm under sudo. Doing so builds plugins into
+# /var/cache/hyprpm/$USER as root, after which the user session can't load
+# them ("Invalid dispatcher: ...") and a later user-run `hyprpm update` can't
+# overwrite the root-owned state ("Failed to write plugin state").
 hyprpm update 2>/dev/null || echo "warn: hyprpm update failed (hyprland headers missing?)"
+
+# hyprpm stages new plugin state at $XDG_RUNTIME_DIR/hyprpm/.temp-state, then
+# renames it onto its cache dir (/var/cache/hyprpm/$USER). When those live on
+# different filesystems — XDG_RUNTIME_DIR is tmpfs, /var/cache is often btrfs —
+# the rename fails with EXDEV and hyprpm reports "Failed to write plugin state",
+# leaving freshly built plugins uncommitted. Finish the commit with a copy so
+# the next `hyprpm reload -n` (hypr autostart) loads the rebuilt plugins.
+hyprpm_staged="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hyprpm/.temp-state"
+hyprpm_state="/var/cache/hyprpm/$(id -un)/state.toml"
+if [[ -f "$hyprpm_staged" && -w "$(dirname "$hyprpm_state")" ]] && ! cmp -s "$hyprpm_staged" "$hyprpm_state"; then
+    echo "hyprpm: committing staged plugin state (cross-filesystem rename workaround)"
+    cp -f "$hyprpm_staged" "$hyprpm_state"
+fi
 {{ end -}}

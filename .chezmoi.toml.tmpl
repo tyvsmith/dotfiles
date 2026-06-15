@@ -46,13 +46,14 @@
 {{- $tags := $profileData.tags -}}
 {{- $wantsDecrypt := or (get $profileData "decrypt") false -}}
 {{- $work := or (get $profileData "work") false -}}
+{{- $backup := or (get $profileData "backup") false -}}
 {{- $de := "" -}}
 {{- if hasKey $profileData "de" -}}{{- $de = $profileData.de -}}
 {{- end -}}
 
-{{- /* Enable encryption when the profile declares it. The run_before decrypt
-     script ensures the key exists (via env var, 1Password, or manual placement)
-     before chezmoi processes any encrypted files. */ -}}
+{{- /* Enable encryption when the profile declares it. run_before_01-decrypt ensures the
+     age key exists (via env var, 1Password, or manual placement) before chezmoi
+     processes any encrypted files. */ -}}
 
 {{ if $wantsDecrypt -}}
 encryption = "age"
@@ -63,6 +64,7 @@ encryption = "age"
     tags = "{{ $tags }}"
     work = {{ $work }}
     decrypt = {{ $wantsDecrypt }}
+    backup = {{ $backup }}
     de = "{{ $de }}"
 {{ if $wantsDecrypt }}
 [age]
