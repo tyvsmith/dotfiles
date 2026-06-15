@@ -87,6 +87,8 @@ default:
       - "{{ .chezmoi.homeDir }}/.local/share/voxtype/models"   # whisper models; meetings/ kept
       - "{{ .chezmoi.homeDir }}/.local/share/vicinae/favicon-data"
       - "{{ .chezmoi.homeDir }}/.local/share/vicinae/file-indexer.db*"
+      # --- unreadable junk (read bits stripped → caused restic exit-3 warnings) ---
+      - "{{ .chezmoi.homeDir }}/.nv"                           # NVIDIA GPU shader/compute cache (rebuildable)
       # --- never-back-up disk images ---
       - "**/*.qcow2"
       - "**/*.iso"
