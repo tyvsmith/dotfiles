@@ -27,11 +27,18 @@ resticprofile --name default schedule
 # Full binary path avoids sudo's secure_path dropping ~/.local or brew bin dirs.
 RP="$(command -v resticprofile)"
 RP_CONF="${HOME}/.config/resticprofile/profiles.yaml"
-if sudo -n true 2>/dev/null; then
-    echo "Scheduling root system profile (/etc) timer…"
-    sudo "$RP" --config "$RP_CONF" --name system schedule
+# Escalate when we can: passwordless sudo (no prompt) OR an interactive apply where sudo can
+# prompt on the terminal (chezmoi connects the script's stdin to the tty). Fall back to printing
+# the command for non-interactive applies (cron/CI/piped). Non-fatal: a declined/failed prompt
+# warns and continues rather than aborting `chezmoi apply` (the user job is already scheduled).
+if sudo -n true 2>/dev/null || [[ -t 0 ]]; then
+    echo "Scheduling root system profile (/etc) timer (may prompt for sudo)…"
+    if ! sudo "$RP" --config "$RP_CONF" --name system schedule; then
+        echo "WARN: could not schedule the /etc timer (sudo declined/failed). Run later:"
+        echo "  sudo $RP --config $RP_CONF --name system schedule"
+    fi
 else
-    echo "NOTE: the /etc backup needs a root timer. Passwordless sudo unavailable — run once:"
+    echo "NOTE: the /etc backup needs a root timer. No passwordless sudo and no tty — run once:"
     echo "  sudo $RP --config $RP_CONF --name system schedule"
 fi
 
