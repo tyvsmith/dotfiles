@@ -17,8 +17,6 @@ command -v hyprpm >/dev/null 2>&1 || { echo "hyprpm not installed, skipping"; ex
 declare -A HYPRPM_REPOS=(
     ["hyprland-plugins"]="https://github.com/hyprwm/hyprland-plugins"
     ["hyprland-scroll-overview"]="https://github.com/yayuuu/hyprland-scroll-overview"
-    ["HyprGlass"]="https://github.com/hyprnux/hyprglass"
-    ["dynamic-cursors"]="https://github.com/virtcode/hypr-dynamic-cursors"
 )
 
 # Optional git rev pins per repo. Used when upstream main doesn't yet support
@@ -28,7 +26,7 @@ declare -A HYPRPM_REVS=()
 
 # Plugins to enable — limited to the ones I actually run. Each must be exposed
 # by one of the repos above.
-HYPRPM_ENABLE=(hyprfocus scrolloverview hyprglass dynamic-cursors)
+HYPRPM_ENABLE=(hyprfocus scrolloverview)
 
 # `hyprpm list` includes ANSI color codes — strip for clean grepping.
 state() { hyprpm list 2>/dev/null | sed -E $'s/\x1b\\[[0-9;]*m//g'; }
@@ -57,5 +55,22 @@ done
 
 # Updates plugins to match current hyprland — needs hyprland headers; skipped
 # silently if hyprland isn't usable yet (fresh install before reboot, etc.).
+# NB: never run hyprpm under sudo. Doing so builds plugins into
+# /var/cache/hyprpm/$USER as root, after which the user session can't load
+# them ("Invalid dispatcher: ...") and a later user-run `hyprpm update` can't
+# overwrite the root-owned state ("Failed to write plugin state").
 hyprpm update 2>/dev/null || echo "warn: hyprpm update failed (hyprland headers missing?)"
+
+# hyprpm stages new plugin state at $XDG_RUNTIME_DIR/hyprpm/.temp-state, then
+# renames it onto its cache dir (/var/cache/hyprpm/$USER). When those live on
+# different filesystems — XDG_RUNTIME_DIR is tmpfs, /var/cache is often btrfs —
+# the rename fails with EXDEV and hyprpm reports "Failed to write plugin state",
+# leaving freshly built plugins uncommitted. Finish the commit with a copy so
+# the next `hyprpm reload -n` (hypr autostart) loads the rebuilt plugins.
+hyprpm_staged="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hyprpm/.temp-state"
+hyprpm_state="/var/cache/hyprpm/$(id -un)/state.toml"
+if [[ -f "$hyprpm_staged" && -w "$(dirname "$hyprpm_state")" ]] && ! cmp -s "$hyprpm_staged" "$hyprpm_state"; then
+    echo "hyprpm: committing staged plugin state (cross-filesystem rename workaround)"
+    cp -f "$hyprpm_staged" "$hyprpm_state"
+fi
 {{ end -}}

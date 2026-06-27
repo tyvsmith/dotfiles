@@ -1,0 +1,48 @@
+{{ if and (eq .chezmoi.os "linux") .backup -}}
+#!/usr/bin/env bash
+# Register the resticprofile backup/check schedules as systemd --user timers.
+# Gated on the profile's `backup: true` flag — only personal machines run restic;
+# servers/containers (debian-server, devpod, Proxmox/LXC) are deliberately excluded.
+# Reruns automatically when the profile or this script changes (hashes below).
+#   profiles.yaml: {{ include "dot_config/resticprofile/private_profiles.yaml.tmpl" | sha256sum }}
+# (restic secrets are self-caching templates in dot_config/resticprofile/; not hashed — they don't affect schedules)
+set -euo pipefail
+
+if ! command -v resticprofile >/dev/null 2>&1; then
+    echo "resticprofile not installed yet — skipping schedule (will run on next apply)"
+    exit 0
+fi
+
+mkdir -p "${HOME}/.cache/resticprofile" "${HOME}/.local/state/restic-system"
+
+# Creates ~/.config/systemd/user/resticprofile-*.{service,timer}, reloads, and enables them.
+# The `default` profile (user HOME backup + check) runs as user_logged_on timers, so a
+# non-root `chezmoi apply` registers them without sudo. Scoped by name so the root `system`
+# profile (handled below) doesn't get pulled into the user scope.
+resticprofile --name default schedule
+
+# The `system` profile backs up /etc and uses schedule-permission: system → a ROOT timer.
+# A non-root apply can't create system timers, so register it via sudo. resticprofile run as
+# root has HOME=/root, so it won't find the user config unless pointed at it with --config.
+# Full binary path avoids sudo's secure_path dropping ~/.local or brew bin dirs.
+RP="$(command -v resticprofile)"
+RP_CONF="${HOME}/.config/resticprofile/profiles.yaml"
+# Escalate when we can: passwordless sudo (no prompt) OR an interactive apply where sudo can
+# prompt on the terminal (chezmoi connects the script's stdin to the tty). Fall back to printing
+# the command for non-interactive applies (cron/CI/piped). Non-fatal: a declined/failed prompt
+# warns and continues rather than aborting `chezmoi apply` (the user job is already scheduled).
+if sudo -n true 2>/dev/null || [[ -t 0 ]]; then
+    echo "Scheduling root system profile (/etc) timer (may prompt for sudo)…"
+    if ! sudo "$RP" --config "$RP_CONF" --name system schedule; then
+        echo "WARN: could not schedule the /etc timer (sudo declined/failed). Run later:"
+        echo "  sudo $RP --config $RP_CONF --name system schedule"
+    fi
+else
+    echo "NOTE: the /etc backup needs a root timer. No passwordless sudo and no tty — run once:"
+    echo "  sudo $RP --config $RP_CONF --name system schedule"
+fi
+
+echo "Active resticprofile timers:"
+systemctl --user list-timers 'resticprofile-*' --no-pager 2>/dev/null || true
+systemctl list-timers 'resticprofile-*' --no-pager 2>/dev/null || true
+{{ end -}}

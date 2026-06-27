@@ -8,6 +8,7 @@
 #   brew/pacman/apt/dnf/rpm_ostree/flatpak/appimage: which package managers to enable
 #   work:     work machine (system SSH agent, corporate configs)
 #   decrypt:  enable age decryption of private configs
+#   backup:   personal machine — install+schedule restic backups (default false; servers/containers stay off)
 #
 # Profile is selected interactively during `chezmoi init`, or via:
 #   DOTFILES_PROFILE=arch chezmoi init
@@ -40,6 +41,7 @@ profiles:
     flatpak: true
     appimage: true
     decrypt: true
+    backup: true   # personal machine — runs restic backups to the homelab rest-server
 
   # --- Debian/Ubuntu ---
   debian-server:
