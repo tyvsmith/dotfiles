@@ -17,8 +17,6 @@ command -v hyprpm >/dev/null 2>&1 || { echo "hyprpm not installed, skipping"; ex
 declare -A HYPRPM_REPOS=(
     ["hyprland-plugins"]="https://github.com/hyprwm/hyprland-plugins"
     ["hyprland-scroll-overview"]="https://github.com/yayuuu/hyprland-scroll-overview"
-    ["HyprGlass"]="https://github.com/hyprnux/hyprglass"
-    ["dynamic-cursors"]="https://github.com/virtcode/hypr-dynamic-cursors"
 )
 
 # Optional git rev pins per repo. Used when upstream main doesn't yet support
@@ -28,7 +26,7 @@ declare -A HYPRPM_REVS=()
 
 # Plugins to enable — limited to the ones I actually run. Each must be exposed
 # by one of the repos above.
-HYPRPM_ENABLE=(hyprfocus scrolloverview hyprglass dynamic-cursors)
+HYPRPM_ENABLE=(hyprfocus scrolloverview)
 
 # `hyprpm list` includes ANSI color codes — strip for clean grepping.
 state() { hyprpm list 2>/dev/null | sed -E $'s/\x1b\\[[0-9;]*m//g'; }
