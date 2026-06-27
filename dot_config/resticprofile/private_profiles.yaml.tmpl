@@ -181,11 +181,9 @@ system:
     schedule-lock-wait: 30m
 
   # No `retention` — server is --append-only; retention runs server-side (see default).
-  check:
-    schedule: "*-*-01 04:30"
-    schedule-permission: system
-    schedule-lock-wait: 1h
-    read-data-subset: "1/12"
+  # No `check` either — `restic check` verifies the whole REPOSITORY (not a tag/source), and
+  # `system` shares the repo with `default`, so default/check already validates the system-tagged
+  # /etc snapshots. A second check here would just re-verify the same repo. One check is enough.
 {{- else }}
 # macOS ({{ $host }}): no resticprofile — this machine uses Time Machine to the NAS.
 version: "1"
