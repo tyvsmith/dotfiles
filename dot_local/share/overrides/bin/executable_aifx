@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# aifx proxy: keeps the claude settings-repair override in the loop. The override
+# dir is first on PATH, so this shadows the real aifx in any shell (and for hook/
+# tool calls). It owns ~/.local/bin/claude (aifx's first binary candidate) as an
+# ephemeral symlink — created before invoking aifx, removed on exit. Find the real
+# aifx on PATH by canonical path, excluding ourselves.
+_canon() { realpath "$1" 2>/dev/null || readlink -f "$1" 2>/dev/null || printf '%s\n' "$1"; }
+SELF="$(_canon "$0")"
+REAL_AIFX=""
+while IFS= read -r _cand; do
+  [[ "$(_canon "$_cand")" != "$SELF" ]] && { REAL_AIFX="$_cand"; break; }
+done < <(type -aP aifx 2>/dev/null)
+[[ -n "$REAL_AIFX" ]] || { echo "aifx-override: no real aifx on PATH" >&2; exit 1; }
+
+LINK="$HOME/.local/bin/claude"
+OVERRIDE="$(dirname "$SELF")/claude"   # sibling claude override
+remove_link() { rm -f "$LINK"; }
+
+# Run aifx with ~/.local/bin/claude set to $1 ("" => absent) for the duration,
+# then remove the link however aifx exits.
+run_with_link() {
+  local target="$1"
+  shift
+  if [[ -n "$target" ]]; then ln -sf "$target" "$LINK"; else remove_link; fi
+  trap remove_link EXIT
+  "$REAL_AIFX" "$@"
+  exit $?
+}
+
+# run: route through the override + force --no-update (updates come from the
+# package manager). install/update: keep the link absent so aifx resolves the real
+# binary via its own candidate list. Everything else passes straight through.
+if [[ "${1:-}" == "agent" && "${3:-}" == "claude" ]]; then
+  case "${2:-}" in
+    run)            run_with_link "$OVERRIDE" agent run claude --no-update "${@:4}" ;;
+    install | update) run_with_link "" agent "$2" claude "${@:4}" ;;
+  esac
+fi
+
+exec "$REAL_AIFX" "$@"

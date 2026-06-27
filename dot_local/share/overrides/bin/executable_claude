@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# claude proxy: preserve the user's settings.json deltas across aifx's enforced
+# merge. Snapshot the enforced baseline, replay tracked deltas before launch, then
+# re-derive them on exit (so claude's shutdown writes like /model-save are caught).
+# Reached directly and via the ephemeral ~/.local/bin/claude symlink, so find the
+# real claude on PATH by canonical path, excluding ourselves.
+_canon() { realpath "$1" 2>/dev/null || readlink -f "$1" 2>/dev/null || printf '%s\n' "$1"; }
+SELF="$(_canon "$0")"
+REAL_CLAUDE=""
+while IFS= read -r _cand; do
+  [[ "$(_canon "$_cand")" != "$SELF" ]] && { REAL_CLAUDE="$_cand"; break; }
+done < <(type -aP claude 2>/dev/null)
+[[ -n "$REAL_CLAUDE" ]] || { echo "claude-override: no real claude on PATH" >&2; exit 1; }
+
+SETTINGS="$HOME/.claude/settings.json"
+USER_CHANGED="$HOME/.claude/settings.user-changed.json"
+CLEAN_SNAPSHOT="$HOME/.claude/settings.clean.json"
+
+# Snapshot the enforced baseline, then replay user deltas (null value = delete key).
+if [[ -f "$SETTINGS" ]]; then
+  cp "$SETTINGS" "$CLEAN_SNAPSHOT" 2>/dev/null || true
+fi
+if [[ -f "$SETTINGS" && -f "$USER_CHANGED" ]]; then
+  tmp=$(mktemp)
+  if jq -n --slurpfile cur "$SETTINGS" --slurpfile user "$USER_CHANGED" '
+    ($cur[0] * $user[0])
+    | walk(if type == "object" then with_entries(select(.value != null)) else . end)
+  ' >"$tmp"; then
+    mv "$tmp" "$SETTINGS"
+  else
+    rm -f "$tmp"
+  fi
+fi
+
+# Re-derive deltas by diffing final settings against the baseline. A differing
+# value is recorded verbatim (user wins, round-trips); a recorded deletion (null)
+# is carried forward only while the key is still absent live, so a later real
+# value isn't stomped back to null.
+_write_diff() {
+  [[ -f "$SETTINGS" && -f "$CLEAN_SNAPSHOT" ]] || return 0
+  local tmp
+  tmp=$(mktemp)
+  if jq -n --slurpfile cur "$SETTINGS" --slurpfile clean "$CLEAN_SNAPSHOT" --slurpfile prev "$USER_CHANGED" '
+    def diff($c):
+      . as $v |
+      if ($v | type) == "object" and ($c | type) == "object" then
+        (reduce ($v | keys_unsorted[]) as $k ({};
+          if ($c | has($k)) then
+            ($v[$k] | diff($c[$k])) as $sub |
+            if $sub == "__SAME__" then . else . + {($k): $sub} end
+          else
+            . + {($k): $v[$k]}
+          end
+        )) as $r |
+        (reduce ($c | keys_unsorted[]) as $k ($r;
+          if ($v | has($k)) then . else . + {($k): null} end
+        )) as $r |
+        if ($r | length) == 0 then "__SAME__" else $r end
+      else
+        if $v == $c then "__SAME__" else $v end
+      end;
+    ($cur[0] | diff($clean[0]) | if . == "__SAME__" then {} else . end) as $new |
+    ($prev[0] // {}) as $old |
+    ($old | [paths(. == null)]) as $null_paths |
+    reduce $null_paths[] as $p ($new;
+      if ($cur[0] | getpath($p)) == null then setpath($p; null) else . end)
+  ' >"$tmp"; then
+    mv "$tmp" "$USER_CHANGED"
+  else
+    rm -f "$tmp"
+  fi
+}
+trap _write_diff EXIT
+
+status=0
+"$REAL_CLAUDE" "$@" || status=$?
+exit "$status"
