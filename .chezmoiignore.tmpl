@@ -25,34 +25,34 @@ tests/
 
 {{ if ne .profile "devpod" }}
 # Devpod-only tooling
-dot_local/bin/executable_devpod-linuxbrew-fetch
+.local/bin/devpod-linuxbrew-fetch
 {{ end }}
 
 {{ if ne .chezmoi.os "darwin" }}
 # macOS-only apps — skip on Linux
-dot_config/borders/
+.config/borders/
 {{ end }}
 
 {{ if ne .de "hyprland-omarchy" }}
 # Hyprland+omarchy ecosystem — skip on non-Hyprland systems
-dot_config/hypr/
-dot_config/quickshell/
-dot_config/hypr-dock/
-dot_config/xdg-desktop-portal/
-dot_config/systemd/user/xdg-desktop-portal-gnome.service.d/
-dot_config/fish/functions/iso2sd.fish
-dot_local/bin/executable_lan-mouse-mode
-dot_local/share/overrides/bin/executable_omarchy-fetch-webapp-icon
-dot_local/share/overrides/bin/executable_omarchy-launch-webapp
-dot_local/share/overrides/bin/executable_omarchy-webapp-install
-dot_config/omarchy/
-dot_config/pacman/
-dot_config/voxtype/
-dot_config/systemd/user/voxtype.service.d/
-dot_local/bin/executable_voxtype-detect-category
-dot_local/bin/executable_voxtype-smart-toggle
-dot_local/bin/executable_voxtype-cleanup
-dot_local/share/overrides/bin/executable_ydotool
+.config/hypr/
+.config/quickshell/
+.config/hypr-dock/
+.config/xdg-desktop-portal/
+.config/systemd/user/xdg-desktop-portal-gnome.service.d/
+.config/fish/functions/iso2sd.fish
+.local/bin/lan-mouse-mode
+.local/share/overrides/bin/omarchy-fetch-webapp-icon
+.local/share/overrides/bin/omarchy-launch-webapp
+.local/share/overrides/bin/omarchy-webapp-install
+.config/omarchy/
+.config/pacman/
+.config/voxtype/
+.config/systemd/user/voxtype.service.d/
+.local/bin/voxtype-detect-category
+.local/bin/voxtype-smart-toggle
+.local/bin/voxtype-cleanup
+.local/share/overrides/bin/ydotool
 {{ end }}
 
 {{ if not .work }}
