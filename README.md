@@ -41,18 +41,15 @@ This will:
 
 ## Profiles
 
-Each profile fully specifies a machine setup: tier, package managers, work mode, and decryption.
+Each profile fully specifies a machine setup: category tags, package managers, work mode, decryption, and backups. See `.chezmoidata/profiles.yaml` for the source of truth.
 
-| Profile | Tier | Description |
-|---------|------|-------------|
-| `macos-personal` | 3 | Personal Mac — full dev + GUI apps |
-| `macos-work` | 3 | Work Mac — corporate dev + GUI apps |
-| `arch` | 3 | Arch Linux desktop — paru + flatpak |
-| `debian-server` | 1 | Debian/Ubuntu server — CLI only |
-| `debian-dev` | 2 | Debian/Ubuntu dev — apt |
-| `debian-brew` | 2 | Debian/Ubuntu dev — Homebrew + flatpak |
-| `devpod` | 2 | Work devpod — Homebrew |
-| `fedora` | 3 | Fedora Workstation — dnf + flatpak |
+| Profile | Pkg Managers | Work | Decrypt | Backup | Description |
+|---------|--------------|------|---------|--------|-------------|
+| `macos-work` | brew | yes | yes | | Work Mac — corporate dev + GUI (Time Machine) |
+| `arch-desktop` | pacman, flatpak, appimage | | yes | yes | Arch Linux desktop — paru + flatpak |
+| `debian-server` | apt | | | | Debian/Ubuntu server — CLI only |
+| `devpod` | brew | yes | | | Debian/Ubuntu dev — Homebrew |
+| `silverblue` | brew, rpm-ostree, flatpak, appimage | | yes | | Fedora Silverblue/Bazzite — immutable |
 | `silverblue` | 3 | Silverblue/Bazzite — Homebrew + flatpak |
 
 **Package tiers:**

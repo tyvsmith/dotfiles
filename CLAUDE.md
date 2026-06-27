@@ -49,18 +49,19 @@ Each profile (defined in `.chezmoidata/profiles.yaml`) fully specifies:
 - **Package managers**: `brew`, `pacman`, `apt`, `dnf`, `rpm_ostree`, `flatpak`
 - **`work`**: work machine (system SSH agent, corporate configs)
 - **`decrypt`**: enable age decryption of private configs
+- **`backup`**: personal machine — install the restic stack and schedule backups (default off; servers/containers/Macs stay off, Macs use Time Machine)
 
 If no profile is specified, auto-detects from distro (macOS → `macos-work`, Arch → `arch-desktop`, etc.).
 
 **Available profiles:**
 
-| Profile | Tags | Pkg Managers | Work | Decrypt | Description |
-|---|---|---|---|---|---|
-| `macos-work` | core, container, dev, ai, ui, ui-extra | brew | yes | yes | Work Mac — corporate dev + GUI |
-| `arch-desktop` | core, container, dev, ai, hardware, ui, ui-extra, gaming | pacman, flatpak, appimage | | yes | Arch Linux desktop |
-| `debian-server` | core | apt | | | Debian/Ubuntu server — CLI only |
-| `devpod` | core | brew | yes | no | Debian/Ubuntu dev |
-| `silverblue` | core, container, dev, ai, hardware, ui, ui-extra, gaming | brew, rpm_ostree, flatpak, appimage | | yes | Silverblue/Bazzite immutable |
+| Profile | Tags | Pkg Managers | Work | Decrypt | Backup | Description |
+|---|---|---|---|---|---|---|
+| `macos-work` | core, container, dev, ai, ui, ui-extra | brew | yes | yes | | Work Mac — corporate dev + GUI (Time Machine) |
+| `arch-desktop` | core, container, dev, ai, hardware, ui, ui-extra, gaming | pacman, flatpak, appimage | | yes | yes | Arch Linux desktop |
+| `debian-server` | core | apt | | | | Debian/Ubuntu server — CLI only |
+| `devpod` | core | brew | yes | no | | Debian/Ubuntu dev |
+| `silverblue` | core, container, dev, ai, hardware, ui, ui-extra, gaming | brew, rpm_ostree, flatpak, appimage | | yes | | Silverblue/Bazzite immutable |
 
 **Package categories:**
 - **core** (all machines): Shell (fish, atuin, zoxide), modern CLI tools (eza, bat, fd, ripgrep, etc.), git, neovim, tmux, essential utils
@@ -123,7 +124,8 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 40-49  Custom binaries (e.g. THPM bootstrap)
 50-59  Tool configuration (e.g. hyprpm plugin sync)
 60-69  Shell configuration
-70+    Future custom
+70-79  Backup & data services (e.g. restic/resticprofile timers)
+80+    Future custom
 ```
 
 | Script | Description |
@@ -142,6 +144,17 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_50-configure-hyprpm.sh.tmpl` | Adds hyprpm repos and enables declared plugins; omarchy-only |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_61-configure-tide.sh.tmpl` | Configures Tide prompt |
+| `run_onchange_70-configure-restic.sh.tmpl` | Registers resticprofile systemd timers (user `default` + root `system`/etc); `backup` profiles only |
+
+### Backups (restic + resticprofile)
+
+`backup: true` profiles run [resticprofile](https://creativeprojects.github.io/resticprofile/) against a REST server on the homelab NAS (`--append-only`, per-host repo `ty/<host>`). Config: `dot_config/resticprofile/private_profiles.yaml.tmpl`.
+
+- **Two profiles**: `default` (user `$HOME` + a staged manifest of system state → user-scoped `user_logged_on` timers) and `system` (`/etc` as root → a root timer; needs one sudo escalation, see below).
+- **Secrets** (never committed): repo encryption key + REST transport key, fetched from `op://dev-keys/restic-<host>/*` once via the `op-cached-secret` partial, then served from on-disk cache (`~/.config/resticprofile/{password,rest-pass}`).
+- **Manifest**: `default` stages package/toolchain lists (pacman, AUR, flatpak, AppImage, brew, cargo, npm, pipx, uv, mise, go) and enabled systemd units into `~/.local/state/restic-system/`, captured by the `$HOME` backup — a record of system state without a root timer.
+- **Excludes** keep the repo lean (verified ~39 GiB of a 4.9 TB home): caches, container/VM images, toolchain registries, build outputs, Steam installs (saves kept), local `~/Backups`. No `retention` block — pruning is server-side (clients can't forget against `--append-only`).
+- **Root `system` timer**: a non-root `chezmoi apply` cannot create system timers. `run_onchange_70` registers it via `sudo -n` if passwordless sudo is available, otherwise it prints the one `sudo … --name system schedule` command to run by hand. The user `default` timers always register without sudo.
 
 ## Tests
 

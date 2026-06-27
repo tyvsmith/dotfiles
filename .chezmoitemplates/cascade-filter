@@ -20,10 +20,10 @@
     absent  = no restriction (installs on all profiles)
     string  = only on profiles where de matches (e.g., hyprland-omarchy)
 
-  work/decrypt fields are tri-state:
+  work/decrypt/backup fields are tri-state:
     absent  = no restriction (installs on all profiles)
-    true    = only on profiles where work/decrypt is true
-    false   = only on profiles where work/decrypt is false
+    true    = only on profiles where work/decrypt/backup is true
+    false   = only on profiles where work/decrypt/backup is false
 
   Parameters (via dict):
     .root      - root template context ($)
@@ -50,6 +50,7 @@
 {{- $de_ok := or (not (hasKey $pkg "de")) (eq (default "" $pkg.de) .root.de) -}}
 {{- $work_ok := or (not (hasKey $pkg "work")) (eq $pkg.work .root.work) -}}
 {{- $decrypt_ok := or (not (hasKey $pkg "decrypt")) (eq $pkg.decrypt .root.decrypt) -}}
+{{- $backup_ok := or (not (hasKey $pkg "backup")) (eq $pkg.backup .root.backup) -}}
 
 {{- /* Opt-in managers: require their field to exist and be truthy */ -}}
 {{- $field_ok := true -}}
@@ -81,7 +82,7 @@
 {{- else if $avail_appimage -}}{{- $winner = "appimage" -}}
 {{- end -}}
 
-{{- if and $enabled $tags_ok $os_ok $de_ok $work_ok $decrypt_ok $field_ok (eq $winner $mgr) -}}
+{{- if and $enabled $tags_ok $os_ok $de_ok $work_ok $decrypt_ok $backup_ok $field_ok (eq $winner $mgr) -}}
 {{-   $resolved := $display -}}
 {{-   if and (eq $mgr "brew") (hasKey $pkg "brew") -}}
 {{-     $resolved = index $pkg "brew" -}}

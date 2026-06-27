@@ -237,14 +237,18 @@ packages:
     desc: "Multipurpose relay for bidirectional data transfer"
     brew: false
 
+  # restic/resticprofile install ONLY on profiles with `backup: true` (cascade-filter
+  # backup gate) — keeps servers/containers/Macs (Time Machine) free of the backup stack.
   restic:
     tags: [core]
     desc: "Fast, secure, deduplicating backup program"
+    backup: true
 
   resticprofile:
     tags: [core]
     desc: "Configuration profiles and scheduler for restic"
     os: linux
+    backup: true
 
   # ===========================================================================
   # macOS GNU Tools
