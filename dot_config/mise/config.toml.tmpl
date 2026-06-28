@@ -1,9 +1,17 @@
 {{ if contains "dev" .tags -}}
+# NOTE: python intentionally NOT a global tool. mise shims fall through to the
+# next binary on PATH when a tool isn't configured, so leaving python out here
+# makes `python3`/`pip` resolve to /usr/bin/python3 everywhere by default —
+# which is what pacman/paru packages (#!/usr/bin/env python3, e.g. virt-manager,
+# needs system gi/PyGObject) expect. Opt into mise python per-project via a
+# .mise.toml (`mise use python@<ver>`), or ad-hoc with `mise shell python@latest`.
 [tools]
 bun = "latest"
 node = "latest"
 rust = "latest"
 go = "latest"
 java = "latest"
-python = "latest"
+
+[settings]
+idiomatic_version_file_enable_tools = ["node", "python", "go", "ruby", "java", "rust"]
 {{ end -}}
