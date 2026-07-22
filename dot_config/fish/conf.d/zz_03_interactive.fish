@@ -37,10 +37,11 @@ if status is-interactive
         end
     end
 
-    # Auto-activate Python virtualenvs on `cd` (any repo with a .venv). Required
-    # because we use mise --shims, which don't run the cd hook that mise's
-    # python.uv_venv_auto relies on. The function autoloads from
-    # ~/.config/fish/functions/__auto_venv.fish; calling it here loads the file
-    # (registering its --on-variable PWD handler) and activates the start dir.
+    # Auto-activate Python virtualenvs on `cd` (any repo with a .venv). mise's
+    # python.uv_venv_auto only covers projects with mise-managed python, which
+    # is intentionally not a global tool — this owns plain-.venv repos. The
+    # function autoloads from ~/.config/fish/functions/__auto_venv.fish; calling
+    # it here loads the file (registering its --on-variable PWD handler) and
+    # activates the start dir.
     __auto_venv
 end
