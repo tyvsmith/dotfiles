@@ -19,7 +19,11 @@ fish_add_path -a --path $OMARCHY_PATH/bin
 {{ end -}}
 
 # Mise - polyglot runtime version manager (Java, Python, Node, etc.)
-__cached_source mise activate --shims fish
+# PATH activation (not --shims): a fish_prompt hook runs `mise hook-env`, which
+# puts the real tool bin dirs (incl. ~/.cargo/bin) on PATH — so binaries added
+# by `cargo install` / `npm i -g` work without a `mise reshim`. hook-env keeps
+# entries added after activation (like the overrides move below) in front.
+__cached_source mise activate fish
 
 # Custom bins
 fish_add_path -a --path ~/.local/bin

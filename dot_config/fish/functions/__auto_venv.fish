@@ -1,8 +1,8 @@
 function __auto_venv --on-variable PWD --description 'Auto-activate the nearest Python .venv on cd'
     # Auto-activate Python virtualenvs on `cd` for any repo that has a .venv —
-    # including uv projects: mise's python.uv_venv_auto only fires through the
-    # `mise activate` HOOK, which we don't run (we use --shims), so this function
-    # owns ALL interactive venv activation. Activates the nearest ancestor .venv,
+    # including uv projects: mise's python.uv_venv_auto only covers projects with
+    # mise-managed python (intentionally not a global tool), so this function
+    # owns plain-.venv activation. Activates the nearest ancestor .venv,
     # deactivates on leaving its tree, and never touches a venv we didn't activate
     # (manual / mise) — we only ever deactivate the one we started (__auto_venv_dir).
     #

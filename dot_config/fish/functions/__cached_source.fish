@@ -3,14 +3,15 @@ function __cached_source --description 'Source a command output with stale-while
     # Example: __cached_source zoxide init fish
     # Example: __cached_source /home/linuxbrew/.linuxbrew/bin/brew shellenv
     #
-    # Caches output to ~/.cache/fish/<name>.fish
+    # Caches output to ~/.cache/fish/<tool>-<subcmds>.fish — the subcommand is
+    # part of the cache key, so changing args (e.g. dropping a flag) invalidates.
     # On cache hit: sources immediately (zero validation cost — all builtins)
     # If tool binary is newer than cache: regenerates in background for next startup
     # Accepts full paths — uses basename for the cache filename.
 
     set -l tool $argv[1]
     set -l subcmd $argv[2..-1]
-    set -l name (string replace -r '.*/' '' $tool)
+    set -l name (string join '-' (string replace -r '.*/' '' $tool) $subcmd | string replace -a '/' '-')
 
     set -l tool_path (command -s $tool 2>/dev/null)
     if test -z "$tool_path"
@@ -31,8 +32,9 @@ function __cached_source --description 'Source a command output with stale-while
     else
         # Cold start: generate synchronously
         mkdir -p $cache_dir
-        # Clean up old versioned cache files (previous naming scheme)
-        for old in $cache_dir/$name.*.fish
+        # Clean up cache files from previous naming schemes (<tool>.fish, <tool>.<ver>.fish)
+        set -l base (string replace -r '.*/' '' $tool)
+        for old in $cache_dir/$base.fish $cache_dir/$base.*.fish
             command rm -f $old
         end
         $tool $subcmd >$cache_file
