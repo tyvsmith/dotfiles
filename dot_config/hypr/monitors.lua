@@ -52,9 +52,21 @@ local MONITOR_HDR = {
   sdrsaturation = 1.0,
 }
 
--- Note: no GDK_SCALE here. Stock monitors.lua exports GDK_SCALE=2, which
--- doubles every GTK app on this 5120x2160 panel at scale 1. The 3.x
--- monitors.conf commented that line out for the same reason.
+-- Note: no GDK_SCALE here, matching the 3.x monitors.conf, which commented out
+-- stock's `env = GDK_SCALE,2`.
+--
+-- What that variable actually does, since it is easy to overstate (measured
+-- 2026-08-14 with GTK3 and GTK4 windows): on Wayland it is IGNORED -- GTK takes
+-- its scale from the compositor, and scale_factor stayed 1 with GDK_SCALE=2
+-- set. It applies only to GTK on X11/Xwayland, where scale_factor went to 2 and
+-- a window's logical allocation halved, i.e. content drawn twice as large.
+--
+-- Omarchy sets it because it pairs with xwayland.force_zero_scaling = true
+-- (default/hypr/envs.lua): Hyprland then does not upscale Xwayland surfaces, so
+-- on a scale-2 display an X11 app would render at half size unless GDK_SCALE
+-- tells GTK to draw at 2x itself. That is right for the retina-class panels the
+-- stock comment names. This panel runs at scale 1, so the same variable would
+-- make any GTK app that lands on Xwayland twice the size it should be.
 
 -- Env vars that mark a process as wanting HDR.
 local HDR_ENV = {
