@@ -377,21 +377,24 @@ packages:
     tags: [ai]
     desc: "Google Gemini CLI"
 
-  opencode:
-    tags: [ai]
-    desc: "AI coding agent"
-
-  claude-code:
-    tags: [ai]
-    desc: "Anthropic Claude Code"
-    brew: "claude-code@latest"
-    brew_cask: true
-
-  codex:
-    tags: [ai]
-    desc: "OpenAI Codex"
-    brew_cask: true
-    pacman: openai-codex
+  # --- Disabled: omarchy 4 installs these as lazy mise wrappers in ~/.local/bin,
+  # so declaring them here would layer AUR/brew copies on top of the same binaries.
+  # Re-enable (uncomment) if moving back to distro packages. ---
+  # opencode:
+  #   tags: [ai]
+  #   desc: "AI coding agent"
+  #
+  # claude-code:
+  #   tags: [ai]
+  #   desc: "Anthropic Claude Code"
+  #   brew: "claude-code@latest"
+  #   brew_cask: true
+  #
+  # codex:
+  #   tags: [ai]
+  #   desc: "OpenAI Codex"
+  #   brew_cask: true
+  #   pacman: openai-codex
 
   # ===========================================================================
   # Basic UI — Fonts
