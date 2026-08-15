@@ -1,4 +1,20 @@
 #!/bin/bash
 # Source upstream with its hardcoded `chromium.desktop` PWA fallback swapped
 # to `brave-browser.desktop`, so non-PWA browsers (Zen) fall back to Brave.
-source <(sed 's/chromium\.desktop/brave-browser.desktop/' /home/ty/.local/share/omarchy/bin/omarchy-launch-webapp)
+
+# Resolve upstream by absolute path. This directory is first on PATH, so
+# `command -v omarchy-launch-webapp` would resolve to this script and recurse.
+# Omarchy 4 (quattro) installs to /usr/bin; pre-quattro was a checkout under
+# ~/.local/share/omarchy; $OMARCHY_PATH/bin covers `omarchy dev link`.
+for upstream in \
+    /usr/bin/omarchy-launch-webapp \
+    "${OMARCHY_PATH:+$OMARCHY_PATH/bin/omarchy-launch-webapp}" \
+    "$HOME/.local/share/omarchy/bin/omarchy-launch-webapp"; do
+    [[ -n $upstream && -x $upstream ]] && break
+done
+[[ -n $upstream && -x $upstream ]] || {
+    echo "omarchy-launch-webapp: upstream not found" >&2
+    exit 1
+}
+
+source <(sed 's/chromium\.desktop/brave-browser.desktop/' "$upstream")
