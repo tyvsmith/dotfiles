@@ -53,7 +53,12 @@ packages:
   blesh:
     tags: [experiment]
     desc: "Bash line editor with syntax highlighting and autosuggestions"
-    pacman: blesh-git
+    # Disabled. blesh-git is an AUR -git package, so paru offers a source
+    # rebuild on every run -- and because it builds from HEAD the "upgrade" can
+    # go backwards (observed r2334 -> r2113). Fish is the primary shell here, so
+    # a bash line editor is not worth a rebuild prompt on each chezmoi apply.
+    # Re-enable by restoring `pacman: blesh-git`.
+    pacman: false
     brew: false
     apt: false
     dnf: false
