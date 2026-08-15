@@ -482,7 +482,10 @@ packages:
     tags: [ui]
     desc: "Password manager"
     brew_cask: true
-    pacman: 1password-beta
+    # Stable, not 1password-beta: the quattro upgrade deliberately replaced the
+    # beta with stable ("Replacing 1Password Beta with stable 1Password"), and
+    # leaving the beta declared here would reinstall it and undo that.
+    pacman: 1password
     rpm_ostree: true
     flatpak: com.onepassword.OnePassword
 
