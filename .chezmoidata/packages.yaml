@@ -185,7 +185,10 @@ packages:
   gh:
     tags: [core]
     desc: "GitHub CLI"
-    pacman: github-cli
+    # Omarchy 4 installs gh as a lazy mise wrapper in ~/.local/bin, so pacman
+    # would layer a second copy. Excluded from pacman only -- macOS has no
+    # omarchy and still needs brew to supply it.
+    pacman: false
 
   lazygit:
     tags: [core]
@@ -376,6 +379,9 @@ packages:
   gemini-cli:
     tags: [ai]
     desc: "Google Gemini CLI"
+    # Same as gh: omarchy 4 ships a lazy mise wrapper (~/.local/bin/gemini).
+    # Excluded from pacman only, so brew still supplies it on macOS.
+    pacman: false
 
   # --- Disabled: omarchy 4 installs these as lazy mise wrappers in ~/.local/bin,
   # so declaring them here would layer AUR/brew copies on top of the same binaries.
