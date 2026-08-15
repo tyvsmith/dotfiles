@@ -9,10 +9,21 @@ set -euo pipefail
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
 
 {{ if eq .de "hyprland-omarchy" -}}
-# hyprland-omarchy: configs are overlays on omarchy's base
-OMARCHY_PATH="${OMARCHY_PATH:-$HOME/.local/share/omarchy}"
-if [[ ! -d "$OMARCHY_PATH" ]]; then
-    fail "omarchy not found at $OMARCHY_PATH
+# hyprland-omarchy: configs are overlays on omarchy's base.
+#
+# Omarchy 4 (quattro) is package-backed and lives at /usr/share/omarchy, where it
+# also exports OMARCHY_PATH itself via /etc/profile.d/omarchy.sh. Pre-quattro was
+# a git checkout at ~/.local/share/omarchy, which the upgrade moves aside to
+# ~/.local/share/omarchy.omarchy-upgrade-to-quattro.<ts>.bak. Accept either, and
+# prefer an inherited OMARCHY_PATH so `omarchy dev link` keeps working.
+if [[ -n "${OMARCHY_PATH:-}" && -d "$OMARCHY_PATH" ]]; then
+    :
+elif [[ -d /usr/share/omarchy ]]; then
+    OMARCHY_PATH=/usr/share/omarchy
+elif [[ -d "$HOME/.local/share/omarchy" ]]; then
+    OMARCHY_PATH="$HOME/.local/share/omarchy"
+else
+    fail "omarchy not found at /usr/share/omarchy or \$HOME/.local/share/omarchy
 
   The '{{ .profile }}' profile requires omarchy for Hyprland configs.
   Install omarchy first, then re-run chezmoi apply.
