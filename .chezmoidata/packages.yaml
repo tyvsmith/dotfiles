@@ -158,6 +158,11 @@ packages:
   tealdeer:
     tags: [core]
     desc: "tldr pages client"
+    # Omarchy 4 ships `tldr` in omarchy-base.packages, which owns the same
+    # /usr/bin/tldr and conflicts with tealdeer -- paru cannot resolve that
+    # under --noconfirm, so the whole pacman run aborts. Excluded from pacman
+    # only; brew still supplies tealdeer on macOS, where omarchy is absent.
+    pacman: false
 
   yazi:
     tags: [core]
