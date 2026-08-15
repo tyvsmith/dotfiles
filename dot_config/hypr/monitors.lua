@@ -23,14 +23,19 @@
 -- The two states.
 ------------------------------------------------------------------------------
 
--- Empty output = whatever is connected, matching the 3.x `$monitor_sdr`, which
--- also led with a bare comma. DP-1 is the only display here, so this is
--- equivalent today -- but it keeps working if the panel lands on another port.
+-- output/mode/position/scale are deliberately identical to stock monitors.lua
+-- ("", preferred, auto, auto) rather than hardcoded, so nothing here is tied to
+-- this particular panel. Verified: preferred resolves to 5120x2160@165.06 at
+-- scale 1, and the HDR swap round-trips without touching mode or refresh.
+--
+-- The only real deviation from stock is the colour pipeline -- bitdepth, cm,
+-- vrr, sdrbrightness, sdrsaturation -- which has to be stated in full because
+-- monitor rules are whole-record replacements.
 local OUTPUT = ""
 
 local MONITOR_SDR = {
   output        = OUTPUT,
-  mode          = "5120x2160@165.06",
+  mode          = "preferred",
   position      = "auto",
   scale         = "auto",
   bitdepth      = 10,
@@ -42,7 +47,7 @@ local MONITOR_SDR = {
 
 local MONITOR_HDR = {
   output        = OUTPUT,
-  mode          = "5120x2160@165.06",
+  mode          = "preferred",
   position      = "auto",
   scale         = "auto",
   bitdepth      = 10,
@@ -52,21 +57,23 @@ local MONITOR_HDR = {
   sdrsaturation = 1.0,
 }
 
--- Note: no GDK_SCALE here, matching the 3.x monitors.conf, which commented out
--- stock's `env = GDK_SCALE,2`.
+-- No GDK_SCALE here, and it should stay that way. Stock sets GDK_SCALE=2,
+-- matching its assumption of a retina-class 2x panel; this display runs at
+-- scale 1, so stock's value is wrong for the hardware, not merely a preference.
+-- The 3.x monitors.conf commented the same line out.
 --
--- What that variable actually does, since it is easy to overstate (measured
--- 2026-08-14 with GTK3 and GTK4 windows): on Wayland it is IGNORED -- GTK takes
--- its scale from the compositor, and scale_factor stayed 1 with GDK_SCALE=2
--- set. It applies only to GTK on X11/Xwayland, where scale_factor went to 2 and
--- a window's logical allocation halved, i.e. content drawn twice as large.
+-- Scope, measured 2026-08-14 with GTK3 and GTK4 windows, because it is easy to
+-- overstate: on Wayland GDK_SCALE is IGNORED -- GTK takes scale from the
+-- compositor and scale_factor stayed 1 with it set. It applies only to GTK on
+-- X11/Xwayland, where scale_factor became 2 and a window's logical allocation
+-- halved (content drawn twice as large). It pairs with
+-- xwayland.force_zero_scaling = true in default/hypr/envs.lua: Hyprland then
+-- won't upscale Xwayland surfaces, so on a 2x panel an X11 app would render at
+-- half size unless GTK draws at 2x itself.
 --
--- Omarchy sets it because it pairs with xwayland.force_zero_scaling = true
--- (default/hypr/envs.lua): Hyprland then does not upscale Xwayland surfaces, so
--- on a scale-2 display an X11 app would render at half size unless GDK_SCALE
--- tells GTK to draw at 2x itself. That is right for the retina-class panels the
--- stock comment names. This panel runs at scale 1, so the same variable would
--- make any GTK app that lands on Xwayland twice the size it should be.
+-- Practical effect of omitting it here: nothing visible today (no Xwayland
+-- clients), but any GTK app that does land on Xwayland renders at the right
+-- size instead of double.
 
 -- Env vars that mark a process as wanting HDR.
 local HDR_ENV = {
