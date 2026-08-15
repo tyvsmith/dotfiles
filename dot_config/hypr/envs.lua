@@ -1,0 +1,36 @@
+-- Environment variables.
+--
+-- Loaded after default.hypr.omarchy, so anything set here wins over
+-- $OMARCHY_PATH/default/hypr/envs.lua.
+
+-- NVIDIA VA-API (Turing+ with GSP firmware).
+--
+-- This is NOT redundant with default/hypr/nvidia.lua. That module would set it,
+-- but every branch is gated on o.shell_succeeds(), and inside Hyprland's Lua
+-- os.execute returns nil, "No child processes", 10 -- Hyprland reaps its own
+-- children, so Lua's waitpid gets ECHILD and the helper always returns false.
+-- Run omarchy-hw-nvidia by hand and it exits 0; run it through the config and
+-- the branch never fires. Verified 2026-08-14 by inspecting the environ of a
+-- Hyprland-spawned process: LIBVA_DRIVER_NAME was absent.
+--
+-- Removal test -- if Omarchy fixes shell_succeeds (o.cmd_present-style
+-- detection, or reading /sys from Lua), this line becomes a duplicate:
+--   grep -c LIBVA_DRIVER_NAME /proc/$(pgrep -n -u "$USER" -f waybar)/environ
+-- Simpler: comment this out, log out, log in, and check any fresh process.
+hl.env("LIBVA_DRIVER_NAME", "nvidia")
+
+-- Deliberately NOT set here:
+--
+--   NVD_BACKEND=direct              already the default in libva-nvidia-driver
+--                                   v0.0.12+
+--   __GLX_VENDOR_LIBRARY_NAME       GLVND autodetects; setting it explicitly has
+--                                   caused Wayland login regressions on some
+--                                   NVIDIA driver releases
+--   QT_QPA_PLATFORMTHEME=qt6ct      obsolete as of Omarchy 4. Migration
+--                                   1785351479.sh dropped Kvantum, and stock now
+--                                   sets QT_QPA_PLATFORMTHEME=gtk3, which reports
+--                                   colorScheme()=Dark and hands Kirigami/QtQuick
+--                                   the same #101315 palette qt6ct was providing
+--                                   -- with no AUR package. Measured 2026-08-14
+--                                   against a no-platform-theme control, which
+--                                   came back Unknown/#efefef (light).
