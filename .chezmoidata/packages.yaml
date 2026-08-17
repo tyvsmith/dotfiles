@@ -170,6 +170,11 @@ packages:
     tags: [core]
     desc: "Git Large File Storage"
 
+  gh:
+    tags: [core]
+    desc: "GitHub CLI"
+    pacman: false # omarchy 4 provides gh as a lazy mise wrapper
+
   lazygit:
     tags: [core]
     desc: "Terminal UI for git"
@@ -453,7 +458,7 @@ packages:
     tags: [ui]
     desc: "Password manager"
     brew_cask: true
-    pacman: 1password # quattro upgrade swapped 1password-beta for stable
+    pacman: 1password-beta
     rpm_ostree: true
     flatpak: com.onepassword.OnePassword
 
