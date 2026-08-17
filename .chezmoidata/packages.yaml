@@ -50,19 +50,6 @@ packages:
     tags: [core]
     desc: "Magical shell history"
 
-  blesh:
-    tags: [experiment]
-    desc: "Bash line editor with syntax highlighting and autosuggestions"
-    # Disabled. blesh-git is an AUR -git package, so paru offers a source
-    # rebuild on every run -- and because it builds from HEAD the "upgrade" can
-    # go backwards (observed r2334 -> r2113). Fish is the primary shell here, so
-    # a bash line editor is not worth a rebuild prompt on each chezmoi apply.
-    # Re-enable by restoring `pacman: blesh-git`.
-    pacman: false
-    brew: false
-    apt: false
-    dnf: false
-
   zoxide:
     tags: [core]
     desc: "Smarter cd command"
@@ -160,15 +147,6 @@ packages:
     tags: [dev]
     desc: "ping with graph"
 
-  tealdeer:
-    tags: [core]
-    desc: "tldr pages client"
-    # Omarchy 4 ships `tldr` in omarchy-base.packages, which owns the same
-    # /usr/bin/tldr and conflicts with tealdeer -- paru cannot resolve that
-    # under --noconfirm, so the whole pacman run aborts. Excluded from pacman
-    # only; brew still supplies tealdeer on macOS, where omarchy is absent.
-    pacman: false
-
   yazi:
     tags: [core]
     desc: "Terminal file manager"
@@ -191,14 +169,6 @@ packages:
   git-lfs:
     tags: [core]
     desc: "Git Large File Storage"
-
-  gh:
-    tags: [core]
-    desc: "GitHub CLI"
-    # Omarchy 4 installs gh as a lazy mise wrapper in ~/.local/bin, so pacman
-    # would layer a second copy. Excluded from pacman only -- macOS has no
-    # omarchy and still needs brew to supply it.
-    pacman: false
 
   lazygit:
     tags: [core]
@@ -386,16 +356,7 @@ packages:
   # ===========================================================================
  
 
-  gemini-cli:
-    tags: [ai]
-    desc: "Google Gemini CLI"
-    # Same as gh: omarchy 4 ships a lazy mise wrapper (~/.local/bin/gemini).
-    # Excluded from pacman only, so brew still supplies it on macOS.
-    pacman: false
-
-  # --- Disabled: omarchy 4 installs these as lazy mise wrappers in ~/.local/bin,
-  # so declaring them here would layer AUR/brew copies on top of the same binaries.
-  # Re-enable (uncomment) if moving back to distro packages. ---
+  # Disabled: omarchy 4 provides these as lazy mise wrappers in ~/.local/bin.
   # opencode:
   #   tags: [ai]
   #   desc: "AI coding agent"
@@ -492,10 +453,7 @@ packages:
     tags: [ui]
     desc: "Password manager"
     brew_cask: true
-    # Stable, not 1password-beta: the quattro upgrade deliberately replaced the
-    # beta with stable ("Replacing 1Password Beta with stable 1Password"), and
-    # leaving the beta declared here would reinstall it and undo that.
-    pacman: 1password
+    pacman: 1password # quattro upgrade swapped 1password-beta for stable
     rpm_ostree: true
     flatpak: com.onepassword.OnePassword
 
