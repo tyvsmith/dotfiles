@@ -1,5 +1,5 @@
 // User XKB rules. Adds the custom:printscreen_f13 option (consumed by
-// ~/.local/bin/lan-mouse-extended) and includes the system rules unchanged.
+// ~/.config/hypr/lan_mouse.lua) and includes the system rules unchanged.
 ! option = symbols
   custom:printscreen_f13 = +custom(printscreen_f13)
 

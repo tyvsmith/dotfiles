@@ -30,3 +30,4 @@ require("default.hypr.toggles")
 
 require("hypr.envs")
 require("hypr.windows")
+require("hypr.lan_mouse")
