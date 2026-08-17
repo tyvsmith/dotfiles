@@ -16,3 +16,4 @@ o.window("steam_app_.*", { workspace = "6 silent" })
 
 -- Workspace 10 -- utilities (backslashes doubled: Lua escape, then regex)
 o.window("com\\.core447\\.StreamController", { workspace = "10 silent" })
+o.window("de\\.feschber\\.LanMouse", { workspace = "10 silent" })
