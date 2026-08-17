@@ -9,10 +9,9 @@ o.exec_on_start("hyprpm reload -n")
 
 o.exec_on_start("uwsm app -s a -- hypr-dock")
 
--- No hypr-sticky-hdr line: as of the Lua port the HDR logic lives in
--- hypr/monitors.lua, driven by Hyprland's own window events. Starting the old
--- ~/.local/bin/hypr-sticky-hdr daemon as well would put two controllers on the
--- same monitor, fighting over its mode.
+-- No hypr-sticky-hdr line: the HDR logic lives in hypr/sticky_hdr.lua, driven
+-- by Hyprland's own window events. The old daemon is no longer installed; running
+-- it as well would put two controllers on the same monitor, fighting over its mode.
 
 -- wait-for-sni blocks until a StatusNotifierWatcher is on the bus so these
 -- apps' tray icons actually register on cold boot. It waits on the generic

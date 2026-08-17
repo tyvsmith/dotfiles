@@ -7,9 +7,3 @@
     type = "git-repo"
     url = "https://github.com/sahaj-b/ghostty-cursor-shaders.git"
     refreshPeriod = "0"
-
-[".local/bin/hypr-sticky-hdr"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/tyvsmith/hypr-sticky-hdr/main/hypr-sticky-hdr"
-    executable = true
-    refreshPeriod = "0"
