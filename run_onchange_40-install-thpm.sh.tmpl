@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install/update theme-hook-plugin-manager (THPM).
 # THPM delivers the bundled theme-set.d/* hooks (10-tmux, 10-gtk, etc.).
-# Pinned to a commit so re-runs are deterministic; bumping is an intentional
-# dotfiles edit.
+# THPM's install.sh clones the head of $THPM_BRANCH itself, so the pin selects
+# the installer and the guard below; bump it to the branch head to update.
 
 {{ if ne .de "hyprland-omarchy" -}}
 # Profile '{{ .profile }}' is not omarchy — nothing to do.
@@ -11,8 +11,8 @@ exit 0
 set -euo pipefail
 
 THPM_REPO="https://github.com/OldJobobo/theme-hook-plugin-manager.git"
-THPM_BRANCH="thpm"
-THPM_COMMIT="80941d0fa44921cf61219bc1a731818ad5b3d170"
+export THPM_BRANCH="quattro" # install.sh reads it
+THPM_COMMIT="7dac327145f66fbfd4e327bfcd36b1656515a3e2"
 THPM_VERSION_FILE="$HOME/.local/share/thpm/version"
 
 if [[ -f "$THPM_VERSION_FILE" ]] && grep -qF "commit=$THPM_COMMIT" "$THPM_VERSION_FILE"; then
