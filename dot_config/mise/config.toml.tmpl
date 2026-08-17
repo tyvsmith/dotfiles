@@ -11,9 +11,7 @@ node = "latest"
 rust = "latest"
 go = "latest"
 java = "latest"
-{{- /* Omarchy 4 ships lazy mise wrapper scripts in ~/.local/bin that shell out to
-       `mise use -g <tool>`, so these two re-add themselves on every invocation.
-       Tracked here so chezmoi apply and the wrappers agree instead of fighting. */}}
+{{- /* Omarchy 4's ~/.local/bin wrappers `mise use -g` these; track them so apply agrees. */}}
 claude = "latest"
 codex = "latest"
 

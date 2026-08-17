@@ -1,36 +1,14 @@
--- sticky_hdr.lua -- keep a Hyprland monitor in HDR for as long as an HDR
--- window lives, not just while it is fullscreen.
+-- sticky_hdr.lua -- keep a monitor in HDR for as long as an HDR window lives,
+-- not just while it is fullscreen (Hyprland's render:cm_auto_hdr flaps on
+-- alt-tab). A window whose process carries a marker env var, or whose class is
+-- listed, switches the monitor to the `hdr` spec until the last such window is
+-- gone plus `cooldown` seconds. Usage: see hypr/monitors.lua.
 --
--- Hyprland's own render:cm_auto_hdr flips a monitor to HDR when its fullscreen
--- window presents an HDR surface, and back to SDR the moment that surface stops
--- being fullscreen -- so alt-tab and workspace switches flap the display. This
--- module makes HDR sticky: a window whose process carries one of the marker
--- environment variables (or whose class is listed) switches the monitor to the
--- HDR spec, and it stays there until the last such window is gone, plus a short
--- cooldown. Anything untagged still gets Hyprland's auto behaviour underneath.
---
--- Usage, from your monitors.lua:
---
---   require("hypr.sticky_hdr").setup({
---     monitor  = { output = "", mode = "preferred", position = "auto",
---                  scale = "auto", bitdepth = 10, vrr = 2, sdrbrightness = 1.35 },
---     sdr      = { cm = "srgb" },   -- merged over `monitor` when idle
---     hdr      = { cm = "hdr" },    -- merged over `monitor` while HDR is wanted
---     env      = { "PROTON_ENABLE_HDR=1", "HYPR_STICKY_HDR=1" },
---     classes  = { "gamescope" },
---     cooldown = 2,                 -- seconds to linger in HDR after the last window
---   })
---
--- Notes on the Hyprland API this is built on (0.56.x):
---   * Monitor rules are whole-record replacements, so `sdr`/`hdr` are merged
---     over the full `monitor` spec rather than applied as partial updates.
---   * Config reload rebuilds the whole Lua state; nothing needs tearing down.
---   * window.close does not fire on SIGKILL, and window.destroy arrives with a
---     nil address, so teardown recounts live windows instead of tracking them.
---   * hl.timer takes milliseconds and HL.Timer has no cancel(); the cooldown
---     timer re-checks demand when it fires instead of being cancelled.
---   * HL.Monitor.cm reports the *configured* preset, not the live HDR state, so
---     the module keeps its own flag.
+-- Hyprland 0.56 notes: monitor rules are whole-record replacements, so sdr/hdr
+-- are merged over the full spec; window.close skips SIGKILL and window.destroy
+-- has no address, so teardown recounts live windows; HL.Timer has no cancel(),
+-- so the cooldown timer re-checks demand; HL.Monitor.cm is the configured
+-- preset, not live state, so the module keeps its own flag.
 
 local M = {}
 

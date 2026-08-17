@@ -14,23 +14,7 @@ end
 
 {{ if eq .de "hyprland-omarchy" -}}
 # Omarchy
-# Omarchy 4 (quattro) exports OMARCHY_PATH from /etc/profile.d/omarchy.sh and
-# /usr/share/uwsm/env.d/10-omarchy — fish reads neither, so it still needs a
-# fallback here. Never hardcode: hyprland.lua bootstraps off
-# `os.getenv("OMARCHY_PATH") or "/usr/share/omarchy"`, so a stale exported value
-# is worse than none — it sends the Lua bootstrap at a path that no longer exists.
-if not set -q OMARCHY_PATH
-    if test -d /usr/share/omarchy
-        set -gx OMARCHY_PATH /usr/share/omarchy
-    else if test -d $HOME/.local/share/omarchy
-        set -gx OMARCHY_PATH $HOME/.local/share/omarchy
-    end
-end
-# Quattro installs the binaries as /usr/bin/omarchy-*, so bin/ only exists on a
-# legacy checkout or under `omarchy dev link`.
-if set -q OMARCHY_PATH; and test -d $OMARCHY_PATH/bin
-    fish_add_path -a --path $OMARCHY_PATH/bin
-end
+set -gx OMARCHY_PATH /usr/share/omarchy
 {{ end -}}
 
 # Mise - polyglot runtime version manager (Java, Python, Node, etc.)

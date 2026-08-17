@@ -56,28 +56,10 @@
 -- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
 -- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
 
-
--- deskflow: forward modifiers to the input-capture client instead of letting
--- Hyprland handle them locally. With Hyprland's default (false), pressing
--- Super/Alt while driving a deskflow client recycles the libei "captured
--- keyboard" device (EI_EVENT_DEVICE_REMOVED) in the same millisecond as the
--- keypress: the release is never delivered, the client is left holding a stuck
--- modifier, and every further key is dropped until you cross screens.
--- Verified 2026-07-28 on Hyprland 0.56.0 + deskflow 1.26.0 -- 8/8 modifier
--- presses lost their release with this off, 8/8 delivered it with this on.
---
--- Side effect: while a client is capturing, Hyprland also skips its LED sync,
--- so CapsLock/NumLock indicators lag until you switch back. Self-correcting.
--- Dormant whenever nothing holds an InputCapture portal session.
---
--- Note the Lua key is input_capture (underscore), not the hyprlang
--- input-capture (hyphen) this was ported from.
---
--- Removal test -- this works around compositor behaviour, not a deskflow bug, so
--- retest after any Hyprland release that touches input-capture. (v0.56.1's
--- input-capture commits #15477/#15520 do NOT address this; as of 2026-07-28
--- nothing is filed upstream for the device-recycle itself.)
---   hyprctl keyword input_capture:capture_modifiers false
---   -- drive the client, press Super, keep typing -- still typing = fixed upstream
---   hyprctl keyword input_capture:capture_modifiers true   -- instant revert
+-- deskflow: forward modifiers to the input-capture client. With Hyprland's
+-- default (false), pressing Super/Alt while driving a client recycles the libei
+-- keyboard device in the same millisecond, the release is lost and the client
+-- holds a stuck modifier (verified 2026-07-28, Hyprland 0.56.0 + deskflow
+-- 1.26.0). Compositor behaviour, not a deskflow bug; retest after Hyprland
+-- releases that touch input-capture. Off while lan-mouse is in use.
 -- hl.config({ input_capture = { capture_modifiers = true } })

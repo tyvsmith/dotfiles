@@ -1,19 +1,16 @@
 -- lan-mouse: Mac-friendly keyboard/mouse while the cursor is on the Mac client.
---
--- Called from lan-mouse's per-client hooks (~/.config/lan-mouse/config.toml):
+-- Called from lan-mouse's hooks (~/.config/lan-mouse/config.toml):
 --   enter_hook = "hyprctl eval 'lan_mouse.enter()'"
 --   leave_hook = "hyprctl eval 'lan_mouse.leave()'"
---
--- Only lan-mouse knows when the cursor crosses to the client -- Hyprland gets
--- no event, the capture barrier is a persistent 1px layer -- so the hooks are
--- the trigger and this module owns the state. State is an upvalue in
--- Hyprland's Lua VM: a config reload wipes the VM and re-reads input options
--- from these files, so both reset together and nothing goes stale. Cost: a
--- reload while on the Mac drops Mac mode until the next crossing.
+-- Only lan-mouse knows when the cursor crosses (Hyprland gets no event; the
+-- barrier is a persistent 1px layer), so the hooks trigger and this owns the
+-- state. A config reload wipes the VM and re-reads the options together, so
+-- nothing goes stale; a reload while on the Mac just drops Mac mode until the
+-- next crossing.
 
--- altwin:swap_alt_win     Alt/Super land in the Mac's Option/Cmd positions.
--- custom:printscreen_f13  Print Screen -> F13; macOS has no PrtSc. Defined in
---                         ~/.config/xkb/{rules/evdev,symbols/custom}.
+-- altwin:swap_alt_win: Alt/Super in the Mac's Option/Cmd positions.
+-- custom:printscreen_f13: PrtSc -> F13 (macOS has no PrtSc); defined in
+-- ~/.config/xkb/{rules/evdev,symbols/custom}.
 local MAC_KB_ADDITIONS = "altwin:swap_alt_win,custom:printscreen_f13"
 local LAYER_NAMESPACE = "LAN Mouse Sharing"
 
@@ -37,11 +34,9 @@ function lan_mouse.leave()
   base = nil
 end
 
--- Safety net. lan-mouse tears its barrier layers down on `cli deactivate`, on
--- exit, and (courtesy of the compositor) on crash; leave_hook is not guaranteed
--- for any of those. No barrier => nothing is capturing => not on the Mac.
--- lan-mouse also rebuilds the layers on an output change, which fires this
--- while still on the Mac -- costs Mac mode until the next crossing, no worse.
+-- Safety net: lan-mouse drops its barrier layers on `cli deactivate`, exit and
+-- crash, none of which guarantee leave_hook. No barrier => nothing captured.
+-- (An output change also rebuilds them, costing Mac mode until the next crossing.)
 hl.on("layer.closed", function(layer)
   if layer.namespace == LAYER_NAMESPACE then
     lan_mouse.leave()
