@@ -1,0 +1,83 @@
+-- Keep only your personal input overrides here. Uncommented settings below
+-- replace Omarchy's defaults.
+
+-- Keyboard layout and options.
+-- See https://wiki.hypr.land/Configuring/Basics/Variables/#input
+-- hl.config({
+--   input = {
+--     -- Use multiple keyboard layouts and switch between them with Left Alt + Right Alt.
+--     kb_layout = "us,dk,eu",
+--     kb_options = "compose:caps,shift:both_capslock_cancel,grp:alts_toggle",
+--
+--     -- Use a specific keyboard variant if needed (e.g. intl for international keyboards).
+--     kb_variant = "intl",
+--
+--     -- Change speed of keyboard repeat.
+--     repeat_rate = 40,
+--     repeat_delay = 250,
+--
+--     -- Start with numlock on by default.
+--     numlock_by_default = true,
+--
+--     -- Increase sensitivity for mouse/trackpad (default: 0).
+--     sensitivity = 0.35,
+--
+--     -- Turn off mouse acceleration (default: adaptive).
+--     accel_profile = "flat",
+--
+--     touchpad = {
+--       -- Use natural (inverse) scrolling.
+--       natural_scroll = true,
+--
+--       -- Use two-finger clicks for right-click instead of lower-right corner.
+--       clickfinger_behavior = true,
+--
+--       -- Control the speed of your scrolling.
+--       scroll_factor = 0.4,
+--
+--       -- Enable the touchpad while typing.
+--       disable_while_typing = false,
+--
+--       -- Left-click-and-drag with three fingers.
+--       drag_3fg = 1,
+--     },
+--   },
+-- })
+
+-- App-specific touchpad scroll speeds.
+-- o.window("(Alacritty|kitty|foot)", { scroll_touchpad = 1.5 })
+-- o.window("com.mitchellh.ghostty", { scroll_touchpad = 0.2 })
+
+-- Enable touchpad gestures for changing workspaces.
+-- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Gestures/
+-- hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+
+-- Enable touchpad gestures for moving focus (helpful on scrolling layout).
+-- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
+-- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
+
+
+-- deskflow: forward modifiers to the input-capture client instead of letting
+-- Hyprland handle them locally. With Hyprland's default (false), pressing
+-- Super/Alt while driving a deskflow client recycles the libei "captured
+-- keyboard" device (EI_EVENT_DEVICE_REMOVED) in the same millisecond as the
+-- keypress: the release is never delivered, the client is left holding a stuck
+-- modifier, and every further key is dropped until you cross screens.
+-- Verified 2026-07-28 on Hyprland 0.56.0 + deskflow 1.26.0 -- 8/8 modifier
+-- presses lost their release with this off, 8/8 delivered it with this on.
+--
+-- Side effect: while a client is capturing, Hyprland also skips its LED sync,
+-- so CapsLock/NumLock indicators lag until you switch back. Self-correcting.
+-- Dormant whenever nothing holds an InputCapture portal session.
+--
+-- Note the Lua key is input_capture (underscore), not the hyprlang
+-- input-capture (hyphen) this was ported from.
+--
+-- Removal test -- this works around compositor behaviour, not a deskflow bug, so
+-- retest after any Hyprland release that touches input-capture. (v0.56.1's
+-- input-capture commits #15477/#15520 do NOT address this; as of 2026-07-28
+-- nothing is filed upstream for the device-recycle itself.)
+--   hyprctl keyword input_capture:capture_modifiers false
+--   -- drive the client, press Super, keep typing -- still typing = fixed upstream
+--   hyprctl keyword input_capture:capture_modifiers true   -- instant revert
+-- hl.config({ input_capture = { capture_modifiers = true } })

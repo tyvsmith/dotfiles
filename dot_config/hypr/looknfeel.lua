@@ -11,24 +11,16 @@ hl.config({
   },
 
   -- https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/
-  -- v4 stock sets only column_width = 0.49, so the rest are first definitions.
+  -- v4 stock sets only column_width = 0.49. Everything else in this table
+  -- differs from Hyprland's compiled default; keys that merely restated the
+  -- default (focus_fit_method, follow_focus, follow_min_visible, wrap_focus,
+  -- wrap_swapcol, explicit_column_widths) were removed 2026-08-15.
   scrolling = {
-    -- Default column width (0.1 - 1.0).
+    -- Default column width (0.1 - 1.0). Hyprland default 0.5.
     column_width = 0.333,
     -- Don't auto-maximize a lone column; honor column_width instead.
+    -- Hyprland default true.
     fullscreen_on_one_column = false,
-    -- 1 = fit (Niri-like), 0 = center the focused column on screen.
-    focus_fit_method = 1,
-    -- Auto-scroll the tape to bring the focused window into view.
-    follow_focus = true,
-    -- Min fraction of a window that must already be visible for follow_focus
-    -- to NOT kick in (0.0 - 1.0). Hard input (binds, clicks) always follows.
-    follow_min_visible = 0.4,
-    -- Wrap focus/swap at the ends of the tape.
-    wrap_focus = true,
-    wrap_swapcol = true,
-    -- Width presets cycled by colresize +conf / -conf. Typed as a string.
-    explicit_column_widths = "0.333, 0.5, 0.667, 1.0",
   },
 })
 

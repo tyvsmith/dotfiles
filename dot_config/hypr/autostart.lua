@@ -32,7 +32,7 @@ o.exec_on_start("uwsm app -s a -- hypr-dock")
 -- re-adds the entry even when autostart is set to false).
 -- -b starts it to the tray instead of opening a window.
 o.exec_on_start("uwsm app -s b -- wait-for-sni flatpak run com.core447.StreamController -b")
-o.exec_on_start("uwsm app -s b -- wait-for-sni deskflow")
+o.exec_on_start("uwsm app -s b -- wait-for-sni lan-mouse")
 o.exec_on_start("uwsm app -s b -- wait-for-sni beeper")
 o.exec_on_start("uwsm app -s b -- wait-for-sni vesktop")
 

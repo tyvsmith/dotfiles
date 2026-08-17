@@ -1,3 +1,36 @@
+-- Keep only your personal keybinding overrides here. Add new bindings or
+-- unbind defaults before replacing them.
+
+-- See current bindings and descriptions:
+--   omarchy menu keybindings --print
+
+-- To disable every Omarchy default binding, set this in
+-- ~/.config/hypr/hyprland.lua before require("default.hypr.omarchy"), then add
+-- only the bindings you want below:
+--   omarchy_default_bindings = false
+
+-- To disable all preinstalled app/webapp bindings, set:
+--   omarchy_preinstalled_bindings = false
+
+-- Add a new binding.
+-- o.bind("SUPER + SHIFT + R", "SSH", "alacritty -e ssh your-server")
+
+-- Change an existing binding by unbinding it first, then binding the key again.
+-- This example changes SUPER+SPACE from the launcher to the Omarchy root menu.
+-- hl.unbind("SUPER + SPACE")
+-- o.bind("SUPER + SPACE", "Omarchy menu", "omarchy-menu toggle root")
+
+-- Disable a default binding without replacing it.
+-- hl.unbind("SUPER + SHIFT + B")
+
+-- Logitech MX Keys examples:
+-- o.bind("SUPER + SHIFT + S", nil, "omarchy-capture-screenshot")
+-- o.bind("SUPER + H", nil, "voxtype record toggle")
+-- o.bind("SUPER + PERIOD", nil, "omarchy-shell shell toggle omarchy.emojis")
+
+
+
+
 -- Personal keybinding overrides.
 --
 -- ============================================================================
@@ -107,17 +140,17 @@
 -- Omarchy 4 webapps you deleted in 3.x and which are therefore BACK. Uncomment
 -- any you still don't want:
 -- hl.unbind("SUPER + SHIFT + ALT + A")   -- Grok
--- hl.unbind("SUPER + SHIFT + C")         -- Calendar (Hey)
--- hl.unbind("SUPER + SHIFT + E")         -- Email (Hey)
--- hl.unbind("SUPER + SHIFT + ALT + E")   -- New email (Hey)
+hl.unbind("SUPER + SHIFT + C")         -- Calendar (Hey)
+hl.unbind("SUPER + SHIFT + E")         -- Email (Hey)
+hl.unbind("SUPER + SHIFT + ALT + E")   -- New email (Hey)
 -- hl.unbind("SUPER + SHIFT + Y")         -- YouTube
--- hl.unbind("SUPER + SHIFT + ALT + G")   -- WhatsApp
--- hl.unbind("SUPER + SHIFT + CTRL + G")  -- Google Messages
+hl.unbind("SUPER + SHIFT + ALT + G")   -- WhatsApp
+hl.unbind("SUPER + SHIFT + CTRL + G")  -- Google Messages
 -- hl.unbind("SUPER + SHIFT + P")         -- Google Photos
 -- hl.unbind("SUPER + SHIFT + S")         -- Google Maps
 -- hl.unbind("SUPER + SHIFT + X")         -- X
--- hl.unbind("SUPER + SHIFT + ALT + X")   -- X Post
--- hl.unbind("SUPER + SHIFT + G")         -- Signal
+hl.unbind("SUPER + SHIFT + ALT + X")   -- X Post
+hl.unbind("SUPER + SHIFT + G")         -- Signal
 -- hl.unbind("SUPER + SHIFT + W")         -- Omawrite
 
 
@@ -125,7 +158,7 @@
 -- DICTATION
 -- ============================================================================
 -- F16 -> evdev keycode 186 -> xkb keycode 194. Key is free in v4.
--- o.bind("code:194", "Toggle dictation", "voxtype-smart-toggle")
+o.bind("code:194", "Toggle dictation", "voxtype-smart-toggle")
 
 -- Free F9 for app shortcuts. v4's bindings/voxtype.lua binds F9 TWICE, press
 -- and release, for push-to-talk -- confirm one unbind clears both.
@@ -137,19 +170,15 @@
 -- WORKSPACE NAVIGATION
 -- ============================================================================
 -- Page keys. Free in v4.
--- o.bind("SUPER + page_down", "Next workspace", hl.dsp.focus({ workspace = "e+1" }))
--- o.bind("SUPER + page_up", "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
--- o.bind("SUPER + SHIFT + page_down", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
--- o.bind("SUPER + SHIFT + page_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
+o.bind("SUPER + page_down", "Next workspace", hl.dsp.focus({ workspace = "e+1" }))
+o.bind("SUPER + page_up", "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
+o.bind("SUPER + SHIFT + page_down", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
+o.bind("SUPER + SHIFT + page_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
 
 -- Invert SUPER+scroll to match natural-scroll direction. v4 binds both of these
 -- the other way round, so the unbinds are required.
--- hl.unbind("SUPER + mouse_down")
--- hl.unbind("SUPER + mouse_up")
--- o.bind("SUPER + mouse_down", "Scroll active workspace backward", hl.dsp.focus({ workspace = "e-1" }))
--- o.bind("SUPER + mouse_up", "Scroll active workspace forward", hl.dsp.focus({ workspace = "e+1" }))
--- o.bind("SUPER + SHIFT + mouse_down", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
--- o.bind("SUPER + SHIFT + mouse_up", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
+o.bind("SUPER + SHIFT + mouse_down", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
+o.bind("SUPER + SHIFT + mouse_up", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
 
 
 -- ============================================================================
@@ -160,7 +189,7 @@
 
 -- scrolloverview registers its own Lua namespace, so no hyprctl shell-out.
 -- hl.plugin.scrolloverview also exposes navigate, gesture, window, configure.
--- o.bind("SUPER + E", "Overview", hl.plugin.scrolloverview.overview("toggle"))
+o.bind("SUPER + E", "Overview", hl.plugin.scrolloverview.overview("toggle"))
 
 
 -- ============================================================================
@@ -169,23 +198,23 @@
 -- Every key in this section is free in v4 EXCEPT SUPER + Home, noted below.
 
 -- Column composition (Niri-style; the COMMA family is owned by notifications).
--- o.bind("SUPER + bracketleft", "Consume or expel toward prev", hl.dsp.layout("consume_or_expel prev"))
--- o.bind("SUPER + bracketright", "Consume or expel toward next", hl.dsp.layout("consume_or_expel next"))
--- o.bind("SUPER + period", "Expel window into its own column", hl.dsp.layout("expel"))
--- o.bind("SUPER + SHIFT + period", "Consume window into previous column", hl.dsp.layout("consume"))
--- o.bind("SUPER + ALT + period", "Promote window out of stack", hl.dsp.layout("promote"))
+o.bind("SUPER + bracketleft", "Consume or expel toward prev", hl.dsp.layout("consume_or_expel prev"))
+o.bind("SUPER + bracketright", "Consume or expel toward next", hl.dsp.layout("consume_or_expel next"))
+o.bind("SUPER + period", "Expel window into its own column", hl.dsp.layout("expel"))
+o.bind("SUPER + SHIFT + period", "Consume window into previous column", hl.dsp.layout("consume"))
+o.bind("SUPER + ALT + period", "Promote window out of stack", hl.dsp.layout("promote"))
 
 -- Column reordering on the tape (leaves SUPER+ALT+arrows for groups).
--- o.bind("SUPER + SHIFT + bracketleft", "Move column left", hl.dsp.layout("swapcol l"))
--- o.bind("SUPER + SHIFT + bracketright", "Move column right", hl.dsp.layout("swapcol r"))
+o.bind("SUPER + SHIFT + bracketleft", "Move column left", hl.dsp.layout("swapcol l"))
+o.bind("SUPER + SHIFT + bracketright", "Move column right", hl.dsp.layout("swapcol r"))
 
 -- Fit / zoom -- I family (Inspect). SUPER+CTRL+I is Omarchy's idle-lock toggle.
--- o.bind("SUPER + I", "Fit active column", hl.dsp.layout("fit active"))
--- o.bind("SUPER + ALT + I", "Fit visible columns", hl.dsp.layout("fit visible"))
--- o.bind("SUPER + SHIFT + I", "Fit entire tape", hl.dsp.layout("fit all"))
+o.bind("SUPER + I", "Fit active column", hl.dsp.layout("fit active"))
+o.bind("SUPER + ALT + I", "Fit visible columns", hl.dsp.layout("fit visible"))
+o.bind("SUPER + SHIFT + I", "Fit entire tape", hl.dsp.layout("fit all"))
 
 -- Center the active column (Niri's Mod+C analog).
--- o.bind("SUPER + ALT + C", "Center active column", hl.dsp.layout("center"))
+o.bind("SUPER + ALT + C", "Center active column", hl.dsp.layout("center"))
 
 -- Tape-end peek (slides the view; does not change focus).
 -- NOTE: v4 binds SUPER + Home to "Restore window width", so that unbind is
@@ -195,8 +224,8 @@
 -- o.bind("SUPER + End", "Slide view to last column", hl.dsp.layout("fit toend"))
 
 -- Column width cycling (presets in scrolling.explicit_column_widths).
--- o.bind("SUPER + R", "Cycle column width forward", hl.dsp.layout("colresize +conf"))
--- o.bind("SUPER + SHIFT + R", "Cycle column width backward", hl.dsp.layout("colresize -conf"))
+o.bind("SUPER + R", "Cycle column width forward", hl.dsp.layout("colresize +conf"))
+o.bind("SUPER + SHIFT + R", "Cycle column width backward", hl.dsp.layout("colresize -conf"))
 
 -- View pinning (stop auto-scrolling on focus changes).
 -- o.bind("SUPER + backslash", "Toggle scroll inhibit (pin view)", hl.dsp.layout("inhibit_scroll"))
@@ -209,20 +238,12 @@
 -- o.bind("SUPER + SHIFT + mouse_right", "Move column right", hl.dsp.layout("swapcol r"))
 
 -- Incremental scroll. `bindde` (repeat-while-held) becomes repeating = true.
--- o.bind("SUPER + CTRL + bracketleft", "Slow-scroll view left", hl.dsp.layout("move +120"), { repeating = true })
--- o.bind("SUPER + CTRL + bracketright", "Slow-scroll view right", hl.dsp.layout("move -120"), { repeating = true })
+o.bind("SUPER + CTRL + bracketleft", "Slow-scroll view left", hl.dsp.layout("move +120"), { repeating = true })
+o.bind("SUPER + CTRL + bracketright", "Slow-scroll view right", hl.dsp.layout("move -120"), { repeating = true })
 
 
 -- ============================================================================
 -- MISC
 -- ============================================================================
 -- Freeze/unfreeze the active process. Key is free in v4.
--- o.bind("SUPER + XF86AudioPlay", nil, "wl-freeze -a")
-
-
--- ============================================================================
--- DROPPED IN THE PORT
--- ============================================================================
--- The vicinae rebind blocks (core plugin + omarchy-menu) are not carried over.
--- They were already fully commented out in the 3.x file, and vicinae was backed
--- out in 90bbad5 in favour of deskflow.
+o.bind("SUPER + XF86AudioPlay", nil, "wl-freeze -a")
