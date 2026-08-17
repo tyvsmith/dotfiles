@@ -78,13 +78,9 @@ o.bind("SUPER + page_up", "Previous workspace", hl.dsp.focus({ workspace = "e-1"
 o.bind("SUPER + SHIFT + page_down", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
 o.bind("SUPER + SHIFT + page_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
 
--- Invert SUPER+scroll to match natural-scroll direction (v4 binds it the other way)
-hl.unbind("SUPER + mouse_down")
-hl.unbind("SUPER + mouse_up")
-o.bind("SUPER + mouse_down", "Scroll active workspace backward", hl.dsp.focus({ workspace = "e-1" }))
-o.bind("SUPER + mouse_up", "Scroll active workspace forward", hl.dsp.focus({ workspace = "e+1" }))
-o.bind("SUPER + SHIFT + mouse_down", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
-o.bind("SUPER + SHIFT + mouse_up", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
+-- SUPER+SHIFT+scroll moves the window, same direction as v4's SUPER+scroll
+o.bind("SUPER + SHIFT + mouse_down", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
+o.bind("SUPER + SHIFT + mouse_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
 
 -- Dock and overview
 -- o.bind("SUPER + D", "Toggle Dock", "hypr-dock")
