@@ -17,4 +17,7 @@ codex = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node", "python", "go", "ruby", "java", "rust"]
+# Don't export GOROOT: Arch's /usr/bin/go (makedepend of AUR Go packages) would
+# pick up mise's toolchain dir and fail with a compile/tool version mismatch.
+go_set_goroot = false
 {{ end -}}
