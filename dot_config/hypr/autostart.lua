@@ -1,40 +1,45 @@
--- Extra autostart processes. hl.exec_cmd rather than o.launch_on_start so the
--- `uwsm app -s a/-s b` slice assignments survive.
+-- Extra autostart processes. Not o.exec_on_start: it cannot pass exec rules,
+-- and o.launch_on_start would lose the `uwsm app -s a/-s b` slice assignments.
 
-o.exec_on_start("hyprpm reload -n")
+local apps = require("hypr.windows").apps
 
-o.exec_on_start("uwsm app -s a -- hypr-dock")
-
--- No hypr-sticky-hdr: HDR lives in hypr/sticky_hdr.lua; the daemon would fight it.
-
--- Tray apps: parked on their workspace without stealing focus at boot. The rule
--- rides on the exec (Hyprland tags the process with HL_EXEC_RULE_TOKEN and
--- matches the window through its environ, so it survives uwsm/wait-for-sni),
--- and beats the static rule in hypr/windows.lua, which stays non-silent so a
--- launcher start or a tray re-show switches there. Exec rules expire 60 s after
--- spawn; a window that maps later falls through to the static rule.
---
--- wait-for-sni blocks until a StatusNotifierWatcher is on the bus so tray icons
--- register on cold boot (10 s fail-open).
-local function tray_app_on_start(command, workspace)
+local function exec_on_start(command, rules)
   hl.on("hyprland.start", function()
-    hl.exec_cmd("uwsm app -s b -- wait-for-sni " .. command, { workspace = workspace .. " silent" })
+    hl.exec_cmd(command, rules)
   end)
 end
 
--- Workspace 4 -- messaging
-tray_app_on_start("beeper", 4)
-tray_app_on_start("vesktop", 4)
-tray_app_on_start("flatpak run com.slack.Slack -b", 4)
+-- Tray apps: parked on their workspace without stealing focus at boot. The
+-- workspace comes from hypr/windows.lua; only "silent" is added here, as an
+-- exec rule (Hyprland tags the process with HL_EXEC_RULE_TOKEN and matches the
+-- window through its environ, so it survives uwsm/wait-for-sni) that beats the
+-- static rule. Exec rules expire 60 s after spawn; a window that maps later
+-- falls through to the static rule and switches workspace.
+--
+-- wait-for-sni blocks until a StatusNotifierWatcher is on the bus (10 s
+-- fail-open). Still needed: the shell acquires the name after its bar maps,
+-- and Chromium's tray code gives up for good if the watcher is absent at
+-- init (Beeper, vesktop, Slack). StreamController self-heals from 1.5.0-beta.16;
+-- Flathub ships beta.15.
+local function tray_app_on_start(name, command)
+  local app = assert(apps[name], "autostart: " .. name .. " has no entry in hypr/windows.lua apps")
+  exec_on_start("uwsm app -s b -- wait-for-sni " .. command, { workspace = app.workspace .. " silent" })
+end
 
--- Workspace 5 -- Steam
-tray_app_on_start("steam", 5)
-tray_app_on_start("protonplus", 5)
+exec_on_start("hyprpm reload -n")
 
--- Workspace 10 -- utilities
+exec_on_start("uwsm app -s a -- hypr-dock")
+
+-- No hypr-sticky-hdr: HDR lives in hypr/sticky_hdr.lua; the daemon would fight it.
+
+tray_app_on_start("beeper", "beeper")
+tray_app_on_start("vesktop", "vesktop")
+tray_app_on_start("slack", "flatpak run com.slack.Slack -b")
+tray_app_on_start("steam", "steam")
+tray_app_on_start("protonplus", "protonplus")
 -- StreamController launches from here ONLY: its own autostart .desktop raced this
 -- and two instances fought over the Stream Deck's USB claim. That path is masked
 -- via systemd/user/app-StreamController@autostart.service; the app recreates the
 -- .desktop on every launch, so deleting it is not enough. -b starts to the tray.
-tray_app_on_start("flatpak run com.core447.StreamController -b", 10)
-tray_app_on_start("lan-mouse", 10)
+tray_app_on_start("streamcontroller", "flatpak run com.core447.StreamController -b")
+tray_app_on_start("lan_mouse", "lan-mouse")

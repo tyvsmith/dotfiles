@@ -3,23 +3,34 @@
 --
 -- Workspace rules here are NOT silent on purpose: a launcher start or a tray
 -- re-show should switch to the app. Boot launches stay quiet via the exec rule
--- in hypr/autostart.lua, which overrides these.
+-- in hypr/autostart.lua, which reads `apps` below and adds "silent" on top.
 
--- Workspace 4 -- messaging
-o.window("com\\.slack\\.Slack", { workspace = "4" })
-o.window("Beeper", { workspace = "4" })
-o.window("vesktop", { workspace = "4" })
+local M = {}
 
--- Workspace 5 -- Steam
-o.window("steam", { workspace = "5" })
-o.window("steamwebhelper", { workspace = "5" })
-o.window("protonplus", { workspace = "5" })
+-- Apps parked on a workspace, by short name (class is a regex: backslashes are
+-- doubled, once for Lua and once for the regex).
+M.apps = {
+  -- Workspace 4 -- messaging
+  slack   = { class = "com\\.slack\\.Slack", workspace = 4 },
+  beeper  = { class = "Beeper",             workspace = 4 },
+  vesktop = { class = "vesktop",            workspace = 4 },
 
--- Workspace 6 -- fullscreen/borderless games (silent: a game launching from
--- Steam should not yank focus while it loads)
-o.window({ fullscreen = 1 }, { workspace = "6 silent" })
-o.window("steam_app_.*", { workspace = "6 silent" })
+  -- Workspace 5 -- Steam
+  steam          = { class = "steam",          workspace = 5 },
+  steamwebhelper = { class = "steamwebhelper", workspace = 5 },
+  protonplus     = { class = "protonplus",     workspace = 5 },
 
--- Workspace 10 -- utilities (backslashes doubled: Lua escape, then regex)
-o.window("com\\.core447\\.StreamController", { workspace = "10" })
-o.window("de\\.feschber\\.LanMouse", { workspace = "10" })
+  -- Workspace 10 -- utilities
+  streamcontroller = { class = "com\\.core447\\.StreamController", workspace = 10 },
+  lan_mouse        = { class = "de\\.feschber\\.LanMouse",         workspace = 10 },
+}
+
+for _, app in pairs(M.apps) do
+  o.window(app.class, { workspace = tostring(app.workspace) })
+end
+
+-- Workspace 6 -- fullscreen/borderless games
+o.window({ fullscreen = 1 }, { workspace = "6" })
+o.window("steam_app_.*", { workspace = "6" })
+
+return M
