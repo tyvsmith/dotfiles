@@ -147,6 +147,10 @@ packages:
     tags: [dev]
     desc: "ping with graph"
 
+  tealdeer:
+    tags: [core]
+    desc: "tldr pages client"
+
   yazi:
     tags: [core]
     desc: "Terminal file manager"
@@ -386,17 +390,6 @@ packages:
     desc: "Hack Nerd Font"
     brew_cask: true
     pacman: ttf-hack-nerd
-
-  # ===========================================================================
-  # Basic UI — Editor
-  # ===========================================================================
-  visual-studio-code-insiders:
-    tags: [ui]
-    desc: "Code editor (Insiders)"
-    brew: "visual-studio-code@insiders"
-    brew_cask: true
-    pacman: visual-studio-code-insiders-bin
-    appimage: tyvsmith/VSCodeInsiders-AppImage
 
 
   # ===========================================================================
