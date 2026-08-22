@@ -1,60 +1,18 @@
--- Keep only your personal input overrides here. Uncommented settings below
--- replace Omarchy's defaults.
-
--- Keyboard layout and options.
+-- Personal input overrides; only what differs from Omarchy's defaults.
 -- See https://wiki.hypr.land/Configuring/Basics/Variables/#input
--- hl.config({
---   input = {
---     -- Use multiple keyboard layouts and switch between them with Left Alt + Right Alt.
---     kb_layout = "us,dk,eu",
---     kb_options = "compose:caps,shift:both_capslock_cancel,grp:alts_toggle",
---
---     -- Use a specific keyboard variant if needed (e.g. intl for international keyboards).
---     kb_variant = "intl",
---
---     -- Change speed of keyboard repeat.
---     repeat_rate = 40,
---     repeat_delay = 250,
---
---     -- Start with numlock on by default.
---     numlock_by_default = true,
---
---     -- Increase sensitivity for mouse/trackpad (default: 0).
---     sensitivity = 0.35,
---
---     -- Turn off mouse acceleration (default: adaptive).
---     accel_profile = "flat",
---
---     touchpad = {
---       -- Use natural (inverse) scrolling.
---       natural_scroll = true,
---
---       -- Use two-finger clicks for right-click instead of lower-right corner.
---       clickfinger_behavior = true,
---
---       -- Control the speed of your scrolling.
---       scroll_factor = 0.4,
---
---       -- Enable the touchpad while typing.
---       disable_while_typing = false,
---
---       -- Left-click-and-drag with three fingers.
---       drag_3fg = 1,
---     },
---   },
--- })
 
--- App-specific touchpad scroll speeds.
--- o.window("(Alacritty|kitty|foot)", { scroll_touchpad = 1.5 })
--- o.window("com.mitchellh.ghostty", { scroll_touchpad = 0.2 })
-
--- Enable touchpad gestures for changing workspaces.
--- See https://wiki.hypr.land/Configuring/Advanced-and-Cool/Gestures/
--- hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
-
--- Enable touchpad gestures for moving focus (helpful on scrolling layout).
--- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
--- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
+-- lan-mouse: Mac-friendly keyboard/mouse while the cursor is on the Mac client;
+-- the mechanics are in hypr/lan_mouse.lua. The global is the hook target in
+-- ~/.config/lan-mouse/config.toml:
+--   enter_hook = "hyprctl eval 'lan_mouse.enter()'"
+--   leave_hook = "hyprctl eval 'lan_mouse.leave()'"
+lan_mouse = require("hypr.lan_mouse").setup({
+  -- altwin:swap_alt_win: Alt/Super in the Mac's Option/Cmd positions.
+  -- custom:printscreen_f13: PrtSc -> F13 (macOS has no PrtSc); defined in
+  -- ~/.config/xkb/{rules/evdev,symbols/custom}.
+  kb_options     = "altwin:swap_alt_win,custom:printscreen_f13",
+  natural_scroll = true,
+})
 
 -- deskflow: forward modifiers to the input-capture client. With Hyprland's
 -- default (false), pressing Super/Alt while driving a client recycles the libei
