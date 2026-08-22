@@ -53,17 +53,17 @@
 -- o.bind("SUPER + SHIFT + ALT + G", "Github", { webapp = "https://github.com/" })
 
 -- Omarchy web apps not wanted
-hl.unbind("SUPER + SHIFT + C")         -- Calendar (Hey)
-hl.unbind("SUPER + SHIFT + E")         -- Email (Hey)
-hl.unbind("SUPER + SHIFT + ALT + E")   -- New email (Hey)
-hl.unbind("SUPER + SHIFT + ALT + G")   -- WhatsApp
-hl.unbind("SUPER + SHIFT + CTRL + G")  -- Google Messages
-hl.unbind("SUPER + SHIFT + ALT + X")   -- X Post
-hl.unbind("SUPER + SHIFT + G")         -- Signal
+hl.unbind("SUPER + SHIFT + C")        -- Calendar (Hey)
+hl.unbind("SUPER + SHIFT + E")        -- Email (Hey)
+hl.unbind("SUPER + SHIFT + ALT + E")  -- New email (Hey)
+hl.unbind("SUPER + SHIFT + ALT + G")  -- WhatsApp
+hl.unbind("SUPER + SHIFT + CTRL + G") -- Google Messages
+hl.unbind("SUPER + SHIFT + ALT + X")  -- X Post
+hl.unbind("SUPER + SHIFT + G")        -- Signal
+hl.unbind("SUPER + SHIFT + S")        -- Google Maps
 -- hl.unbind("SUPER + SHIFT + ALT + A")   -- Grok
 -- hl.unbind("SUPER + SHIFT + Y")         -- YouTube
 -- hl.unbind("SUPER + SHIFT + P")         -- Google Photos
--- hl.unbind("SUPER + SHIFT + S")         -- Google Maps
 -- hl.unbind("SUPER + SHIFT + X")         -- X
 -- hl.unbind("SUPER + SHIFT + W")         -- Omawrite
 
@@ -81,6 +81,9 @@ o.bind("SUPER + SHIFT + page_up", "Move to previous workspace", hl.dsp.window.mo
 -- SUPER+SHIFT+scroll moves the window, same direction as v4's SUPER+scroll
 o.bind("SUPER + SHIFT + mouse_down", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
 o.bind("SUPER + SHIFT + mouse_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
+
+-- SUPER+SHIFT+S joins the SUPER+SHIFT+number move family (key freed from Google Maps above)
+o.bind("SUPER + SHIFT + S", "Move window to scratchpad", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
 
 -- Dock and overview
 -- o.bind("SUPER + D", "Toggle Dock", "hypr-dock")
