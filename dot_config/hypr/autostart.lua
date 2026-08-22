@@ -1,7 +1,7 @@
 -- Extra autostart processes. Not o.exec_on_start: it cannot pass exec rules,
 -- and o.launch_on_start would lose the `uwsm app -s a/-s b` slice assignments.
 
-local placements = require("hypr.placements")
+local window_workspaces = require("hypr.window_workspaces")
 
 local function exec_on_start(command, rules)
   hl.on("hyprland.start", function()
@@ -10,7 +10,7 @@ local function exec_on_start(command, rules)
 end
 
 -- Tray apps: parked on their workspace without stealing focus at boot. The
--- workspace comes from hypr/placements.lua; only "silent" is added, as
+-- workspace comes from hypr/window_workspaces.lua; only "silent" is added, as
 -- an exec rule (Hyprland tags the process with HL_EXEC_RULE_TOKEN and matches the
 -- window through its environ, so it survives uwsm/wait-for-sni) that beats the
 -- static rule. Exec rules expire 60 s after spawn; a window that maps later
@@ -22,7 +22,7 @@ end
 -- init (Beeper, vesktop, Slack). StreamController self-heals from 1.5.0-beta.16;
 -- Flathub ships beta.15.
 local function tray_app_on_start(name, command)
-  local p = assert(placements[name], "autostart: " .. name .. " has no entry in hypr/placements.lua")
+  local p = assert(window_workspaces[name], "autostart: " .. name .. " has no entry in hypr/window_workspaces.lua")
   exec_on_start("uwsm app -s b -- wait-for-sni " .. command, { workspace = p.workspace .. " silent" })
 end
 
