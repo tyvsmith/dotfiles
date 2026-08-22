@@ -13,7 +13,7 @@ local omarchy_monitor_scale = 1
 hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
 
 require("hypr.sticky_hdr").setup({
-  monitor = {
+  monitor  = {
     output        = "",
     mode          = "preferred",
     position      = "auto",
@@ -25,7 +25,7 @@ require("hypr.sticky_hdr").setup({
   },
   sdr      = { cm = "srgb" },
   hdr      = { cm = "hdr" },
-  env      = { "PROTON_ENABLE_HDR=1", "HYPR_STICKY_HDR=1" },
+  env      = { "PROTON_ENABLE_HDR=1", "DXVK_HDR=1", "HYPR_STICKY_HDR=1" },
   classes  = { "gamescope" },
   cooldown = 2,
 })
