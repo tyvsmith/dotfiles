@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+{{ if eq .de "hyprland-omarchy" -}}
+# Splice the third-party pacman repo snippets into /etc/pacman.conf via the
+# omarchy pre-refresh-pacman hook, so editing a snippet + `chezmoi apply` takes
+# effect now rather than at the next `omarchy refresh pacman`.
+# Reruns when a snippet or the hook changes (hashes below).
+#   head: {{ include "dot_config/pacman/custom-repos-head.conf" | sha256sum }}
+#   tail: {{ include "dot_config/pacman/custom-repos-tail.conf" | sha256sum }}
+#   hook: {{ include "dot_config/omarchy/hooks/pre-refresh-pacman.d/executable_10-custom-repos.sh" | sha256sum }}
+set -euo pipefail
+
+HOOK="${HOME}/.config/omarchy/hooks/pre-refresh-pacman.d/10-custom-repos.sh"
+[[ -x $HOOK ]] || { echo "pacman repo hook not deployed yet — skipping (will run on next apply)"; exit 0; }
+
+# Nothing to do if pacman.conf already matches the snippets (no sudo needed).
+if "$HOOK" --check; then
+    exit 0
+fi
+
+# The hook needs one sudo (install over /etc/pacman.conf). Escalate when
+# passwordless sudo works or we have a tty to prompt on; otherwise print the
+# command rather than hang a non-interactive apply.
+if sudo -n true 2>/dev/null || [[ -t 0 ]]; then
+    if ! "$HOOK"; then
+        echo "WARN: could not update /etc/pacman.conf (sudo declined/failed). Run later:"
+        echo "  $HOOK"
+    fi
+else
+    echo "NOTE: /etc/pacman.conf needs re-splicing. No passwordless sudo and no tty — run once:"
+    echo "  $HOOK"
+fi
+{{ else -}}
+# Profile '{{ .profile }}' is not omarchy — nothing to do.
+exit 0
+{{ end -}}
