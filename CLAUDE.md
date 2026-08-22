@@ -138,6 +138,7 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_13-install-packages-apt.sh.tmpl` | Debian/Ubuntu packages via apt |
 | `run_onchange_14-install-packages-dnf.sh.tmpl` | Fedora packages via dnf |
 | `run_onchange_15-install-packages-rpm-ostree.sh.tmpl` | Immutable Fedora packages via rpm-ostree |
+| `run_onchange_20-configure-pacman-repos.sh.tmpl` | Splices `~/.config/pacman/custom-repos-{head,tail}.conf` into `/etc/pacman.conf` via the omarchy `pre-refresh-pacman` hook (one sudo); omarchy-only |
 | `run_onchange_30-install-packages-flatpak.sh.tmpl` | Flatpak GUI apps (Linux, tier 4+) |
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
 | `run_onchange_40-install-thpm.sh.tmpl` | Installs THPM (theme-hook-plugin-manager) at a pinned commit; omarchy-only |
