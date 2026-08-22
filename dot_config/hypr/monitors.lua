@@ -29,3 +29,9 @@ require("hypr.sticky_hdr").setup({
   classes  = { "gamescope" },
   cooldown = 2,
 })
+
+-- NVIDIA VA-API. Not redundant with default/hypr/nvidia.lua: that module gates
+-- on o.shell_succeeds(), and os.execute returns ECHILD inside Hyprland's Lua, so
+-- it never fires (verified 2026-08-14: LIBVA_DRIVER_NAME absent from a spawned
+-- process's environ).
+hl.env("LIBVA_DRIVER_NAME", "nvidia")
