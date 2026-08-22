@@ -1,4 +1,13 @@
 {{ if contains "dev" .tags -}}
+# Chezmoi owns this drop-in: language runtimes and mise settings, nothing else.
+# Omarchy owns ~/.config/mise/config.toml, which its ~/.local/bin lazy wrappers
+# rewrite on every launch via `mise use -g`.
+#
+# NOTE: CLI agents (claude, codex, opencode, gemini, ...) are deliberately absent.
+# On omarchy the wrappers install and pin them; declaring them here would fight
+# `mise use -g`. On every other profile they are installed by hand — mise is not
+# the system of record for agents anywhere.
+#
 # NOTE: python intentionally NOT a global tool. mise shims fall through to the
 # next binary on PATH when a tool isn't configured, so leaving python out here
 # makes `python3`/`pip` resolve to /usr/bin/python3 everywhere by default —
@@ -11,9 +20,6 @@ node = "latest"
 rust = "latest"
 go = "latest"
 java = "latest"
-{{- /* Omarchy 4's ~/.local/bin wrappers `mise use -g` these; track them so apply agrees. */}}
-claude = "latest"
-codex = "latest"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node", "python", "go", "ruby", "java", "rust"]
