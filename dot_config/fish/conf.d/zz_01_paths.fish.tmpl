@@ -14,8 +14,7 @@ end
 
 {{ if eq .de "hyprland-omarchy" -}}
 # Omarchy
-set -gx OMARCHY_PATH $HOME/.local/share/omarchy
-fish_add_path -a --path $OMARCHY_PATH/bin
+set -gx OMARCHY_PATH /usr/share/omarchy
 {{ end -}}
 
 # Mise - polyglot runtime version manager (Java, Python, Node, etc.)

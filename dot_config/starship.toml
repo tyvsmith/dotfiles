@@ -1,7 +1,6 @@
 add_newline = true
-command_timeout = 5000
+command_timeout = 200
 format = "[$directory$git_branch$git_status]($style)$character"
-#right_format = "$python$nodejs$golang$java$docker_context$cmd_duration"
 
 [character]
 error_symbol = "[✗](bold cyan)"
@@ -31,33 +30,3 @@ stashed    = ""
 staged     = ""
 renamed    = ""
 deleted    = ""
-
-[cmd_duration]
-min_time = 2_000
-format = "[$duration]($style) "
-style = "yellow"
-
-[python]
-format = "[$symbol$version]($style) "
-symbol = "py "
-style = "yellow"
-
-[nodejs]
-format = "[$symbol$version]($style) "
-symbol = "node "
-style = "green"
-
-[golang]
-format = "[$symbol$version]($style) "
-symbol = "go "
-style = "cyan"
-
-[java]
-format = "[$symbol$version]($style) "
-symbol = "java "
-style = "red"
-
-[docker_context]
-format = "[$symbol$context]($style) "
-symbol = "docker "
-style = "blue"

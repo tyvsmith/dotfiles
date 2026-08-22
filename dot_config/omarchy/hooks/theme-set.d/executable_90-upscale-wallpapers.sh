@@ -24,7 +24,7 @@ fi
 
 # --- child: do the work synchronously in its own session ----------------------
 THEME_NAME="${1:-}"
-BG_DIR="$HOME/.config/omarchy/current/theme/backgrounds"
+BG_DIR="$HOME/.local/state/omarchy/current/theme/backgrounds"
 CACHE_DIR="$HOME/.cache/omarchy-wallpaper-upscale"
 LOG_FILE="$CACHE_DIR/last-run.log"
 
@@ -96,7 +96,7 @@ done
 echo "done: upscaled=$upscaled processed=$processed"
 
 if (( upscaled > 0 )); then
-  link="$HOME/.config/omarchy/current/background"
+  link="$HOME/.local/state/omarchy/current/background"
   if [[ -L $link ]]; then
     bg=$(readlink -f "$link")
     [[ -f $bg ]] && omarchy-theme-bg-set "$bg" || true

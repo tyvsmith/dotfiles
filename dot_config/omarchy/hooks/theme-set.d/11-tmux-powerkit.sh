@@ -2,10 +2,10 @@
 source "${THPM_THEME_ENV:-$HOME/.local/share/thpm/lib/theme-env.sh}"
 
 target="$HOME/.config/tmux/omarchy-powerkit-theme.sh"
-shipped="$HOME/.config/omarchy/current/theme/tmux-powerkit.sh"
-colors_toml="$HOME/.config/omarchy/current/theme/colors.toml"
+shipped="$HOME/.local/state/omarchy/current/theme/tmux-powerkit.sh"
+colors_toml="$HOME/.local/state/omarchy/current/theme/colors.toml"
 themes_dir="$HOME/.config/tmux/plugins/tmux-powerkit/src/themes"
-theme_name_file="$HOME/.config/omarchy/current/theme.name"
+theme_name_file="$HOME/.local/state/omarchy/current/theme.name"
 entry_script="$HOME/.config/tmux/plugins/tmux-powerkit/tmux-powerkit.tmux"
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/tmux-powerkit/data"
 

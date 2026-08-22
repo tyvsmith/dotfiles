@@ -6,7 +6,7 @@
 #      window class Brave generates for --app= mode (its window-class matcher
 #      has no `brave-` prefix; falls back to the StartupWMClass→file map)
 #   3. Restart hypr-dock — its StartupWMClass map is built once via sync.Once
-source /home/ty/.local/share/omarchy/bin/omarchy-webapp-install "$@"
+source /usr/bin/omarchy-webapp-install "$@"
 
 host="${APP_URL#*://}"; host="${host%%/*}"
 [[ -z $host ]] && exit 0

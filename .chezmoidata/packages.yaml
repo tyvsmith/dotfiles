@@ -50,14 +50,6 @@ packages:
     tags: [core]
     desc: "Magical shell history"
 
-  blesh:
-    tags: [experiment]
-    desc: "Bash line editor with syntax highlighting and autosuggestions"
-    pacman: blesh-git
-    brew: false
-    apt: false
-    dnf: false
-
   zoxide:
     tags: [core]
     desc: "Smarter cd command"
@@ -155,10 +147,6 @@ packages:
     tags: [dev]
     desc: "ping with graph"
 
-  tealdeer:
-    tags: [core]
-    desc: "tldr pages client"
-
   yazi:
     tags: [core]
     desc: "Terminal file manager"
@@ -185,7 +173,7 @@ packages:
   gh:
     tags: [core]
     desc: "GitHub CLI"
-    pacman: github-cli
+    pacman: false # omarchy 4 provides gh as a lazy mise wrapper
 
   lazygit:
     tags: [core]
@@ -373,25 +361,22 @@ packages:
   # ===========================================================================
  
 
-  gemini-cli:
-    tags: [ai]
-    desc: "Google Gemini CLI"
-
-  opencode:
-    tags: [ai]
-    desc: "AI coding agent"
-
-  claude-code:
-    tags: [ai]
-    desc: "Anthropic Claude Code"
-    brew: "claude-code@latest"
-    brew_cask: true
-
-  codex:
-    tags: [ai]
-    desc: "OpenAI Codex"
-    brew_cask: true
-    pacman: openai-codex
+  # Disabled: omarchy 4 provides these as lazy mise wrappers in ~/.local/bin.
+  # opencode:
+  #   tags: [ai]
+  #   desc: "AI coding agent"
+  #
+  # claude-code:
+  #   tags: [ai]
+  #   desc: "Anthropic Claude Code"
+  #   brew: "claude-code@latest"
+  #   brew_cask: true
+  #
+  # codex:
+  #   tags: [ai]
+  #   desc: "OpenAI Codex"
+  #   brew_cask: true
+  #   pacman: openai-codex
 
   # ===========================================================================
   # Basic UI — Fonts

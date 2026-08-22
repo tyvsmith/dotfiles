@@ -151,8 +151,8 @@ default:
     schedule-lock-wait: 1h
     read-data-subset: "1/12"
 
-# --- /etc, run as ROOT (captures root-only files the user HOME backup can't read:
-#     /etc/shadow, NetworkManager system-connections, sudoers.d, etc.) ---
+# --- system config, run as ROOT (captures root-only files the user HOME backup can't
+#     read: /etc/shadow, NetworkManager system-connections, sudoers.d, etc.) ---
 # schedule-permission: system → a root systemd timer. A non-root `chezmoi apply` cannot
 # create system timers, so run_onchange_70-configure-restic.sh schedules this via
 # `sudo resticprofile --name system schedule` (it prints the one command to run by hand
@@ -169,6 +169,11 @@ system:
   backup:
     source:
       - /etc
+      # ALSA mixer levels written by `alsactl store`. Root-owned and outside /etc, so
+      # neither the HOME profile nor /etc reaches it. Small, and losing it means every
+      # card comes back at driver defaults - which on the Maxwell dongle is a silent
+      # 20 dB drop on PCM,1 that reads as a hardware fault, not a settings loss.
+      - /var/lib/alsa
     exclude-caches: true
     tag:
       - "{{ $host }}"

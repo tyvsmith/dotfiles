@@ -1,4 +1,4 @@
 #!/bin/bash
 # Source upstream with its hardcoded `chromium.desktop` PWA fallback swapped
 # to `brave-browser.desktop`, so non-PWA browsers (Zen) fall back to Brave.
-source <(sed 's/chromium\.desktop/brave-browser.desktop/' /home/ty/.local/share/omarchy/bin/omarchy-launch-webapp)
+source <(sed 's/chromium\.desktop/brave-browser.desktop/' /usr/bin/omarchy-launch-webapp)
