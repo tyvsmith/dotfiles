@@ -63,6 +63,15 @@ tests/
 .local/share/overrides/bin/ydotool
 {{ end }}
 
+{{ if not (contains "gaming" .tags) }}
+# Gaming-only: ScopeBuddy launch layering and GameMode CCD pinning.
+# environment.d/gaming.conf is deliberately NOT here -- it only raises the
+# NVIDIA shader cache ceiling, which is inert on a machine that never games.
+.config/scopebuddy/
+.config/scopebuddy/**
+.config/gamemode.ini
+{{ end }}
+
 {{ if not .work }}
 # Work-only: aifx + claude settings-repair overrides (paths are target-relative)
 .local/share/overrides/bin/claude
