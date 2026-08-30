@@ -4,9 +4,11 @@
 -- rules in registration order and the last one wins. No pairs(), and no rule
 -- appended after the loop whose correctness depends on where its line sits.
 --
--- Static rules are not silent unless the entry says so: a launcher start or a
--- tray re-show should switch to the app. Boot launches stay quiet via the exec
--- rule in hypr/autostart.lua, which always adds "silent".
+-- Static rules are not silent unless the entry says so. Everything autostart.lua
+-- launches says so, because the exec rule that used to carry that job cannot be
+-- relied on -- see the note in hypr/apps.lua. Placement is therefore only half
+-- the story here: hypr/placement.lua focuses any window of those apps that is
+-- not the one that came up at boot, so a later launch still takes you to it.
 
 local apps = require("hypr.apps")
 

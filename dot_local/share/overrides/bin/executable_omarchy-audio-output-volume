@@ -1,0 +1,32 @@
+#!/bin/bash
+# Add an optional sink argument to upstream:
+#   omarchy-audio-output-volume <raise|lower|mute-toggle|+N|-N> [sink-name]
+#
+# Upstream resolves the target from `pactl get-default-sink` alone, so the volume
+# keys can never reach a non-default output. The Maxwell chat endpoint is pinned
+# to priority.session = 100 in ~/.config/wireplumber/wireplumber.conf.d/50-audio-devices.conf
+# precisely so it is never chosen as default, which puts it permanently out of reach.
+#
+# omarchy-audio-output-sink already accepts a sink name and passes alsa_output.*
+# through untouched, so forwarding $2 is the whole patch.
+
+upstream=/usr/bin/omarchy-audio-output-volume
+
+# Absent device is the common case (headset powered off). Upstream would fail to
+# read a volume and print to a stderr nobody sees; say so on the OSD instead.
+if [[ -n ${2:-} ]] &&
+  ! pactl list sinks short 2>/dev/null | awk -v n="$2" '$2 == n {found = 1} END {exit !found}'; then
+  omarchy-osd -i volume-muted -m "Output not connected"
+  exit 0
+fi
+
+patched="$(sed 's|omarchy-audio-output-sink)|omarchy-audio-output-sink "${2:-}")|' "$upstream")"
+
+# Fail loudly if upstream refactors the anchor away. A silently-unpatched override
+# would send the chat chord to the SYSTEM volume, which is worse than not working.
+if [[ $patched == "$(<"$upstream")" ]]; then
+  omarchy-osd -m "audio-output-volume override is stale"
+  exit 1
+fi
+
+source <(printf '%s\n' "$patched")

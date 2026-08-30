@@ -4,6 +4,11 @@
 -- listed, switches the monitor to the `hdr` spec until the last such window is
 -- gone plus `cooldown` seconds. Usage: see hypr/monitors.lua.
 --
+-- M.prewarm() enters HDR ahead of any window, for launchers that probe the
+-- output's color state once at startup (gamescope). The hold lasts prewarm_sec
+-- (default 10s): a qualifying window arriving inside it takes over normal
+-- stickiness; otherwise the hold expires and the usual cooldown revert runs.
+--
 -- Hyprland 0.56 notes: monitor rules are whole-record replacements, so sdr/hdr
 -- are merged over the full spec; window.close skips SIGKILL and window.destroy
 -- has no address, so teardown recounts live windows; HL.Timer has no cancel(),
@@ -11,13 +16,15 @@
 -- preset, not live state, so the module keeps its own flag.
 
 local M = {}
+M._instances = {}
 
 local DEFAULTS = {
   sdr      = { cm = "srgb" },
   hdr      = { cm = "hdr" },
-  env      = { "PROTON_ENABLE_HDR=1", "HYPR_STICKY_HDR=1" },
-  classes  = {},
-  cooldown = 2,
+  env      = { "DXVK_HDR=1", "HYPR_STICKY_HDR=1" },
+  classes  = { "gamescope" },
+  cooldown_sec = 2,
+  prewarm_sec  = 10,
 }
 
 local function merged(base, over)
@@ -48,18 +55,20 @@ end
 --- Start managing one monitor. Returns a handle with :wants_hdr(), :in_hdr().
 function M.setup(opts)
   assert(type(opts) == "table" and type(opts.monitor) == "table",
-    "sticky_hdr.setup: opts.monitor (an hl.monitor spec) is required")
-
+  "sticky_hdr.setup: opts.monitor (an hl.monitor spec) is required")
+  
   local SDR      = merged(opts.monitor, opts.sdr or DEFAULTS.sdr)
   local HDR      = merged(opts.monitor, opts.hdr or DEFAULTS.hdr)
   local ENV      = opts.env or DEFAULTS.env
   local CLASSES  = to_set(opts.classes or DEFAULTS.classes)
-  local COOLDOWN = math.floor((opts.cooldown or DEFAULTS.cooldown) * 1000)
-
-  local env_wants = {} -- pid -> bool, so /proc is read once per process
-  local in_hdr    = false
-  local pending   = false
-
+  local COOLDOWN_MS = math.floor((opts.cooldown_sec or DEFAULTS.cooldown_sec) * 1000)
+  local PREWARM_MS  = math.floor((opts.prewarm_sec or DEFAULTS.prewarm_sec) * 1000)
+  
+  local env_wants   = {} -- pid -> bool, so /proc is read once per process
+  local in_hdr      = false
+  local pending     = false
+  local prewarm_gen = 0 -- overlapping holds: only the newest timer may end one
+  
   local function window_wants_hdr(w)
     if CLASSES[w.class] then return true end
     local pid = w.pid
@@ -67,14 +76,15 @@ function M.setup(opts)
     if env_wants[pid] == nil then env_wants[pid] = environ_has_any(pid, ENV) end
     return env_wants[pid]
   end
-
+  
   local function demand()
+    if prewarm_gen > 0 then return true end
     for _, w in ipairs(hl.get_windows()) do
       if window_wants_hdr(w) then return true end
     end
     return false
   end
-
+  
   local function sync()
     local want = demand()
     if want and not in_hdr then
@@ -88,10 +98,10 @@ function M.setup(opts)
           in_hdr = false
           hl.monitor(SDR)
         end
-      end, { timeout = COOLDOWN, type = "oneshot" })
+      end, { timeout = COOLDOWN_MS, type = "oneshot" })
     end
   end
-
+  
   hl.on("window.open", sync)
   hl.on("window.close", sync)
   hl.on("window.destroy", sync)
@@ -100,16 +110,39 @@ function M.setup(opts)
     in_hdr = false
     sync()
   end)
-
+  
+  local function prewarm()
+    prewarm_gen = prewarm_gen + 1
+    local gen = prewarm_gen
+    if not in_hdr then
+      in_hdr = true
+      hl.monitor(HDR)
+    end
+    hl.timer(function()
+      if gen ~= prewarm_gen then return end
+      prewarm_gen = 0
+      sync()
+    end, { timeout = PREWARM_MS, type = "oneshot" })
+  end
+  
   -- Baseline. Adopts windows that already exist so a config reload mid-game
   -- does not flash SDR.
   in_hdr = demand()
   hl.monitor(in_hdr and HDR or SDR)
-
-  return {
+  
+  local handle = {
     wants_hdr = demand,
     in_hdr    = function() return in_hdr end,
+    prewarm   = prewarm,
   }
+  table.insert(M._instances, handle)
+  return handle
+end
+
+--- Enter HDR on every managed monitor before a launcher probes the output.
+--- Called from outside the VM: hyprctl eval "require('hypr.sticky_hdr').prewarm()"
+function M.prewarm()
+  for _, h in ipairs(M._instances) do h.prewarm() end
 end
 
 return M

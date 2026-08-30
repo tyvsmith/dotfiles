@@ -1,7 +1,8 @@
 -- Extra autostart processes. Not o.exec_on_start: it cannot pass exec rules,
 -- and o.launch_on_start would lose the `uwsm app -s a/-s b` slice assignments.
 
-local apps = require("hypr.apps")
+local apps      = require("hypr.apps")
+local placement = require("hypr.placement")
 
 local function exec_on_start(command, rules)
   hl.on("hyprland.start", function()
@@ -10,11 +11,17 @@ local function exec_on_start(command, rules)
 end
 
 -- Tray apps: parked on their workspace without stealing focus at boot. The
--- workspace comes from hypr/apps.lua; only "silent" is added, as
--- an exec rule (Hyprland tags the process with HL_EXEC_RULE_TOKEN and matches the
--- window through its environ, so it survives uwsm/wait-for-sni) that beats the
--- static rule. Exec rules expire 60 s after spawn; a window that maps later
--- falls through to the static rule and switches workspace.
+-- workspace comes from hypr/apps.lua, whose entries all set `silent`, so the
+-- static rule already keeps boot quiet on its own. Launching one of these later
+-- still takes you to it -- hypr/placement.lua focuses any window of theirs that
+-- is not the boot one.
+--
+-- The exec rule below is a duplicate of that, kept because it costs nothing and
+-- applies after the static rule when it does bind. It is NOT the mechanism: it
+-- reaches only windows that kept HL_EXEC_RULE_TOKEN in their own environ or kept
+-- the pid Hyprland forked, and it expires 60 s after spawn. Slack and
+-- StreamController fail both tests, which is what used to yank focus at boot.
+-- See hypr/apps.lua for the full account.
 --
 -- wait-for-sni blocks until a StatusNotifierWatcher is on the bus (10 s
 -- fail-open). Still needed: the shell acquires the name after its bar maps,
@@ -23,6 +30,11 @@ end
 -- Flathub ships beta.15.
 local function tray_app_on_start(id, command)
   local app = apps.get(id)
+
+  -- Runs at config load, so a `hyprctl reload` rebuilds the managed set. Arming
+  -- is separate and happens once per session -- see hypr/placement.lua.
+  placement.manage(apps.literal_class(app))
+
   exec_on_start("uwsm app -s b -- wait-for-sni " .. command,
     { workspace = apps.workspace_arg(app, true) })
 end

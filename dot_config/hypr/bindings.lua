@@ -134,3 +134,19 @@ o.bind("SUPER + CTRL + bracketright", "Slow-scroll view right", hl.dsp.layout("m
 
 -- Freeze/unfreeze the active process
 o.bind("SUPER + XF86AudioPlay", nil, "wl-freeze -a")
+
+-- Maxwell chat endpoint. Bare volume keys stay on the default output; CTRL
+-- reaches chat, which 50-audio-devices.conf pins below auto-selection so it is
+-- never default and so never reachable by the unmodified keys.
+--
+-- Called by ABSOLUTE PATH on purpose. The session PATH puts /usr/share/omarchy/bin
+-- (which symlinks omarchy-* to /usr/bin) ahead of ~/.local/share/overrides/bin, so
+-- a bare command name resolves to upstream here even though an interactive shell
+-- picks the override. Upstream ignores the sink argument and moves the default
+-- output instead -- silently adjusting Game while claiming to adjust Chat.
+local chat_vol = os.getenv("HOME") .. "/.local/share/overrides/bin/omarchy-audio-output-volume"
+local chat_sink = "alsa_output.usb-Audeze_LLC_Audeze_Maxwell_XBOX_Dongle_0000000000000000-00.pro-output-0"
+
+o.bind("CTRL + XF86AudioRaiseVolume", "Chat volume up", chat_vol .. " raise " .. chat_sink, { locked = true, repeating = true })
+o.bind("CTRL + XF86AudioLowerVolume", "Chat volume down", chat_vol .. " lower " .. chat_sink, { locked = true, repeating = true })
+o.bind("CTRL + XF86AudioMute", "Chat mute", chat_vol .. " mute-toggle " .. chat_sink, { locked = true })

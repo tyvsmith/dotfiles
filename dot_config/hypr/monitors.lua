@@ -22,12 +22,7 @@ require("hypr.sticky_hdr").setup({
     vrr           = 2,
     sdrbrightness = 1.35, -- only acts in HDR mode
     sdrsaturation = 1.0,
-  },
-  sdr      = { cm = "srgb" },
-  hdr      = { cm = "hdr" },
-  env      = { "PROTON_ENABLE_HDR=1", "DXVK_HDR=1", "HYPR_STICKY_HDR=1" },
-  classes  = { "gamescope" },
-  cooldown = 2,
+  }
 })
 
 -- NVIDIA VA-API. Not redundant with default/hypr/nvidia.lua: that module gates
