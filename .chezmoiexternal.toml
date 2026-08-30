@@ -7,3 +7,11 @@
     type = "git-repo"
     url = "https://github.com/sahaj-b/ghostty-cursor-shaders.git"
     refreshPeriod = "0"
+
+# Pinned to a commit; bump the SHA to take an update (the cache is keyed by
+# URL, so a new SHA re-downloads without --refresh-externals). Source of
+# truth: https://github.com/tyvsmith/hypr-sticky-hdr
+[".config/hypr/sticky_hdr.lua"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/tyvsmith/hypr-sticky-hdr/9c7ec5b4922852e43b98d5fbafd384e52b7eff21/sticky_hdr.lua"
+    refreshPeriod = "0"
