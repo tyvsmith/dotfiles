@@ -20,7 +20,8 @@
 -- neither the color state nor the configured VRR mode can be read back, and
 -- the module keeps its own flag.
 --
--- Tests: dotfiles tests/sticky_hdr/run.sh, against a mock `hl`.
+-- Tests (mock hl): the hypr-sticky-hdr repo's tests/run.sh, mirrored in the
+-- dotfiles repo as tests/sticky_hdr/run.sh.
 
 local M = {}
 M._instances = {}
