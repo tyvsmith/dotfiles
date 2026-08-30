@@ -13,5 +13,5 @@
 # truth: https://github.com/tyvsmith/hypr-sticky-hdr
 [".config/hypr/sticky_hdr.lua"]
     type = "file"
-    url = "https://raw.githubusercontent.com/tyvsmith/hypr-sticky-hdr/9c7ec5b4922852e43b98d5fbafd384e52b7eff21/sticky_hdr.lua"
+    url = "https://raw.githubusercontent.com/tyvsmith/hypr-sticky-hdr/4fa4c302a0c2388ed788f4f156f5074b961e9aa4/sticky_hdr.lua"
     refreshPeriod = "0"
