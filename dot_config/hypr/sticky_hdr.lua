@@ -257,6 +257,7 @@ function M.setup(opts)
     hl.timer(function()
       if gen ~= prewarm_gen then return end
       prewarm_gen = 0
+      os.remove(STATE_FILE) -- a dead hold must not resurrect on reload
       sync()
     end, { timeout = ms, type = "oneshot" })
   end

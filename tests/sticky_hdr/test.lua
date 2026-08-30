@@ -1,4 +1,4 @@
--- Behavior tests for dot_config/hypr/sticky_hdr.lua, run against a mock `hl`.
+-- Behavior tests for sticky_hdr.lua, run against a mock `hl`.
 -- Run via ./run.sh, which sets HYPR_STICKY_HDR=1 (for the real-/proc test) and
 -- a throwaway XDG_RUNTIME_DIR (for prewarm persistence).
 
@@ -276,6 +276,21 @@ T("prewarm_hold_survives_reload", function()
   local mod2, _, state2 = fresh(true) -- new VM, persisted state kept
   mod2.setup(mkopts())
   eq(cm_of(MOCK.last_applied(state2)), "hdr", "baseline after mid-hold reload")
+end)
+
+-- 13b. The persisted deadline dies with the hold: once it expires and the
+-- module reverts, a reload must not resurrect the hold from disk.
+T("expired_hold_not_resumed_after_reload", function()
+  local mod, _, state = fresh()
+  local h = mod.setup(mkopts())
+  h.prewarm()
+  for _, t in ipairs(MOCK.timers_with_timeout(state, PREWARM_MS)) do MOCK.fire_timer(t) end
+  settle(state)
+  for _, t in ipairs(MOCK.timers_with_timeout(state, COOLDOWN_MS)) do MOCK.fire_timer(t) end
+  eq(cm_of(MOCK.last_applied(state)), "srgb", "reverted after hold expiry")
+  local mod2, _, state2 = fresh(true) -- reload with whatever state persisted
+  mod2.setup(mkopts())
+  eq(cm_of(MOCK.last_applied(state2)), "srgb", "expired hold must not resume after reload")
 end)
 
 -- 14. wants_hdr() reports real window demand, not a prewarm hold.
