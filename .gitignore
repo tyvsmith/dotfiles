@@ -12,3 +12,4 @@ vim/bundle/*
 **/decrypted_*
 .mcp.json
 .mcp.json.bak
+.worktrees/
