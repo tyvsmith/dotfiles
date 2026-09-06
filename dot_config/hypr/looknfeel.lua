@@ -25,7 +25,11 @@ hl.animation({ leaf = "hyprfocusOut", enabled = true, speed = 1.7, bezier = "md3
 -- warning is spurious; it works (verified with hyprctl getoption).
 hl.config({
   plugin = {
-    hyprfocus = { slide_height = 10 }, -- default 20
+    hyprfocus = {
+      keyboard_focus_animation = "slide",
+      mouse_focus_animation = "slide",
+      slide_height = 10, -- default 20
+    },
     scrolloverview = {
       gesture_distance = 300,          -- how far is the "max" for the gesture
       scale = 0.5,                     -- preferred overview scale

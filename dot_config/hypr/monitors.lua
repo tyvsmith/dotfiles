@@ -2,7 +2,8 @@
 -- List current monitors and supported resolutions with: hyprctl monitors all
 --
 -- The panel rests in SDR and goes sticky-HDR while a tagged game (or gamescope)
--- window lives; the mechanics are in hypr/sticky_hdr.lua.
+-- window lives; the mechanics come from the system-installed
+-- hypr.sticky_hdr Lua module.
 
 -- Kept on their own lines: `omarchy hyprland monitor scaling` rewrites these two
 -- by regex. GDK_SCALE must stay 1 on this scale-1 5120x2160 panel; stock's 2
@@ -13,7 +14,7 @@ local omarchy_monitor_scale = 1
 hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
 
 require("hypr.sticky_hdr").setup({
-  monitor  = {
+  monitor = {
     output        = "",
     mode          = "preferred",
     position      = "auto",
