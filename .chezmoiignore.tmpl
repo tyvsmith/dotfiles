@@ -4,7 +4,11 @@ CLAUDE.md
 AGENTS.md
 install.sh
 legacy/
-.claude/
+# NOTE: .claude/ and .agents/ are intentionally NOT ignored here. They are
+# dot-prefixed *source* dirs (repo-local agent skills) that chezmoi already
+# excludes from the source state automatically. Listing them here instead
+# matches the *target* paths ~/.claude and ~/.agents, which would block
+# dot_claude/ and dot_agents/ from deploying.
 docs/
 
 # Ignore scripts directory (run_* scripts are in repo root)

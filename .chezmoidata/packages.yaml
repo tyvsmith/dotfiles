@@ -308,6 +308,7 @@ packages:
   mise:
     tags: [dev]
     desc: "Polyglot runtime version manager"
+    pacman: mise-bin
 
   uv:
     tags: [dev]
@@ -406,6 +407,12 @@ packages:
   hyprmoncfg:
     tags: [hardware]
     desc: "GUI monitor configuration for Hyprland"
+    os: linux
+    de: hyprland-omarchy
+
+  hypr-sticky-hdr:
+    tags: [hardware]
+    desc: "Keep a Hyprland monitor in HDR while an HDR window lives"
     os: linux
     de: hyprland-omarchy
 

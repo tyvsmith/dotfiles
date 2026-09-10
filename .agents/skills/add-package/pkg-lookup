@@ -1,0 +1,286 @@
+#!/usr/bin/env bash
+# pkg-lookup — verify canonical package names across supported package managers
+# for the dotfiles .chezmoidata/packages.yaml workflow. Authoritative registries
+# only; no guesses. Output is a single JSON object on stdout.
+#
+# Subcommands:
+#   brew     <name>            formulae.brew.sh formula
+#   cask     <name>            formulae.brew.sh cask
+#   pacman   <name>            archlinux.org official packages
+#   aur      <name>            AUR RPC v5
+#   apt      <name>            Ubuntu Launchpad archive (binary package)
+#   dnf      <name>             mdapi.fedoraproject.org (rawhide)
+#   flatpak  <id-or-query>     flathub.org (appstream lookup or search)
+#   appimage <owner/repo>      GitHub releases (.AppImage assets)
+#   all      <name>            run brew/cask/pacman/aur/apt/dnf/flatpak in parallel
+#   --help | -h                show this help
+#
+# Exit codes:
+#   0  hit (or `all` always — see per-manager `found` flag)
+#   1  miss
+#   2  usage / missing dependency / unknown subcommand
+
+set -euo pipefail
+
+usage() {
+  sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+die() {
+  printf 'pkg-lookup: %s\n' "$1" >&2
+  exit 2
+}
+
+command -v jq >/dev/null 2>&1 || die "missing dependency: jq"
+
+if command -v curl >/dev/null 2>&1; then
+  http_get() {
+    curl --fail --silent --show-error --max-time 5 --location "$1"
+  }
+elif command -v xh >/dev/null 2>&1; then
+  # xh requires an explicit method when there are no body params for some servers.
+  http_get() {
+    xh --check-status --body --timeout=5 GET "$1"
+  }
+else
+  die "missing dependency: curl or xh"
+fi
+
+# emit_hit MANAGER QUERY NAME [DESC] [HOMEPAGE] [NOTES_JSON_ARRAY] — emits JSON and exits 0.
+emit_hit() {
+  local manager="$1" query="$2" name="$3"
+  local desc="${4:-}" homepage="${5:-}" notes="${6:-[]}"
+  jq -n \
+    --arg m "$manager" --arg q "$query" --arg n "$name" \
+    --arg d "$desc" --arg h "$homepage" --argjson notes "$notes" \
+    '{manager:$m, query:$q, found:true, name:$n, description:$d, homepage:$h, notes:$notes}'
+  exit 0
+}
+
+# emit_miss MANAGER QUERY [NOTE] — emits JSON and exits 1.
+emit_miss() {
+  local manager="$1" query="$2" note="${3:-}"
+  local notes='[]'
+  [[ -n "$note" ]] && notes=$(jq -cn --arg s "$note" '[$s]')
+  jq -n \
+    --arg m "$manager" --arg q "$query" --argjson notes "$notes" \
+    '{manager:$m, query:$q, found:false, name:null, description:null, homepage:null, notes:$notes}'
+  exit 1
+}
+
+# ---------- per-manager lookups ----------
+
+lookup_brew() {
+  local name="$1" body
+  if ! body=$(http_get "https://formulae.brew.sh/api/formula/${name}.json" 2>/dev/null); then
+    emit_miss "brew" "$name"
+  fi
+  local rn rd rh
+  rn=$(printf '%s' "$body" | jq -r '.name // ""')
+  rd=$(printf '%s' "$body" | jq -r '.desc // ""')
+  rh=$(printf '%s' "$body" | jq -r '.homepage // ""')
+  [[ -z "$rn" ]] && emit_miss "brew" "$name"
+  emit_hit "brew" "$name" "$rn" "$rd" "$rh"
+}
+
+lookup_cask() {
+  local name="$1" body
+  if ! body=$(http_get "https://formulae.brew.sh/api/cask/${name}.json" 2>/dev/null); then
+    emit_miss "cask" "$name"
+  fi
+  local rn rd rh
+  rn=$(printf '%s' "$body" | jq -r '.token // ""')
+  rd=$(printf '%s' "$body" | jq -r '.desc // ""')
+  rh=$(printf '%s' "$body" | jq -r '.homepage // ""')
+  [[ -z "$rn" ]] && emit_miss "cask" "$name"
+  emit_hit "cask" "$name" "$rn" "$rd" "$rh"
+}
+
+lookup_pacman() {
+  local name="$1" body
+  if ! body=$(http_get "https://archlinux.org/packages/search/json/?name=${name}" 2>/dev/null); then
+    emit_miss "pacman" "$name"
+  fi
+  local count
+  count=$(printf '%s' "$body" | jq -r '.results | length')
+  [[ "$count" == "0" ]] && emit_miss "pacman" "$name" "no exact match in Arch official repos (try aur)"
+  local rn rd rh
+  rn=$(printf '%s' "$body" | jq -r '.results[0].pkgname')
+  rd=$(printf '%s' "$body" | jq -r '.results[0].pkgdesc')
+  rh=$(printf '%s' "$body" | jq -r '.results[0].url')
+  emit_hit "pacman" "$name" "$rn" "$rd" "$rh"
+}
+
+lookup_aur() {
+  local name="$1" body
+  # arg[] must be percent-encoded as arg%5B%5D for curl/xh
+  if ! body=$(http_get "https://aur.archlinux.org/rpc/v5/info?arg%5B%5D=${name}" 2>/dev/null); then
+    emit_miss "aur" "$name"
+  fi
+  local count
+  count=$(printf '%s' "$body" | jq -r '.resultcount // 0')
+  [[ "$count" == "0" ]] && emit_miss "aur" "$name"
+  local rn rd rh
+  rn=$(printf '%s' "$body" | jq -r '.results[0].Name')
+  rd=$(printf '%s' "$body" | jq -r '.results[0].Description // ""')
+  rh=$(printf '%s' "$body" | jq -r '.results[0].URL // ""')
+  emit_hit "aur" "$name" "$rn" "$rd" "$rh"
+}
+
+lookup_apt() {
+  # Uses Ubuntu's Launchpad API, which indexes binary package names — the same
+  # name `apt install` takes. Ubuntu mirrors Debian for the vast majority of
+  # packages; cases where a name differs between Debian and Ubuntu are rare
+  # and worth flagging manually anyway.
+  local name="$1" body count rn rv display
+  if ! body=$(http_get "https://api.launchpad.net/devel/ubuntu/+archive/primary?ws.op=getPublishedBinaries&binary_name=${name}&exact_match=true&ws.size=1" 2>/dev/null); then
+    emit_miss "apt" "$name" "Launchpad API unreachable"
+  fi
+  count=$(printf '%s' "$body" | jq -r '.entries | length')
+  if [[ "$count" == "0" ]]; then
+    emit_miss "apt" "$name" "no binary package named '$name' published in Ubuntu archive"
+  fi
+  rn=$(printf '%s' "$body" | jq -r '.entries[0].binary_package_name')
+  rv=$(printf '%s' "$body" | jq -r '.entries[0].binary_package_version')
+  display=$(printf '%s' "$body" | jq -r '.entries[0].display_name')
+  emit_hit "apt" "$name" "$rn" "$display" "https://packages.ubuntu.com/${rn}" \
+    "$(jq -cn --arg v "$rv" '["latest published version: \($v); verified via Launchpad (Ubuntu archive)"]')"
+}
+
+lookup_dnf() {
+  local name="$1" body rn rd rh
+  if ! body=$(http_get "https://mdapi.fedoraproject.org/rawhide/pkg/${name}" 2>/dev/null); then
+    emit_miss "dnf" "$name"
+  fi
+  rn=$(printf '%s' "$body" | jq -r '.basename // .name // ""')
+  rd=$(printf '%s' "$body" | jq -r '.summary // ""')
+  rh=$(printf '%s' "$body" | jq -r '.url // ""')
+  [[ -z "$rn" ]] && emit_miss "dnf" "$name"
+  emit_hit "dnf" "$name" "$rn" "$rd" "$rh"
+}
+
+lookup_flatpak() {
+  local query="$1" body rn rd rh
+  # If query looks like a reverse-DNS app-id (contains a dot), do exact appstream lookup.
+  if [[ "$query" == *.*.* ]]; then
+    if ! body=$(http_get "https://flathub.org/api/v2/appstream/${query}" 2>/dev/null); then
+      emit_miss "flatpak" "$query" "no Flathub appstream entry for that app-id"
+    fi
+    rn=$(printf '%s' "$body" | jq -r '.id // ""')
+    rd=$(printf '%s' "$body" | jq -r '(.summary // (.name // "")) | tostring')
+    rh=$(printf '%s' "$body" | jq -r '.urls.homepage // ""')
+    [[ -z "$rn" ]] && emit_miss "flatpak" "$query"
+    emit_hit "flatpak" "$query" "$rn" "$rd" "$rh"
+  fi
+  # Otherwise: search (POST endpoint).
+  if command -v curl >/dev/null 2>&1; then
+    body=$(curl --fail --silent --show-error --max-time 5 --location \
+      -H 'Content-Type: application/json' \
+      -d "$(jq -cn --arg q "$query" '{query:$q}')" \
+      "https://flathub.org/api/v2/search" 2>/dev/null || true)
+  else
+    body=$(xh --check-status --body --timeout=5 \
+      POST "https://flathub.org/api/v2/search" query="$query" 2>/dev/null || true)
+  fi
+  [[ -z "${body:-}" ]] && emit_miss "flatpak" "$query"
+  local total
+  total=$(printf '%s' "$body" | jq -r '(.estimatedTotalHits // (.hits | length // 0))')
+  if [[ "$total" == "0" || -z "$total" ]]; then
+    emit_miss "flatpak" "$query"
+  fi
+  # Filter hits to those whose app_id or name contains the query (case-insensitive)
+  # to avoid Flathub's fuzzy search returning unrelated apps.
+  local filtered
+  filtered=$(printf '%s' "$body" | jq -c --arg q "$query" \
+    '[.hits[]? | select(((.app_id // "") | ascii_downcase | contains($q | ascii_downcase))
+                     or ((.name // "")   | ascii_downcase | contains($q | ascii_downcase)))] | .[0:1]')
+  if [[ "$filtered" == "[]" || -z "$filtered" ]]; then
+    emit_miss "flatpak" "$query" "search returned hits but none matched query in app_id or name"
+  fi
+  rn=$(printf '%s' "$filtered" | jq -r '.[0].app_id // ""')
+  rd=$(printf '%s' "$filtered" | jq -r '.[0].summary // ""')
+  rh="https://flathub.org/apps/${rn}"
+  [[ -z "$rn" ]] && emit_miss "flatpak" "$query"
+  emit_hit "flatpak" "$query" "$rn" "$rd" "$rh" \
+    '["top Flathub search hit (filtered to query match); verify it is the intended app before writing flatpak: <app-id>"]'
+}
+
+lookup_appimage() {
+  local repo="$1" body rn rd rh asset_count
+  if [[ "$repo" != */* ]]; then
+    die "appimage subcommand requires owner/repo (got: $repo)"
+  fi
+  if ! body=$(http_get "https://api.github.com/repos/${repo}/releases/latest" 2>/dev/null); then
+    emit_miss "appimage" "$repo" "no latest release on GitHub for ${repo}"
+  fi
+  asset_count=$(printf '%s' "$body" | jq -r '[.assets[]? | select(.name | test("\\.AppImage$"; "i"))] | length')
+  if [[ "$asset_count" == "0" ]]; then
+    emit_miss "appimage" "$repo" "latest release has no *.AppImage asset"
+  fi
+  rn="$repo"
+  rd=$(printf '%s' "$body" | jq -r '.name // .tag_name // ""')
+  rh="https://github.com/${repo}"
+  emit_hit "appimage" "$repo" "$rn" "$rd" "$rh" \
+    "$(printf '%s' "$body" | jq -c '[.assets[]? | select(.name | test("\\.AppImage$"; "i")) | .name]')"
+}
+
+# `all`: run brew/cask/pacman/aur/apt/dnf/flatpak in parallel, aggregate.
+# Appimage is omitted because it requires owner/repo, not a bare name.
+lookup_all() {
+  local name="$1" tmp
+  tmp=$(mktemp -d)
+  trap 'rm -rf "$tmp"' RETURN
+
+  for m in brew cask pacman aur apt dnf flatpak; do
+    (
+      # Each lookup_* function exits the subshell; capture stdout, ignore exit.
+      "lookup_${m}" "$name" 2>/dev/null || true
+    ) > "$tmp/${m}.json" &
+  done
+  wait
+
+  # Replace empty files with null JSON so jq --slurpfile sees something parseable.
+  for m in brew cask pacman aur apt dnf flatpak; do
+    [[ -s "$tmp/${m}.json" ]] || printf 'null\n' > "$tmp/${m}.json"
+  done
+
+  jq -n \
+    --arg q "$name" \
+    --slurpfile brew    "$tmp/brew.json" \
+    --slurpfile cask    "$tmp/cask.json" \
+    --slurpfile pacman  "$tmp/pacman.json" \
+    --slurpfile aur     "$tmp/aur.json" \
+    --slurpfile apt     "$tmp/apt.json" \
+    --slurpfile dnf     "$tmp/dnf.json" \
+    --slurpfile flatpak "$tmp/flatpak.json" \
+    '{
+       query: $q,
+       results: {
+         brew:    ($brew[0]    // null),
+         cask:    ($cask[0]    // null),
+         pacman:  ($pacman[0]  // null),
+         aur:     ($aur[0]     // null),
+         apt:     ($apt[0]     // null),
+         dnf:     ($dnf[0]     // null),
+         flatpak: ($flatpak[0] // null)
+       }
+     }'
+}
+
+# ---------- dispatch ----------
+
+[[ $# -lt 1 ]] && { usage; exit 2; }
+
+case "$1" in
+  -h|--help|help) usage; exit 0 ;;
+  brew)     [[ $# -ge 2 ]] || die "brew requires <name>";     lookup_brew     "$2" ;;
+  cask)     [[ $# -ge 2 ]] || die "cask requires <name>";     lookup_cask     "$2" ;;
+  pacman)   [[ $# -ge 2 ]] || die "pacman requires <name>";   lookup_pacman   "$2" ;;
+  aur)      [[ $# -ge 2 ]] || die "aur requires <name>";      lookup_aur      "$2" ;;
+  apt)      [[ $# -ge 2 ]] || die "apt requires <name>";      lookup_apt      "$2" ;;
+  dnf)      [[ $# -ge 2 ]] || die "dnf requires <name>";      lookup_dnf      "$2" ;;
+  flatpak)  [[ $# -ge 2 ]] || die "flatpak requires <id-or-query>"; lookup_flatpak "$2" ;;
+  appimage) [[ $# -ge 2 ]] || die "appimage requires <owner/repo>"; lookup_appimage "$2" ;;
+  all)      [[ $# -ge 2 ]] || die "all requires <name>";      lookup_all      "$2" ;;
+  *) die "unknown subcommand: $1 (try --help)" ;;
+esac
