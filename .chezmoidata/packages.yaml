@@ -410,6 +410,12 @@ packages:
     os: linux
     de: hyprland-omarchy
 
+  hyprpm:
+    tags: [ui]
+    desc: "Hyprland plugin manager (split from the hyprland package in 0.56.2-3)"
+    os: linux
+    de: hyprland-omarchy
+
   hypr-sticky-hdr:
     tags: [hardware]
     desc: "Keep a Hyprland monitor in HDR while an HDR window lives"
