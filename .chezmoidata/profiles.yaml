@@ -11,8 +11,8 @@
 #   backup:   personal machine — install+schedule restic backups (default false; servers/containers stay off)
 #
 # Profile is selected interactively during `chezmoi init`, or via:
-#   DOTFILES_PROFILE=arch chezmoi init
-#   chezmoi init --promptChoice profile=arch
+#   DOTFILES_PROFILE=arch-desktop chezmoi init
+#   chezmoi init --promptChoice "Machine profile=arch-desktop"
 #
 # Auto-detected from distro if non-interactive.
 #

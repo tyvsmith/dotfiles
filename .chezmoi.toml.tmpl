@@ -1,7 +1,7 @@
 {{- /* Profile-driven machine configuration for chezmoi
      Profile is selected interactively during chezmoi init, or via:
-       DOTFILES_PROFILE=arch chezmoi init
-       chezmoi init --promptChoice profile=arch
+       DOTFILES_PROFILE=arch-desktop chezmoi init
+       chezmoi init --promptChoice "Machine profile=arch-desktop"
      Auto-detects from distro if non-interactive.
 */ -}}
 
@@ -31,7 +31,11 @@
 {{- if ne $envProfile "" -}}
 {{-   $profile = $envProfile -}}
 {{- else -}}
-{{-   $choices := keys $profiles | sortAlpha -}}
+{{- /* promptChoiceOnce needs []interface{}; sortAlpha returns []string */ -}}
+{{-   $choices := list -}}
+{{-   range $name := keys $profiles | sortAlpha -}}
+{{-     $choices = append $choices $name -}}
+{{-   end -}}
 {{-   writeToStdout "\nAvailable profiles:\n" -}}
 {{-   range $name := $choices -}}
 {{-     $p := index $profiles $name -}}

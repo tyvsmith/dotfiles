@@ -40,7 +40,7 @@ chezmoi apply
 
 Machine setup is driven by a single **profile** selected via environment variable or `install.sh`:
 ```bash
-DOTFILES_PROFILE=arch chezmoi init
+DOTFILES_PROFILE=arch-desktop chezmoi init
 ./install.sh --profile macos-work
 ```
 

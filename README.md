@@ -134,7 +134,7 @@ If you prefer not to use the install script:
 brew install chezmoi
 
 # Set profile via environment
-export DOTFILES_PROFILE=arch
+export DOTFILES_PROFILE=arch-desktop
 
 # Initialize and apply
 chezmoi init --apply tyvsmith/dotfiles
