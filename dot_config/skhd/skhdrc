@@ -10,33 +10,59 @@
 alt - w : osascript -e 'tell application "System Events" to keystroke "w" using command down'
 
 # --- App launches: Omarchy Super+Shift+letter pattern ---
-alt - return                  : ~/.config/skhd/new-ghostty-window.sh
-alt + cmd - return            : /usr/bin/open -na Ghostty --args -e tmux new-session -A -s main
-alt + shift - return          : /usr/bin/open -b "$(defaults read com.sindresorhus.velja defaultBrowser 2>/dev/null)" --args --new-window
-alt + shift + cmd - b         : /usr/bin/open -b "$(defaults read com.sindresorhus.velja defaultBrowser 2>/dev/null)" --args --incognito --new-window
-alt + shift - n               : /usr/bin/open -na Ghostty --args -e nvim
-alt + shift - c               : /usr/bin/open -b "com.google.Chrome.app.kjbdgfilnfhdoflbpgamdcdgpehopbep"   # Calendar PWA (Chrome Canary bundle — adjust)
-alt + shift - e               : /usr/bin/open -b "com.google.Chrome.app.fmgjjmmmlfnkbppncabfkddbjimcfncm"   # Gmail PWA (Chrome Canary bundle — adjust)
-alt + shift - g               : /usr/bin/open -b "net.whatsapp.WhatsApp"
-alt + shift - m               : /usr/bin/open -b "com.spotify.client"
-alt + shift - o               : /usr/bin/open -b "md.obsidian"
-alt + shift - f               : /usr/bin/open -a Finder
-alt + shift - a               : /usr/bin/open -b "com.anthropic.claudefordesktop"
-alt + shift - d               : /usr/bin/open -na Ghostty --args -e lazydocker
-alt + shift - 0x2C            : /usr/bin/open -b "com.1password.1password"   # 0x2C = '/'
+# All GUI launches go through launch-here.sh, which places the app's window on
+# the workspace that was focused when the hotkey fired (instead of letting
+# macOS activation pull you to wherever the app already has windows). Apps that
+# spawn a fresh window pass --new-window; single-window apps use the default
+# (activation) mode. See launch-here.sh for details.
+alt - return                  : ~/.config/skhd/launch-here.sh --new-window com.mitchellh.ghostty -- ~/.config/skhd/new-ghostty-window.sh
+alt + cmd - return            : ~/.config/skhd/launch-here.sh --new-window com.mitchellh.ghostty -- /usr/bin/open -na Ghostty --args -e tmux new-session -A -s main
+alt + ctrl - return           : ~/.config/skhd/launch-here.sh --new-window com.mitchellh.ghostty -- /usr/bin/open -na Ghostty --args -e /opt/homebrew/bin/herdr   # herdr (attaches to persistent session)
+alt + shift - return          : ~/.config/skhd/launch-here.sh --new-window "$(defaults read com.sindresorhus.velja defaultBrowser 2>/dev/null)" -- /usr/bin/open -b "$(defaults read com.sindresorhus.velja defaultBrowser 2>/dev/null)" --args --new-window
+alt + shift + cmd - b         : ~/.config/skhd/launch-here.sh --new-window "$(defaults read com.sindresorhus.velja defaultBrowser 2>/dev/null)" -- /usr/bin/open -b "$(defaults read com.sindresorhus.velja defaultBrowser 2>/dev/null)" --args --incognito --new-window
+alt + shift - n               : ~/.config/skhd/launch-here.sh --new-window com.mitchellh.ghostty -- /usr/bin/open -na Ghostty --args -e nvim
+alt + shift - c               : ~/.config/skhd/launch-here.sh com.tinyspeck.slackmacgap -- /usr/bin/open -b "com.tinyspeck.slackmacgap"                                # Chat (Slack)
+alt + shift + cmd - c         : ~/.config/skhd/launch-here.sh com.google.Chrome.app.kjbdgfilnfhdoflbpgamdcdgpehopbep -- /usr/bin/open -b "com.google.Chrome.app.kjbdgfilnfhdoflbpgamdcdgpehopbep"  # Calendar PWA
+alt + shift + cmd - e         : ~/.config/skhd/launch-here.sh com.google.Chrome.app.fmgjjmmmlfnkbppncabfkddbjimcfncm -- /usr/bin/open -b "com.google.Chrome.app.fmgjjmmmlfnkbppncabfkddbjimcfncm"  # Gmail PWA
+alt + shift - g               : ~/.config/skhd/launch-here.sh net.whatsapp.WhatsApp -- /usr/bin/open -b "net.whatsapp.WhatsApp"
+alt + shift + cmd - g         : ~/.config/skhd/launch-here.sh com.github.GitHubDesktop -- /usr/bin/open -b "com.github.GitHubDesktop"                                # GitHub
+alt + shift - m               : ~/.config/skhd/launch-here.sh com.spotify.client -- /usr/bin/open -b "com.spotify.client"
+alt + shift - o               : ~/.config/skhd/launch-here.sh md.obsidian -- /usr/bin/open -b "md.obsidian"
+alt + shift - f               : ~/.config/skhd/launch-here.sh com.apple.finder -- /usr/bin/open -a Finder
+alt + shift + ctrl - a        : ~/.config/skhd/launch-here.sh com.anthropic.claudefordesktop -- /usr/bin/open -b "com.anthropic.claudefordesktop"                          # Claude
+alt + shift + cmd - a         : ~/.config/skhd/launch-here.sh com.openai.chat -- /usr/bin/open -b "com.openai.chat"                                         # ChatGPT
+alt + shift - d               : ~/.config/skhd/launch-here.sh --new-window com.mitchellh.ghostty -- /usr/bin/open -na Ghostty --args -e lazydocker
+alt + shift - 0x2C            : ~/.config/skhd/launch-here.sh com.1password.1password -- /usr/bin/open -b "com.1password.1password"                                 # 0x2C = '/'
 
 # --- System shortcuts (Omarchy Super+Ctrl+letter pattern) ---
 alt + ctrl - c : /usr/bin/open "cleanshot://all-in-one"
 alt + ctrl - l : pmset displaysleepnow
-alt + ctrl - t : /usr/bin/open -na Ghostty --args -e btop
+alt + ctrl - t : ~/.config/skhd/launch-here.sh --new-window com.mitchellh.ghostty -- /usr/bin/open -na Ghostty --args -e btop
 alt + ctrl - v : /usr/bin/open "raycast://extensions/raycast/clipboard-history/clipboard-history"
 alt + ctrl - a : /usr/bin/open "x-apple.systempreferences:com.apple.preference.sound"
 alt + ctrl - b : /usr/bin/open "x-apple.systempreferences:com.apple.preferences.Bluetooth"
 alt + ctrl - w : /usr/bin/open "x-apple.systempreferences:com.apple.wifi-settings-extension"
 
-# --- Voice input (Voxtype push-to-talk) ---
-# F13 = keycode 0x69; bind by keycode because skhd's `f13` keyword can miss
+# --- Media keys (lan-mouse forwards these as raw keycodes; bind explicitly) ---
+# 0x48 = vol up, 0x49 = vol down, 0x4a = mute
+0x48 : osascript -e 'set volume output volume (output volume of (get volume settings) + 6.25)'
+0x49 : osascript -e 'set volume output volume (output volume of (get volume settings) - 6.25)'
+0x4a : osascript -e 'set volume output muted not (output muted of (get volume settings))'
+
+
+# F16 = keycode 0x6a; bind by keycode because skhd's `f1x` keywords can miss
 # events arriving via lan-mouse's CGEventPost synthesis.
 # Fn key on Mac keyboard arrives as keycode 0xB3.
-0x69 : /opt/homebrew/bin/voxtype record toggle
+0x6a : /opt/homebrew/bin/voxtype record toggle
 0xB3 : /opt/homebrew/bin/voxtype record toggle
+
+# --- Screenshot (macshot capture area) ---
+# F13 = keycode 0x69; macshot has no CLI, so forward its global hotkey cmd+shift+x
+0x69 : osascript -e 'tell application "System Events" to keystroke "x" using {command down, shift down}'
+
+# --- Hyper key bindings (caps lock → cmd+ctrl+alt+shift via Hyperkey app) ---
+cmd + ctrl + alt + shift - p         : osascript -e 'tell application "System Events" to keystroke "x" using {command down, shift down}'
+cmd + ctrl + alt + shift - z         : osascript -e 'set volume output volume (output volume of (get volume settings) - 10)'
+cmd + ctrl + alt + shift - x         : osascript -e 'set volume output volume (output volume of (get volume settings) + 10)'
+cmd + ctrl + alt + shift - c         : osascript -e 'set volume output muted not (output muted of (get volume settings))'
+cmd + ctrl + alt + shift - backspace : osascript -e 'tell application "System Events" to key code 117'
