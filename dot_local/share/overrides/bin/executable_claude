@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
 # claude proxy: preserve the user's settings.json deltas across aifx's enforced
 # merge. Snapshot the enforced baseline, replay tracked deltas before launch, then
 # re-derive them on exit (so claude's shutdown writes like /model-save are caught).
@@ -10,9 +9,15 @@ _canon() { realpath "$1" 2>/dev/null || readlink -f "$1" 2>/dev/null || printf '
 SELF="$(_canon "$0")"
 REAL_CLAUDE=""
 while IFS= read -r _cand; do
-  [[ "$(_canon "$_cand")" != "$SELF" ]] && { REAL_CLAUDE="$_cand"; break; }
+  [[ "$(_canon "$_cand")" != "$SELF" ]] && {
+    REAL_CLAUDE="$_cand"
+    break
+  }
 done < <(type -aP claude 2>/dev/null)
-[[ -n "$REAL_CLAUDE" ]] || { echo "claude-override: no real claude on PATH" >&2; exit 1; }
+[[ -n "$REAL_CLAUDE" ]] || {
+  echo "claude-override: no real claude on PATH" >&2
+  exit 1
+}
 
 SETTINGS="$HOME/.claude/settings.json"
 USER_CHANGED="$HOME/.claude/settings.user-changed.json"
