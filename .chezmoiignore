@@ -1,4 +1,12 @@
-{{- /* macOS-only: skhd launch wrapper (skhd is a macOS hotkey daemon) */ -}}
+{{- /* macOS-only configs — the software does not exist on Linux, so keep
+       these off non-darwin machines:
+         skhd    hotkey daemon (+ launch-here.sh, new-ghostty-window.sh)
+         omniwm  Niri-style tiling window manager
+         borders JankyBorders window borders
+         raycast launcher */ -}}
 {{ if ne .chezmoi.os "darwin" }}
-.config/skhd/launch-here.sh
+.config/skhd
+.config/omniwm
+.config/borders
+.config/raycast
 {{ end }}
