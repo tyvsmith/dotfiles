@@ -592,6 +592,11 @@ packages:
     brew: skhd-zig
     brew_tap: "jackielii/tap"
 
+  cliclick:
+    tags: [ui]
+    os: darwin
+    desc: "Post keyboard/mouse events from the CLI — used by skhdrc for media keys (kp:volume-up etc.) so the system HUD shows"
+
   borders:
     tags: [ui]
     os: darwin
