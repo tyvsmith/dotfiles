@@ -1,5 +1,6 @@
 add_newline = true
-command_timeout = 200
+# Allow cold monorepo scans; fish-fast-starship renders Git status asynchronously.
+command_timeout = 60000
 format = "[$directory$git_branch$git_status]($style)$character"
 
 [character]
