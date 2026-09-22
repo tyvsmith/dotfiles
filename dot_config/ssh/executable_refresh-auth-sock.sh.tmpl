@@ -1,0 +1,42 @@
+#!/bin/sh
+# Keep ~/.ssh/ssh_auth_sock pointing at the live ssh-agent socket.
+#
+# Every shell exports SSH_AUTH_SOCK=~/.ssh/ssh_auth_sock (see
+# fish/conf.d/zz_02_vars.fish.tmpl), so the kernel resolves the real
+# socket at connect(2) time. Repointing the link once heals every shell
+# and long-running child (herdr panes, tmux panes, vim, builds) without
+# an env change. Called on every fish start and from tmux attach hooks.
+
+link="$HOME/.ssh/ssh_auth_sock"
+
+# 1. A live inherited socket that is not the link itself means this
+#    session brought a new agent (fresh SSH login with forwarding). It wins.
+if [ -n "$SSH_AUTH_SOCK" ] && [ "$SSH_AUTH_SOCK" != "$link" ] && [ -S "$SSH_AUTH_SOCK" ]; then
+    ln -snf "$SSH_AUTH_SOCK" "$link"
+    exit 0
+fi
+
+# 2. Link already points at a live socket: nothing to do.
+[ -S "$link" ] && exit 0
+
+# 3. Platform lookup.
+{{ if eq .chezmoi.os "darwin" -}}
+# Name the gui/<uid> domain explicitly. Persistent servers (herdr) run in
+# a Background launchd context where plain `launchctl getenv` sees nothing.
+sock=$(launchctl print "gui/$(id -u)" 2>/dev/null | sed -n 's/.*SSH_AUTH_SOCK => \(.*\)/\1/p' | tail -n1)
+{{- else -}}
+{{- if not .work }}
+sock="$HOME/.1password/agent.sock"
+[ -S "$sock" ] && { ln -snf "$sock" "$link"; exit 0; }
+{{- end }}
+# Newest OpenSSH forwarded agent socket owned by this user.
+sock=$(ls -t /tmp/ssh-*/agent.* 2>/dev/null | head -n1)
+{{- end }}
+if [ -n "$sock" ] && [ -S "$sock" ]; then
+    ln -snf "$sock" "$link"
+    exit 0
+fi
+
+# 4. tmux's copy, refreshed on attach via update-environment.
+sock=$(tmux show-environment SSH_AUTH_SOCK 2>/dev/null | cut -d= -f2-)
+[ -n "$sock" ] && [ -S "$sock" ] && ln -snf "$sock" "$link"

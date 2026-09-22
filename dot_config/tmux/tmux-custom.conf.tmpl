@@ -61,16 +61,11 @@ bind -T root MouseDown2Status kill-window -t=
 unbind -T root MouseDown1StatusRight
 
 # ── SSH Agent Socket ───────────────────────────────────────────────
-# Maintain a stable symlink at ~/.ssh/ssh_auth_sock pointing at the
-# live ssh-agent socket. Fish shells inside tmux use the symlink
-# (see fish/conf.d/zz_02_vars.fish.tmpl), so the kernel resolves the
-# real socket at connect(2) time — no per-prompt polling, no stale
-# env var capture by long-running children (vim, builds, etc.).
-#
-# Refresh on every attach AND on session creation so detach/reattach
-# after a reboot picks up the new launchd socket path immediately.
-set-hook -g client-attached 'run-shell "~/.config/tmux/scripts/refresh-ssh-sock.sh"'
-set-hook -g session-created 'run-shell "~/.config/tmux/scripts/refresh-ssh-sock.sh"'
+# All shells use the stable symlink ~/.ssh/ssh_auth_sock (see
+# ssh/refresh-auth-sock.sh). Refresh on attach and session creation so
+# reattaching after a reboot repoints it at the new agent socket.
+set-hook -g client-attached 'run-shell "~/.config/ssh/refresh-auth-sock.sh"'
+set-hook -g session-created 'run-shell "~/.config/ssh/refresh-auth-sock.sh"'
 
 # ── Plugins ──────────────────────────────────────────────────────────
 set-environment -g TMUX_PLUGIN_MANAGER_PATH '~/.config/tmux/plugins'
