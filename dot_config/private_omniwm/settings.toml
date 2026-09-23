@@ -7,6 +7,7 @@ schemaVersion = 3
 
 [appearance]
 mode = "dark"
+tabRailAppIcons = true
 
 [borders]
 enabled = true
@@ -66,17 +67,24 @@ fingerCount = 3
 invertDirection = true
 mouseMoveModifierKey = "option"
 mouseResizeModifierKey = "option"
+overviewGestureEnabled = false
+overviewGestureFingerCount = 4
 scrollEnabled = true
 scrollModifierKey = "optionShift"
 scrollSensitivity = 5.0
 trackpadScrollStyle = "snap"
+windowGestureSensitivity = 1.0
+windowMoveEnabled = false
+windowMoveFingerCount = 4
+windowResizeEnabled = false
+windowResizeFingerCount = 3
 workspaceSwipeAxis = "vertical"
 workspaceSwipeEnabled = true
 workspaceSwipeFingerCount = 3
 
 [hiddenBar]
 enabled = true
-hiddenBundleIDs = []
+hiddenBundleIDs = ["com.1password.1password", "com.github.ygini.Hello-IT", "com.knollsoft.Hyperkey", "com.jetbrains.toolbox", "com.sw33tlie.macshot.macshot", "com.okta.mobile", "com.raycast.macos", "com.sindresorhus.Velja", "com.airwatch.mac.agent", "us.zoom.xos", "com.zscaler.zscaler", "de.feschber.LanMouse", "pro.betterdisplay.BetterDisplay"]
 rehideIntervalSeconds = 5.0
 
 [mouseWarp]
@@ -94,6 +102,9 @@ singleWindowFit = "fill"
 visibleContainerCount = 2
 
 [overview]
+invertScrollDirection = false
+matchFocusBorder = true
+mouseScrollSpeed = 1.0
 zoom = 1.0
 
 [overview.backdrop]
@@ -185,20 +196,24 @@ useWorkspaceId = false
 [workspaceBar]
 backgroundOpacity = 0.1
 deduplicateAppIcons = false
-enabled = false
+enabled = true
 excludedBundleIDs = []
 height = 24.0
 hideEmptyWorkspaces = false
 hideInNativeFullscreen = false
 notchActiveZoneWidth = 180.0
-notchMode = "splitActiveLeft"
+notchMode = "moveBelowMenuBar"
 position = "overlappingMenuBar"
 reserveLayoutSpace = false
 revealHoldMilliseconds = 200.0
 revealModifier = "off"
+showAccentHighlights = true
 showFloatingWindows = false
+showItemBackgrounds = true
 showLabels = true
-systemStatsButton = true
+solidBlackBackground = false
+systemStatsButton = false
+transparentBackground = false
 windowLevel = "popup"
 xOffset = 0.0
 yOffset = 0.0
@@ -868,11 +883,11 @@ binding = "Unassigned"
 id = "moveColumnToIndex.9"
 
 [[hotkeys]]
-binding = "Option+Period"
+binding = "Option+R"
 id = "cycleSizeForward"
 
 [[hotkeys]]
-binding = "Option+Comma"
+binding = "Option+Shift+R"
 id = "cycleSizeBackward"
 
 [[hotkeys]]
@@ -992,7 +1007,7 @@ binding = "Control+Option+Space"
 id = "openCommandPalette"
 
 [[hotkeys]]
-binding = "Option+Shift+R"
+binding = "Option+Command+R"
 id = "raiseAllFloatingWindows"
 
 [[hotkeys]]
