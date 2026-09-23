@@ -45,24 +45,49 @@ alt + ctrl - w : /usr/bin/open "x-apple.systempreferences:com.apple.wifi-setting
 
 # --- Media keys (lan-mouse forwards these as raw keycodes; bind explicitly) ---
 # 0x48 = vol up, 0x49 = vol down, 0x4a = mute
-0x48 : osascript -e 'set volume output volume (output volume of (get volume settings) + 6.25)'
-0x49 : osascript -e 'set volume output volume (output volume of (get volume settings) - 6.25)'
-0x4a : osascript -e 'set volume output muted not (output muted of (get volume settings))'
-
+0x48 : /opt/homebrew/bin/cliclick kp:volume-up
+0x49 : /opt/homebrew/bin/cliclick kp:volume-down
+0x4a : /opt/homebrew/bin/cliclick kp:mute
 
 # F16 = keycode 0x6a; bind by keycode because skhd's `f1x` keywords can miss
 # events arriving via lan-mouse's CGEventPost synthesis.
 # Fn key on Mac keyboard arrives as keycode 0xB3.
-0x6a : /opt/homebrew/bin/voxtype record toggle
+f16 : /opt/homebrew/bin/voxtype record toggle
 0xB3 : /opt/homebrew/bin/voxtype record toggle
 
 # --- Screenshot (macshot capture area) ---
-# F13 = keycode 0x69; macshot has no CLI, so forward its global hotkey cmd+shift+x
-0x69 : osascript -e 'tell application "System Events" to keystroke "x" using {command down, shift down}'
+# F13 = keycode 0x69; bind by keycode because lan-mouse events lack the Fn flag the f13 keyword expects
+f13 : /usr/bin/open -g "macshot://capture"
 
-# --- Hyper key bindings (caps lock → cmd+ctrl+alt+shift via Hyperkey app) ---
-cmd + ctrl + alt + shift - p         : osascript -e 'tell application "System Events" to keystroke "x" using {command down, shift down}'
-cmd + ctrl + alt + shift - z         : osascript -e 'set volume output volume (output volume of (get volume settings) - 10)'
-cmd + ctrl + alt + shift - x         : osascript -e 'set volume output volume (output volume of (get volume settings) + 10)'
-cmd + ctrl + alt + shift - c         : osascript -e 'set volume output muted not (output muted of (get volume settings))'
-cmd + ctrl + alt + shift - backspace : osascript -e 'tell application "System Events" to key code 117'
+# --- Built-in keyboard (skhd --list-devices; FIFO transport reports 0x0/0x0) ---
+.device builtin { vendor: 0x0000, product: 0x0000 }
+.sequence_timeout 1s
+
+# --- Caps lock: tap = F18 (compose prefix), hold = hyper layer ---
+# F13 is macshot (line 61) and F16 is voxtype, so the tap key is F18.
+:: hyp @
+.remap caps_lock [device builtin] {
+    tap             : f18
+    hold            : hyp
+    timeout         : 150ms
+    permissive_hold : off
+}
+hyp < escape ; default
+hyp < p         : /usr/bin/open -g "macshot://capture"
+hyp < z         : /opt/homebrew/bin/cliclick kp:volume-down
+hyp < x         : /opt/homebrew/bin/cliclick kp:volume-up
+hyp < c         : /opt/homebrew/bin/cliclick kp:mute
+hyp < backspace | delete    # forward delete, native skhd key forward
+
+# --- Compose (caps tap = F18, then sequence). 0x27 = apostrophe, 0x1B = minus ---
+f18, escape ~
+f18, e, 0x27 : skhd -t "é"
+f18, 0x27, e : skhd -t "é"
+f18, e, 0x32 : skhd -t "è"
+f18, a, 0x27 : skhd -t "á"
+f18, n, 0x2B : skhd -t "ñ"
+f18, s, s    : skhd -t "ß"
+f18, 0x1B, 0x1B, 0x1B : skhd -t "—"
+f18, 0x1B, 0x1B, 0x18 : skhd -t "–"
+f18, c, 0x2B : skhd -t "ç"
+

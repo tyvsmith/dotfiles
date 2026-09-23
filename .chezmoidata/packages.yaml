@@ -591,6 +591,7 @@ packages:
     desc: "Simple hotkey daemon for macOS — skhd.zig fork with stable bundle ID so TCC permissions survive brew upgrades"
     brew: skhd-zig
     brew_tap: "jackielii/tap"
+    brew_cask: true
 
   cliclick:
     tags: [ui]
