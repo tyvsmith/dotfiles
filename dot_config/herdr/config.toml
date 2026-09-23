@@ -95,8 +95,9 @@ tab_bar_right = [{ type = "zoom" }, { type = "hostname" }]
 # and it resolves on the server so remote sessions name the remote host.
 window_title = "{hostname}: {workspace}"
 
+status_indicators = "symbols"
 [ui.toast]
-delivery = "herdr"
+delivery = "system"
 
 [ui.sound]
 enabled = true
