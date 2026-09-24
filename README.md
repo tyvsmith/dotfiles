@@ -117,7 +117,7 @@ chezmoi add --encrypt ~/.config/sensitive/file.conf
 | `du` | `dust` | Visual disk usage |
 | `ps` | `procs` | Colored, searchable |
 | `top` | `btm` | System monitor TUI |
-| `rm` | `trash` | Safe delete |
+| `rm` | `gtrash put` | Safe delete |
 
 ### Git
 - Delta as pager (side-by-side diffs)

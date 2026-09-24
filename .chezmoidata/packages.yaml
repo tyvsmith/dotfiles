@@ -8,7 +8,7 @@
 #
 # Fields:
 #   name:       YAML key          # override for display (e.g., 7zip)
-#   tags:       (required)        # list of category tags (core, container, dev, ai, experiment, hardware, ui, ui-extra, gaming)
+#   tags:       (required)        # list of category tags (core, core-extra, container, dev, dev-extra, ai, experiment, hardware, ui, ui-extra, gaming)
 #   desc:       (required)        # short description
 #   os:         null              # restrict to: darwin | linux
 #   de:         null              # restrict to a desktop environment (e.g., hyprland-omarchy, gnome)
@@ -63,7 +63,7 @@ packages:
     desc: "Per-directory env vars"
 
   fastfetch:
-    tags: [core]
+    tags: [core-extra]
     desc: "System information display"
 
   # ===========================================================================
@@ -122,17 +122,19 @@ packages:
     tags: [core]
     desc: "Git pager with syntax highlighting"
 
-  trash-cli:
+  gtrash:
     tags: [core]
-    desc: "Safe rm replacement"
+    desc: "Trash CLI (rm replacement, XDG trash spec)"
+    apt: false
+    dnf: false
 
   choose:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "cut/awk replacement"
     brew: choose-rust
 
   broot:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "Interactive tree explorer"
 
   xh:
@@ -140,11 +142,11 @@ packages:
     desc: "curl replacement"
 
   doggo:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "dig replacement"
 
   gping:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "ping with graph"
 
   tealdeer:
@@ -160,7 +162,7 @@ packages:
     desc: "Terminal file manager TUI"
 
   pv:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "Pipe viewer / progress monitor"
 
   # ===========================================================================
@@ -214,11 +216,6 @@ packages:
   wget:
     tags: [core]
     desc: "Network downloader"
-
-  gnupg:
-    tags: [core]
-    desc: "GnuPG encryption"
-    dnf: gnupg2
 
   tree:
     tags: [core]
@@ -318,16 +315,14 @@ packages:
   # Build & Image Tools
   # ===========================================================================
   imagemagick:
-    tags: [dev]
+    tags: [core-extra]
     desc: "Image manipulation"
     dnf: ImageMagick
 
   7zip:
-    tags: [dev]
-    desc: "Archive tool"
-    brew: p7zip
-    apt: p7zip-full
-    dnf: p7zip
+    tags: [core-extra]
+    desc: "Archive tool (official 7-Zip; binary is 7zz)"
+    brew: sevenzip
 
   # ===========================================================================
   # Development Utilities
@@ -338,19 +333,19 @@ packages:
     dnf: ShellCheck
 
   tokei:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "Code statistics"
 
   hyperfine:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "Command benchmarking"
 
   grex:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "Regex generator"
 
   gum:
-    tags: [dev]
+    tags: [dev-extra]
     desc: "TUI toolkit for shell scripts"
 
   tree-sitter-cli:
@@ -365,6 +360,12 @@ packages:
   # AI Tools
   # ===========================================================================
  
+
+  herdr:
+    tags: [ai]
+    desc: "Terminal multiplexer for AI coding agents"
+    apt: false
+    dnf: false
 
   # Disabled: omarchy 4 provides these as lazy mise wrappers in ~/.local/bin.
   # opencode:

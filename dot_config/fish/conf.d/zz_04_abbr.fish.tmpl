@@ -4,6 +4,7 @@
 # Non-core abbreviations are gated by profile tags at template time
 # =============================================================================
 
+{{- $tags := splitList ", " .tags }}
 if status is-interactive
     function __deferred_abbr_init --on-event fish_prompt
     #Delete the function after it runs the first time
@@ -21,8 +22,8 @@ if status is-interactive
         # Bat for cat
         abbr --add cat 'bat -p'
 
-        # Trash for rm (safer delete)
-        abbr --add rm trash
+        # gtrash for rm (safer delete); runtime check since apt/dnf lack it
+        command -q gtrash; and abbr --add rm 'gtrash put'
 
         # Duf for df (beautiful disk free)
         abbr --add df duf
@@ -85,11 +86,13 @@ if status is-interactive
         abbr -a --position anywhere --command git ap add --patch
         abbr -a --position anywhere --command git pf push --force-with-lease
 
-        {{ if contains "dev" .tags -}}
+        {{ if has "dev" $tags -}}
             # --- Dev tools ---
             # Difftastic for diff
             abbr --add diff difft
+        {{ end -}}
 
+        {{ if has "dev-extra" $tags -}}
             # Gping for ping (graph visualization)
             abbr --add ping gping
 
@@ -97,7 +100,7 @@ if status is-interactive
             abbr --add br broot
         {{ end -}}
 
-        {{ if contains "container" .tags -}}
+        {{ if has "container" $tags -}}
             # --- Container management ---
             abbr --add d docker
             abbr --add p podman
@@ -109,7 +112,7 @@ if status is-interactive
             abbr --add dbc 'distrobox create'
         {{ end -}}
 
-        {{ if contains "ai" .tags -}}
+        {{ if has "ai" $tags -}}
             # --- AI tools ---
             abbr --add c opencode
             abbr --add cx 'clear-all; and claude --permission-mode bypassPermissions'
@@ -127,7 +130,7 @@ if status is-interactive
             abbr -a --position anywhere --command devpod r restart
         {{ end -}}
 
-        {{ if contains "experiment" .tags -}}
+        {{ if has "experiment" $tags -}}
             # --- Experimental ---
             abbr --add zj zellij
         {{ end -}}

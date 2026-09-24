@@ -72,6 +72,14 @@ for attempt in $(seq 1 "$MAX_RETRIES"); do
 done
 
 log "Homebrew formula installation complete!"
+{{- if eq .profile "devpod" }}
+
+# Devpod brew is fully managed by this Brewfile, so uninstall anything it no
+# longer lists (retagged packages, manual installs). Not safe on a Mac, where
+# ad-hoc `brew install`s are expected to survive.
+log "Removing formulas no longer in the Brewfile..."
+brew bundle cleanup --force --file=- <<<"$BREWFILE_CONTENT" || log "brew bundle cleanup failed; continuing"
+{{- end }}
 
 # =============================================================================
 # Disable vendor fish conf.d files we handle ourselves with caching

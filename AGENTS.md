@@ -45,7 +45,7 @@ DOTFILES_PROFILE=arch-desktop chezmoi init
 ```
 
 Each profile (defined in `.chezmoidata/profiles.yaml`) fully specifies:
-- **`tags`**: comma-delimited category tags (`core`, `container`, `dev`, `ai`, `hardware`, `ui`, `ui-extra`, `gaming`)
+- **`tags`**: comma-delimited category tags (`core`, `core-extra`, `container`, `dev`, `dev-extra`, `dev-toolchains`, `ai`, `experiment`, `hardware`, `ui`, `ui-extra`, `gaming`)
 - **Package managers**: `brew`, `pacman`, `apt`, `dnf`, `rpm_ostree`, `flatpak`
 - **`work`**: work machine (system SSH agent, corporate configs)
 - **`decrypt`**: enable age decryption of private configs
@@ -57,17 +57,20 @@ If no profile is specified, auto-detects from distro (macOS → `macos-work`, Ar
 
 | Profile | Tags | Pkg Managers | Work | Decrypt | Backup | Description |
 |---|---|---|---|---|---|---|
-| `macos-work` | core, container, dev, ai, ui, ui-extra | brew | yes | yes | | Work Mac — corporate dev + GUI (Time Machine) |
-| `arch-desktop` | core, container, dev, ai, hardware, ui, ui-extra, gaming | pacman, flatpak, appimage | | yes | yes | Arch Linux desktop |
+| `macos-work` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, ui, ui-extra | brew | yes | yes | | Work Mac — corporate dev + GUI (Time Machine) |
+| `arch-desktop` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, hardware, ui, ui-extra, gaming | pacman, flatpak, appimage | | yes | yes | Arch Linux desktop |
 | `debian-server` | core | apt | | | | Debian/Ubuntu server — CLI only |
-| `devpod` | core | brew | yes | no | | Debian/Ubuntu dev |
-| `silverblue` | core, container, dev, ai, hardware, ui, ui-extra, gaming | brew, rpm_ostree, flatpak, appimage | | yes | | Silverblue/Bazzite immutable |
+| `devpod` | core, dev, ai | brew | yes | no | | Work devpod — lean; toolchains from image/repo |
+| `silverblue` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, hardware, ui, ui-extra, gaming | brew, rpm_ostree, flatpak, appimage | | yes | | Silverblue/Bazzite immutable |
 
 **Package categories:**
-- **core** (all machines): Shell (fish, atuin, zoxide), modern CLI tools (eza, bat, fd, ripgrep, etc.), git, neovim, tmux, essential utils
+- **core** (all machines): Shell (fish, atuin, zoxide), modern CLI tools (eza, bat, fd, ripgrep, yazi, gtrash, etc.), git, neovim, tmux, essential utils
+- **core-extra** (machines you sit at): fastfetch, imagemagick, 7zip
 - **container**: docker, docker-compose, podman, distrobox, lazydocker
-- **dev**: mise, uv, build tools (imagemagick, p7zip), dev utilities (shellcheck, tokei, hyperfine)
-- **ai**: llm, claude-code, gemini-cli, opencode, codex
+- **dev**: mise, uv, difftastic, shellcheck, tree-sitter-cli, usage
+- **dev-extra**: broot, doggo, gping, choose, grex, gum, hyperfine, pv, tokei
+- **dev-toolchains**: global mise runtimes at `latest` (bun, node, rust, go, java); without it the mise drop-in carries settings only
+- **ai**: herdr (agent CLIs themselves are installed outside packages.yaml)
 - **hardware**: bluetui and other hardware interaction tools
 - **ui**: Fonts, VS Code, ghostty, browser, 1Password, obsidian
 - **ui-extra**: JetBrains, Discord, media apps, macOS extras
@@ -168,6 +171,6 @@ Regression suite for `voxtype-cleanup` — runs the live LLM script against know
 Skips cleanly when `~/.config/voxtype/secrets.env` is missing or any required env var is absent. To test the skip path: `VOXTYPE_LLM_API_KEY="" ./tests/run.sh`. Tuning: `VOXTYPE_TEST_RUNS=5 VOXTYPE_TEST_THRESHOLD=3 ./tests/run.sh`.
 
 ### Philosophy
-- All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→trash`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.
+- All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→gtrash put`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.
 - Shorthand abbreviations for longer tool names: `lg→lazygit`, `br→broot`
 - Shell greeting shows random CLI tips to teach modern tool usage

@@ -1,4 +1,5 @@
-{{ if contains "dev" .tags -}}
+{{ $tags := splitList ", " .tags -}}
+{{ if has "dev" $tags -}}
 # Chezmoi owns this drop-in: language runtimes and mise settings, nothing else.
 # Omarchy owns ~/.config/mise/config.toml, which its ~/.local/bin lazy wrappers
 # rewrite on every launch via `mise use -g`.
@@ -14,12 +15,19 @@
 # which is what pacman/paru packages (#!/usr/bin/env python3, e.g. virt-manager,
 # needs system gi/PyGObject) expect. Opt into mise python per-project via a
 # .mise.toml (`mise use python@<ver>`), or ad-hoc with `mise shell python@latest`.
+#
+# NOTE: global runtimes are gated on the dev-toolchains tag. Without it (devpods)
+# the file carries settings only, so tools resolve from the repo's mise.toml or
+# fall through to the image's binaries on PATH.
+{{ if has "dev-toolchains" $tags -}}
 [tools]
 bun = "latest"
 node = "latest"
 rust = "latest"
 go = "latest"
 java = "latest"
+
+{{ end -}}
 
 [settings]
 idiomatic_version_file_enable_tools = ["node", "python", "go", "ruby", "java", "rust"]
