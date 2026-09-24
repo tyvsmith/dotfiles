@@ -521,6 +521,7 @@ packages:
     tags: [ui-extra]
     desc: "Enhanced Discord client"
     flatpak: dev.vencord.Vesktop
+    pacman: vesktop-bin
     brew_cask: true
     work: false
 

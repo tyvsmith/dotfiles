@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # voxtype-cleanup regression test harness.
 # Tests the LLM cleanup script against the real model — no mocking.
-# Run: ./tests/run.sh
+# Run: ./tests/voxtype/run.sh
 # Skip conditions: missing secrets.env, missing env vars, no network hint.
 #
 # Tuning:
@@ -13,7 +13,7 @@ RUNS="${VOXTYPE_TEST_RUNS:-3}"
 THRESHOLD="${VOXTYPE_TEST_THRESHOLD:-2}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-SCRIPT="$REPO_ROOT/dot_local/bin/executable_voxtype-cleanup"
+SCRIPT="$REPO_ROOT/home/dot_local/bin/executable_voxtype-cleanup"
 SECRETS="${VOXTYPE_SECRETS:-${XDG_CONFIG_HOME:-$HOME/.config}/voxtype/secrets.env}"
 CONFIG="${VOXTYPE_CATEGORIES:-${XDG_CONFIG_HOME:-$HOME/.config}/voxtype/categories.yaml}"
 
@@ -42,7 +42,7 @@ fi
 [[ -n "${VOXTYPE_LLM_BASE_URL:-}" ]] || skip "VOXTYPE_LLM_BASE_URL not set (not in environment or secrets.env)"
 [[ -n "${VOXTYPE_LLM_MODEL:-}" ]]    || skip "VOXTYPE_LLM_MODEL not set (not in environment or secrets.env)"
 
-# To test the skip path: VOXTYPE_LLM_API_KEY="" ./tests/run.sh
+# To test the skip path: VOXTYPE_LLM_API_KEY="" ./tests/voxtype/run.sh
 
 # ── test case data ────────────────────────────────────────────────────────────
 # Format: INPUT|HINT|MUST_MATCH (comma-sep regex)|MUST_NOT_MATCH (comma-sep regex)

@@ -1,27 +1,27 @@
 ---
 name: add-package
 description: >
-  Add a new package to .chezmoidata/packages.yaml in the dotfiles repo at
+  Add a new package to home/.chezmoidata/packages.yaml in the dotfiles repo at
   ~/Code/dotfiles. Verifies the canonical name on every supported manager
   (Homebrew formula + cask, Arch official + AUR, Ubuntu apt, Fedora dnf,
   Flathub, AppImage GitHub releases) via the bundled `pkg-lookup` helper (at `.agents/skills/add-package/pkg-lookup`) before writing
   the entry, so name overrides and cascade fields are correct by construction —
   never guessed. Use when the user says "add package <name>", "track <name> in
   chezmoi", "install <name> on all my machines", or is editing
-  .chezmoidata/packages.yaml directly. Do not use for one-off `paru -S` or
+  home/.chezmoidata/packages.yaml directly. Do not use for one-off `paru -S` or
   `brew install` invocations that are not meant to persist across machines.
 ---
 
 # add-package
 
-Add a new entry to `.chezmoidata/packages.yaml` with platform-correct names
+Add a new entry to `home/.chezmoidata/packages.yaml` with platform-correct names
 verified against authoritative registries, not guessed.
 
 ## When to use
 
 - User wants to add a package to the dotfiles so it installs on every machine
   on next `chezmoi apply`.
-- User is editing `.chezmoidata/packages.yaml` directly and asks for help.
+- User is editing `home/.chezmoidata/packages.yaml` directly and asks for help.
 - The user mentions a tool by colloquial name (e.g., "fd", "Obsidian") and you
   need the actual install name on each manager.
 
@@ -31,7 +31,7 @@ verified against authoritative registries, not guessed.
 - Updating an existing entry's version, description, or tags (no lookup needed
   — just edit).
 - Removing an entry.
-- Editing `.chezmoitemplates/cascade-filter` or any `run_onchange_*` install
+- Editing `home/.chezmoitemplates/cascade-filter` or any `run_onchange_*` install
   script.
 
 ## Workflow
@@ -94,7 +94,7 @@ Apply these rules in order:
 
 After applying these rules, you should have a minimal entry — only fields that
 differ from defaults. Read the schema comments at
-`.chezmoidata/packages.yaml:9-39` if uncertain about defaults.
+`home/.chezmoidata/packages.yaml:9-39` if uncertain about defaults.
 
 ### 4. Confirm tags and description
 
@@ -114,9 +114,9 @@ not your paraphrase.
 
 ### 5. Find the right section and insert
 
-Section headers in `.chezmoidata/packages.yaml` are `# Title` lines bracketed
+Section headers in `home/.chezmoidata/packages.yaml` are `# Title` lines bracketed
 by `# ===` rules. Current sections (run `grep -n '^  # [A-Z]'
-.chezmoidata/packages.yaml` to confirm):
+home/.chezmoidata/packages.yaml` to confirm):
 
 - Shell & Environment, Editor, Modern CLI Replacements, Git Tools,
   Essential Utilities, Containers, Development SDKs & Package Managers,
@@ -145,7 +145,7 @@ Default to **No** — let them apply on their schedule.
 
 ## Schema cheatsheet
 
-Authoritative source: `.chezmoidata/packages.yaml:9-39` (header comment).
+Authoritative source: `home/.chezmoidata/packages.yaml:9-39` (header comment).
 
 - Cascade order: `brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`.
 - Tri-state fields (`brew`, `pacman`, `apt`, `dnf`): **absent** = use YAML key,
@@ -226,7 +226,7 @@ appflowy:
   Flatpak or AppImage, the package is macOS-only. Add `os: darwin` to make
   the constraint explicit.
 - **Existing entry already present**: `grep -n '^  <name>:'
-  .chezmoidata/packages.yaml` first. If the entry exists, ask the user
+  home/.chezmoidata/packages.yaml` first. If the entry exists, ask the user
   whether they want to update it (different skill scope) or pick a different
   name.
 
@@ -234,7 +234,7 @@ appflowy:
 
 - Do not invent a package name without evidence from the bundled helper. If a lookup
   misses, ask the user — do not guess.
-- Do not edit `.chezmoitemplates/cascade-filter` or any
+- Do not edit `home/.chezmoitemplates/cascade-filter` or any
   `run_onchange_*-install-packages-*.sh.tmpl` script. The schema is fixed.
 - Do not run `chezmoi apply` without explicit user approval.
 - Do not modify existing entries as a side effect of adding a new one.
@@ -245,8 +245,8 @@ appflowy:
 ## Tools used by this skill
 
 - `Bash`: `.agents/skills/add-package/pkg-lookup all <name>` (and per-manager variants), `chezmoi diff`,
-  `grep` against `.chezmoidata/packages.yaml`.
-- `Read`: inspect `.chezmoidata/packages.yaml` to find the insertion point and
+  `grep` against `home/.chezmoidata/packages.yaml`.
+- `Read`: inspect `home/.chezmoidata/packages.yaml` to find the insertion point and
   confirm schema header.
 - `Edit`: insert the new entry.
 - `AskUserQuestion`: pick tags, confirm description, gate `chezmoi apply`.

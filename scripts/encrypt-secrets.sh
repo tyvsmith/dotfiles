@@ -5,8 +5,8 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-PUBLIC_KEY_FILE="$REPO_ROOT/.age-public-key"
-WORK_KEY_FILE="$REPO_ROOT/.age-public-key-work"
+PUBLIC_KEY_FILE="$REPO_ROOT/home/.age-public-key"
+WORK_KEY_FILE="$REPO_ROOT/home/.age-public-key-work"
 
 if [[ ! -f "$PUBLIC_KEY_FILE" ]]; then
     echo "Error: Public key not found at $PUBLIC_KEY_FILE"
@@ -20,7 +20,7 @@ if [[ -f "$WORK_KEY_FILE" ]]; then
 fi
 
 # Find and encrypt all decrypted_* files
-find "$REPO_ROOT" -name "decrypted_*" -type f | while read -r plaintext_file; do
+find "$REPO_ROOT/home" -name "decrypted_*" -type f | while read -r plaintext_file; do
     dir=$(dirname "$plaintext_file")
     filename=$(basename "$plaintext_file")
 

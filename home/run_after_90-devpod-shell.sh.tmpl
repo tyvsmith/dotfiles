@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # shellcheck source=/dev/null
-source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
 # Find fish binary — check well-known install paths, then fall back to PATH
 FISH_PATH=""
