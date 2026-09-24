@@ -74,6 +74,9 @@ up while searching, and ones you mention in passing.
 - When I correct you, re-read what I asked before continuing.
 - Prefer the narrowest change that solves the problem.
 - Consult current docs before implementing against an SDK or API rather than recalling.
+{{- if eq .product "Claude Code" }}
+- To recall past sessions, grep transcripts in `~/.claude/projects/*/*.jsonl` and `.remember/` history before asking me.
+{{- end }}
 
 ## Sudo
 
