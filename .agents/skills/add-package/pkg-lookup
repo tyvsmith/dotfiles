@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # pkg-lookup — verify canonical package names across supported package managers
-# for the dotfiles .chezmoidata/packages.yaml workflow. Authoritative registries
+# for the dotfiles home/.chezmoidata/packages.yaml workflow. Authoritative registries
 # only; no guesses. Output is a single JSON object on stdout.
 #
 # Subcommands:

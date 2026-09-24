@@ -9,7 +9,7 @@
 set -euo pipefail
 
 # shellcheck source=/dev/null
-source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
 GITCONFIG="$HOME/.gitconfig"
 INCLUDE_PATH="~/.config/git/config"

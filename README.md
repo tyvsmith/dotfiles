@@ -41,7 +41,7 @@ This will:
 
 ## Profiles
 
-Each profile fully specifies a machine setup: category tags, package managers, work mode, decryption, and backups. See `.chezmoidata/profiles.yaml` for the source of truth.
+Each profile fully specifies a machine setup: category tags, package managers, work mode, decryption, and backups. See `home/.chezmoidata/profiles.yaml` for the source of truth.
 
 | Profile | Pkg Managers | Work | Decrypt | Backup | Description |
 |---------|--------------|------|---------|--------|-------------|
@@ -142,39 +142,39 @@ chezmoi init --apply tyvsmith/dotfiles
 
 ## Structure
 
-```
+```text
 dotfiles/
-├── install.sh                          # New machine setup script
-├── Brewfile.tmpl                       # Homebrew packages (templated)
-├── .chezmoi.toml.tmpl                  # Chezmoi config template
-├── .chezmoiignore.tmpl                 # Ignore rules (templated)
-├── .age-public-key                     # Age encryption public key
-├── run_before_01-decrypt.sh.tmpl       # Age key from 1Password/env if missing (restic secrets use self-caching templates)
-├── run_onchange_01-install-packages.sh.tmpl  # brew bundle
-├── run_onchange_02-install-fisher.sh.tmpl    # Fisher plugins
-├── run_onchange_03-configure-tide.sh.tmpl    # Tide prompt config
-├── encrypted_dot_gitconfig.local.age   # Encrypted git identity
-├── scripts/
-│   ├── encrypt-secrets.sh              # Encrypt decrypted_* files
-│   ├── decrypt-secrets.sh              # Decrypt for local editing
-│   └── lib/common.sh                   # Shared shell functions
-├── dot_config/
-│   ├── fish/
-│   │   ├── conf.d/
-│   │   │   ├── 0_bling.fish            # Abbreviations, CLI tips
-│   │   │   ├── 0_brew.fish.tmpl        # Homebrew PATH setup
-│   │   │   ├── 0_paths.fish            # Additional PATH entries
-│   │   │   └── 0_vars.fish.tmpl        # Environment variables
-│   │   ├── fish_plugins.tmpl           # Fisher plugin list
-│   │   └── tide_config.fish            # Tide 'configure --auto' command
-│   └── gh/
-│       └── private_config.yml          # GitHub CLI config
-├── dot_gitconfig.tmpl                  # Git config (templated)
-└── private_dot_ssh/
-    ├── config.tmpl                     # SSH config
-    └── config.d/
-        └── encrypted_00-trusted.age    # Encrypted trusted hosts
+├── .chezmoiroot                  # Contains home
+├── home/                        # Chezmoi source state
+│   ├── .chezmoi.toml.tmpl        # Profile configuration
+│   ├── .chezmoidata/             # Packages and profiles
+│   ├── .chezmoitemplates/        # Shared templates
+│   ├── .chezmoiignore*           # Target exclusions
+│   ├── .chezmoiexternal.toml     # External repositories
+│   ├── .age-public-key*         # Encryption recipients
+│   ├── run_*                    # Install and configuration scripts
+│   ├── dot_config/              # ~/.config
+│   ├── dot_local/               # ~/.local
+│   ├── dot_agents/              # Shared tool instructions
+│   ├── dot_claude/
+│   ├── dot_codex/
+│   ├── private_dot_ssh/         # SSH configuration
+│   └── symlink_dot_devpod.tmpl
+├── install.sh                   # Bootstrap entry point
+├── scripts/                     # Repository helpers
+├── tests/
+└── docs/
 ```
+
+Keep worktrees outside `home/`, for example in `.claude/worktrees/` or
+`.worktrees/`. Chezmoi reads nested data before applying ignore rules;
+`.chezmoiroot` keeps repository tooling and worktree data outside its source state.
+Keep `sourceDir` configured to the repository root; `.chezmoiroot` selects `home/`.
+
+After updating an existing checkout, preview with `chezmoi diff` before applying.
+Changed `run_onchange` scripts may run again because their shared-library paths
+now point to `../scripts/lib/` from `home/`.
+
 
 ## Updating
 
@@ -208,3 +208,11 @@ tide configure
 # Copy the output and update:
 chezmoi edit ~/.config/fish/tide_config.fish
 ```
+
+## Validate the source layout
+
+Run `python3 tests/chezmoi/test_source_root.py` with `chezmoi`, `age`, and
+`age-keygen` installed. Checks cover nested worktree isolation, profile rendering,
+shared-library paths, and secret-helper boundaries using a disposable key.
+Rendering excludes secrets, backups, and external checkouts; macOS templates
+are evaluated on the host OS. No install scripts run.

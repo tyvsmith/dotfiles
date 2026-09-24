@@ -30,6 +30,10 @@ chezmoi apply
 
 ## Architecture
 
+Chezmoi source state lives in `home/`, selected by the root `.chezmoiroot`.
+Keep worktrees and repository tooling outside `home/`. Template includes are
+relative to `home/`; shared shell libraries remain in `scripts/lib/`.
+
 ### Chezmoi Naming Conventions
 - `dot_` prefix → becomes `.` (e.g., `dot_config` → `.config`)
 - `private_` prefix → file permissions set to 0600
@@ -44,7 +48,7 @@ DOTFILES_PROFILE=arch-desktop chezmoi init
 ./install.sh --profile macos-work
 ```
 
-Each profile (defined in `.chezmoidata/profiles.yaml`) fully specifies:
+Each profile (defined in `home/.chezmoidata/profiles.yaml`) fully specifies:
 - **`tags`**: comma-delimited category tags (`core`, `core-extra`, `container`, `dev`, `dev-extra`, `dev-toolchains`, `ai`, `experiment`, `hardware`, `ui`, `ui-extra`, `gaming`)
 - **Package managers**: `brew`, `pacman`, `apt`, `dnf`, `rpm_ostree`, `flatpak`
 - **`work`**: work machine (system SSH agent, corporate configs)
@@ -81,7 +85,7 @@ Templates use `{{ if eq .chezmoi.os "darwin" }}` for macOS-specific and `{{ else
 
 ### Package Management
 
-Packages are defined once in `.chezmoidata/packages.yaml` and installed via platform-specific package managers:
+Packages are defined once in `home/.chezmoidata/packages.yaml` and installed via platform-specific package managers:
 - **macOS**: Homebrew formulas + casks
 - **Arch Linux**: paru (handles both official repos and AUR)
 - **Debian/Ubuntu**: apt (native repos only)
@@ -103,17 +107,17 @@ Opt-in manager fields are present when available:
 - `flatpak:` — Flatpak app ID
 - `appimage:` — GitHub repo (`owner/name`) for AppImage download
 
-Cascade order: `brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
+Cascade order: `brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `home/.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
 
 **Debian/Ubuntu apt availability:**
 The apt install script uses runtime `apt-cache` checks to determine package availability, so it works correctly across different Debian/Ubuntu versions without static exclusion lists. Packages available in Ubuntu 24.04 but missing in Debian Bookworm (e.g., eza, sd, git-delta, gping, yq, hyperfine) will be installed where available and skipped with warnings where not.
 
 ### Key Files
-- `.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
-- `.chezmoidata/profiles.yaml` - Machine profile definitions (tags, pkg managers, work, decrypt)
-- `.chezmoitemplates/cascade-filter` - Shared cascade logic for package manager selection
-- `dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
-- `dot_config/git/config.tmpl` - Git config with delta pager, useful aliases
+- `home/.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
+- `home/.chezmoidata/profiles.yaml` - Machine profile definitions (tags, pkg managers, work, decrypt)
+- `home/.chezmoitemplates/cascade-filter` - Shared cascade logic for package manager selection
+- `home/dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
+- `home/dot_config/git/config.tmpl` - Git config with delta pager, useful aliases
 
 ### Install Scripts
 
@@ -152,7 +156,7 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 
 ### Backups (restic + resticprofile)
 
-`backup: true` profiles run [resticprofile](https://creativeprojects.github.io/resticprofile/) against a REST server on the homelab NAS (`--append-only`, per-host repo `ty/<host>`). Config: `dot_config/resticprofile/private_profiles.yaml.tmpl`.
+`backup: true` profiles run [resticprofile](https://creativeprojects.github.io/resticprofile/) against a REST server on the homelab NAS (`--append-only`, per-host repo `ty/<host>`). Config: `home/dot_config/resticprofile/private_profiles.yaml.tmpl`.
 
 - **Two profiles**: `default` (user `$HOME` + a staged manifest of system state → user-scoped `user_logged_on` timers) and `system` (`/etc` as root → a root timer; needs one sudo escalation, see below).
 - **Secrets** (never committed): repo encryption key + REST transport key, fetched from `op://dev-keys/restic-<host>/*` once via the `op-cached-secret` partial, then served from on-disk cache (`~/.config/resticprofile/{password,rest-pass}`).
@@ -165,10 +169,10 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 Regression suite for `voxtype-cleanup` — runs the live LLM script against known inputs and checks outputs with M-of-N pass logic to handle non-determinism.
 
 ```bash
-./tests/run.sh
+./tests/voxtype/run.sh
 ```
 
-Skips cleanly when `~/.config/voxtype/secrets.env` is missing or any required env var is absent. To test the skip path: `VOXTYPE_LLM_API_KEY="" ./tests/run.sh`. Tuning: `VOXTYPE_TEST_RUNS=5 VOXTYPE_TEST_THRESHOLD=3 ./tests/run.sh`.
+Skips cleanly when `~/.config/voxtype/secrets.env` is missing or any required env var is absent. To test the skip path: `VOXTYPE_LLM_API_KEY="" ./tests/voxtype/run.sh`. Tuning: `VOXTYPE_TEST_RUNS=5 VOXTYPE_TEST_THRESHOLD=3 ./tests/voxtype/run.sh`.
 
 ### Philosophy
 - All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→gtrash put`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.

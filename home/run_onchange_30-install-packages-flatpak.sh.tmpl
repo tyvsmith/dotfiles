@@ -16,7 +16,7 @@ exit 0
 set -euo pipefail
 
 # shellcheck source=/dev/null
-source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
 if ! command -v flatpak &>/dev/null; then
     warn "flatpak not found — skipping Flatpak app installation."

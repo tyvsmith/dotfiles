@@ -26,7 +26,7 @@ else
 fi
 
 # Find and decrypt all encrypted_*.age files
-find "$REPO_ROOT" -name "encrypted_*.age" -type f | while read -r encrypted_file; do
+find "$REPO_ROOT/home" -name "encrypted_*.age" -type f | while read -r encrypted_file; do
     dir=$(dirname "$encrypted_file")
     filename=$(basename "$encrypted_file")
 

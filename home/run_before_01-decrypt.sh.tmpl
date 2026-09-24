@@ -9,7 +9,7 @@
 set -euo pipefail
 
 # shellcheck source=/dev/null
-source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
 # ensure_secret <dest> <label> <op_ref> [env_var]
 # Ensures <dest> exists (0600). Order: keep existing file -> $env_var (if set) -> 1Password -> fail.

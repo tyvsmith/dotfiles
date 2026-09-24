@@ -15,15 +15,10 @@ on:
   push:
     branches: [main]
     paths:
-      - '.chezmoidata/**'
-      - 'run_*.sh.tmpl'
-      - 'run_*.sh'
-      - 'dot_*/**'
+      - '.chezmoiroot'
+      - 'home/**'
       - 'install.sh'
       - 'scripts/**'
-      - '.chezmoi.toml.tmpl'
-      - '.chezmoiignore.tmpl'
-      - '.chezmoitemplates/**'
       - '.github/workflows/devpod-linuxbrew-cache.yml'
 
 permissions:
@@ -102,7 +97,7 @@ jobs:
       - name: Build manifest
         run: |
           set -eux
-          PKG_SHA=$(sha256sum checkout/.chezmoidata/packages.yaml | awk '{print $1}')
+          PKG_SHA=$(sha256sum checkout/home/.chezmoidata/packages.yaml | awk '{print $1}')
           export PKG_SHA
           sudo -u builder -H -E bash -lc "
             FP=\$(sha256sum /tmp/brew-versions.txt | awk '{print \$1}')
@@ -160,7 +155,7 @@ jobs:
           if ! gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
             gh release create "${RELEASE_TAG}" \
               --title "Linuxbrew cache (debian 12, x86_64)" \
-              --notes "Rolling cache of \`~/.linuxbrew\` for the devpod profile. Asset and manifest are replaced on every successful workflow run. Consumed by \`dot_local/bin/executable_devpod-linuxbrew-fetch\`."
+              --notes "Rolling cache of \`~/.linuxbrew\` for the devpod profile. Asset and manifest are replaced on every successful workflow run. Consumed by \`home/dot_local/bin/executable_devpod-linuxbrew-fetch\`."
           fi
 
       - name: Upload assets (replace existing)

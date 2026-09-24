@@ -1,22 +1,3 @@
-LICENSE
-README.md
-CLAUDE.md
-AGENTS.md
-install.sh
-legacy/
-# NOTE: do not add .claude/ or .agents/ here. They are dot-prefixed *source*
-# dirs (repo-local agent skills) that chezmoi already excludes from the source
-# state. As ignore entries they would instead match the *target* paths
-# ~/.claude and ~/.agents and block a future dot_claude/ or dot_agents/ from
-# deploying.
-docs/
-
-# Ignore scripts directory (run_* scripts are in repo root)
-scripts/
-
-# Test harness — repo tooling, not deployed dotfiles
-tests/
-
 # Plaintext versions of encrypted files are for local editing only, never deployed
 **/decrypted_*
 

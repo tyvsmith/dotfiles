@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # shellcheck source=/dev/null
-source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/scripts/lib/common.sh"
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
 {{ $p := index .profiles .profile -}}
 {{ if and (hasKey $p "brew") $p.brew -}}
