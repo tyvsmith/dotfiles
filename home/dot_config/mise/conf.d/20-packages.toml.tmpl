@@ -5,6 +5,17 @@
 # are pinned by the repo's mise-packages.lock, merged into ~/.config/mise/mise.lock.
 [tools]
 {{- range $key, $pkg := .packages }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "mise" "fmt" "\"%s\" = \"latest\"  # %s") }}
+{{-   $spec := includeTemplate "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "mise" "fmt" "%s%.0s") | trim }}
+{{-   if $spec }}
+{{-     $version := get $pkg "mise_version" | default "latest" }}
+{{-     $opts := get $pkg "mise_opts" | default dict }}
+{{-     if $opts }}
+{{-       $fields := list (printf "version = %q" $version) }}
+{{-       range $k, $v := $opts }}{{ $fields = append $fields (printf "%s = %q" $k (toString $v)) }}{{ end }}
+{{ printf "%q" $spec }} = { {{ join ", " $fields }} }  # {{ $key }}
+{{-     else }}
+{{ printf "%q" $spec }} = {{ printf "%q" $version }}  # {{ $key }}
+{{-     end }}
+{{-   end }}
 {{- end }}
 {{ end -}}

@@ -59,6 +59,21 @@ if [[ -n "$fish_bin" ]]; then
     log "Linked $BIN_DIR/fish -> $fish_bin"
 fi
 
+# Upstream gnu builds can require a newer glibc than the image ships (atuin,
+# yazi, tree-sitter did); ldd reports any missing symbol version. Warn rather
+# than fail so the rest of the apply (login shell, fisher) still runs.
+broken=()
+while IFS= read -r dir; do
+    for f in "$dir"/*; do
+        [[ -f "$f" && -x "$f" ]] || continue
+        ldd "$f" 2>&1 | grep -q "not found" && broken+=("${f##*/}")
+    done
+done < <(mise bin-paths "${tools[@]}" 2>/dev/null)
+if (( ${#broken[@]} )); then
+    warn "these binaries cannot run on this system's libc: ${broken[*]}"
+    warn "pick a musl build (mise_opts: { matching: \"musl\" }) or hold the version (mise_version)"
+fi
+
 # Drop superseded versions of our tools only. A bare `mise prune` could also
 # remove versions a work repo installed whose config mise isn't tracking.
 # Packages removed from packages.yaml stay installed until `mise uninstall`.

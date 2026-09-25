@@ -118,6 +118,7 @@ Profiles with `mise: true` install every package that declares a `mise:` backend
 - Add or remove a package: edit `packages.yaml`, run `scripts/mise-lock`, commit both files.
 - Upgrade: `scripts/mise-lock --bump`, review the lockfile diff, commit. Machines update on the next apply.
 - Local mise use is safe: `mise use -g`, toolchains, and `mise upgrade` write the same lockfile, and the merge keeps their entries.
+- Devpods run Debian 12 (glibc 2.36). Some upstream gnu builds need newer glibc: pick a static build with `mise_opts: { matching: "musl" }` or hold a version line with `mise_version`. The install script warns about any managed binary `ldd` cannot resolve.
 - Reset a machine's lockfile to exactly the repo's (drops stale entries, including local-only pins): `scripts/mise-lock --force-overwrite` on that machine.
 
 **Debian/Ubuntu apt availability:**

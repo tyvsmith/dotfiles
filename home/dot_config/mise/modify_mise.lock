@@ -7,7 +7,8 @@
   Per managed tool:
     - missing locally, or the repo pins a newer version -> take the repo entry
     - same version but different entry (e.g. new platform) -> take the repo entry
-    - local version newer (upgraded on this machine) -> keep local
+    - version spec changed in the repo (e.g. latest -> 0.25) -> take the repo entry
+    - local version newer under the same spec (upgraded here) -> keep local
   Tools the repo does not manage are never touched or removed. When nothing
   changes the file is emitted byte-for-byte, so mise's formatting survives.
 */ -}}
@@ -24,8 +25,12 @@
 {{-     $local := index $tools $name -}}
 {{-     $rv := (index $entries 0).version -}}
 {{-     $lv := (index $local 0).version -}}
+{{-     $rs := get (index $entries 0) "specifiers" | toJson -}}
+{{-     $ls := get (index $local 0) "specifiers" | toJson -}}
 {{-     if eq $rv $lv -}}
 {{-       $take = ne (toJson $entries) (toJson $local) -}}
+{{-     else if ne $rs $ls -}}
+{{-       $take = true -}}
 {{-     else if and (regexMatch $semver $rv) (regexMatch $semver $lv) (semverCompare (printf "> %s" $rv) $lv) -}}
 {{-       $take = false -}}
 {{-     end -}}

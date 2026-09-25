@@ -34,6 +34,8 @@
 #   mise:       null              # mise backend spec (e.g. aqua:sharkdp/bat, github:owner/repo);
 #                                 # installs a prebuilt release binary at the version pinned in
 #                                 # .chezmoitemplates/mise-packages.lock (regenerate with scripts/mise-lock)
+#   mise_version: "latest"        # version spec for mise (e.g. "0.25" to hold a major line)
+#   mise_opts:  null              # backend options, e.g. { matching: "musl" } to pick a static build
 #   rpm_ostree: false             # true (use YAML key) or package name; immutable Fedora only
 #   flatpak:    null              # Flatpak app ID (Linux GUI), or false
 #   mas:        null              # Mac App Store ID
@@ -53,7 +55,8 @@ packages:
   atuin:
     tags: [core]
     desc: "Magical shell history"
-    mise: "aqua:atuinsh/atuin"
+    mise: "github:atuinsh/atuin"
+    mise_opts: { matching: "musl" }   # gnu build needs glibc 2.38+; Debian 12 has 2.36
 
   zoxide:
     tags: [core]
@@ -179,7 +182,8 @@ packages:
   yazi:
     tags: [core]
     desc: "Terminal file manager"
-    mise: "aqua:sxyazi/yazi"
+    mise: "github:sxyazi/yazi"
+    mise_opts: { matching: "musl" }   # gnu build needs glibc 2.39+
 
   superfile:
     tags: [experiment]
@@ -386,6 +390,7 @@ packages:
     tags: [dev]
     desc: "Parser generator for editors"
     mise: "aqua:tree-sitter/tree-sitter"
+    mise_version: "0.25"   # 0.26+ ships only glibc 2.39+ builds, no musl
 
   usage:
     tags: [dev]

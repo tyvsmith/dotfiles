@@ -79,23 +79,6 @@ url = "https://github.com/astral-sh/uv/releases/download/0.12.18/uv-x86_64-unkno
 url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/582430671"
 provenance = "github-attestations"
 
-[[tools."aqua:atuinsh/atuin"]]
-version = "18.23.0"
-backend = "aqua:atuinsh/atuin"
-specifiers = ["latest"]
-
-[tools."aqua:atuinsh/atuin"."platforms.linux-arm64"]
-checksum = "sha256:21869faff1fedb9f8fb27837136567b089bcd588d21252533d5b314605517ae2"
-url = "https://github.com/atuinsh/atuin/releases/download/v18.23.0/atuin-aarch64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/atuinsh/atuin/releases/assets/580134142"
-provenance = "github-attestations"
-
-[tools."aqua:atuinsh/atuin"."platforms.linux-x64"]
-checksum = "sha256:5cf46e926b696a9b23a3c61ef3cb00f8f7c156d1d7b7967a3b51741653b48ba3"
-url = "https://github.com/atuinsh/atuin/releases/download/v18.23.0/atuin-x86_64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/atuinsh/atuin/releases/assets/580134239"
-provenance = "github-attestations"
-
 [[tools."aqua:bootandy/dust"]]
 version = "1.2.6"
 backend = "aqua:bootandy/dust"
@@ -402,21 +385,6 @@ checksum = "sha256:321f0dd7af8340a5f2e6a8fec6538a04f617486f9ec70d878f91c09cd8dee
 url = "https://github.com/starship/starship/releases/download/v1.26.0/starship-x86_64-unknown-linux-gnu.tar.gz"
 url_api = "https://api.github.com/repos/starship/starship/releases/assets/460374620"
 
-[[tools."aqua:sxyazi/yazi"]]
-version = "26.9.1"
-backend = "aqua:sxyazi/yazi"
-specifiers = ["latest"]
-
-[tools."aqua:sxyazi/yazi"."platforms.linux-arm64"]
-checksum = "sha256:02807f08d6b589b65b7516a4e259d83f5995d7a23bb12b3a155141385b370b3a"
-url = "https://github.com/sxyazi/yazi/releases/download/v26.9.1/yazi-aarch64-unknown-linux-gnu.zip"
-url_api = "https://api.github.com/repos/sxyazi/yazi/releases/assets/539261402"
-
-[tools."aqua:sxyazi/yazi"."platforms.linux-x64"]
-checksum = "sha256:a02fe91d3304294048c681f010f1100856872a4e98ecf6927328e888d40a6ad2"
-url = "https://github.com/sxyazi/yazi/releases/download/v26.9.1/yazi-x86_64-unknown-linux-gnu.zip"
-url_api = "https://api.github.com/repos/sxyazi/yazi/releases/assets/539261400"
-
 [[tools."aqua:tealdeer-rs/tealdeer"]]
 version = "1.9.0"
 backend = "aqua:tealdeer-rs/tealdeer"
@@ -448,21 +416,19 @@ url = "https://github.com/tmux/tmux-builds/releases/download/v3.7c/tmux-3.7c-lin
 url_api = "https://api.github.com/repos/tmux/tmux-builds/releases/assets/528734864"
 
 [[tools."aqua:tree-sitter/tree-sitter"]]
-version = "0.27.0"
+version = "0.25.10"
 backend = "aqua:tree-sitter/tree-sitter"
-specifiers = ["latest"]
+specifiers = ["0.25"]
 
 [tools."aqua:tree-sitter/tree-sitter"."platforms.linux-arm64"]
-checksum = "sha256:3a35a2dd961ad842384e982c75daf792c01d1a67e442fc3914d4de37bd8a59cb"
-url = "https://github.com/tree-sitter/tree-sitter/releases/download/v0.27.0/tree-sitter-linux-arm64.gz"
-url_api = "https://api.github.com/repos/tree-sitter/tree-sitter/releases/assets/536857304"
-provenance = "github-attestations"
+checksum = "sha256:07fbff8ae0eeb0d3e496e14fc1a30dcc730cc2c97d70e601e5357f2e51958af5"
+url = "https://github.com/tree-sitter/tree-sitter/releases/download/v0.25.10/tree-sitter-linux-arm64.gz"
+url_api = "https://api.github.com/repos/tree-sitter/tree-sitter/releases/assets/296134136"
 
 [tools."aqua:tree-sitter/tree-sitter"."platforms.linux-x64"]
-checksum = "sha256:20a1f39ec1c45f2211492dcb8881c802b643b554bb196869a29ac3778277fa77"
-url = "https://github.com/tree-sitter/tree-sitter/releases/download/v0.27.0/tree-sitter-linux-x64.gz"
-url_api = "https://api.github.com/repos/tree-sitter/tree-sitter/releases/assets/536857303"
-provenance = "github-attestations"
+checksum = "sha256:8283ddba69253c698f6e987ba0e2f9285e079c8db4d36ebe1394b5bb3a0ebdfd"
+url = "https://github.com/tree-sitter/tree-sitter/releases/download/v0.25.10/tree-sitter-linux-x64.gz"
+url_api = "https://api.github.com/repos/tree-sitter/tree-sitter/releases/assets/296134134"
 
 [[tools."aqua:twpayne/chezmoi"]]
 version = "2.72.2"
@@ -480,6 +446,26 @@ checksum = "sha256:a2be1b8bcdf06c6f173e070bb3ddbcc52c50478fe9b57f6e6c63d15c7cff4
 url = "https://github.com/twpayne/chezmoi/releases/download/v2.72.2/chezmoi_2.72.2_linux-glibc_amd64.tar.gz"
 url_api = "https://api.github.com/repos/twpayne/chezmoi/releases/assets/561706563"
 provenance = "cosign"
+
+[[tools."github:atuinsh/atuin"]]
+version = "18.23.0"
+backend = "github:atuinsh/atuin"
+specifiers = ["latest"]
+
+[tools."github:atuinsh/atuin".options]
+matching = "musl"
+
+[tools."github:atuinsh/atuin"."platforms.linux-arm64"]
+checksum = "sha256:faf91adc71e6b661b21ed4f486babbd7af9d17363d4276da4a0251f83c72498d"
+url = "https://github.com/atuinsh/atuin/releases/download/v18.23.0/atuin-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/atuinsh/atuin/releases/assets/580134145"
+provenance = "github-attestations"
+
+[tools."github:atuinsh/atuin"."platforms.linux-x64"]
+checksum = "sha256:d1b40dd6e7cd3d823867ffe22b39a025bc420f7875926ae9ca974155378da14d"
+url = "https://github.com/atuinsh/atuin/releases/download/v18.23.0/atuin-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/atuinsh/atuin/releases/assets/580134247"
+provenance = "github-attestations"
 
 [[tools."github:dalance/procs"]]
 version = "0.14.12"
@@ -510,6 +496,24 @@ url_api = "https://api.github.com/repos/fish-shell/fish-shell/releases/assets/55
 checksum = "sha256:8f643d10ad1abb0ef7072764c01ceb5cf61b2d373fda400cf60f0bad69b7e095"
 url = "https://github.com/fish-shell/fish-shell/releases/download/4.9.3/fish-4.9.3-linux-x86_64.tar.xz"
 url_api = "https://api.github.com/repos/fish-shell/fish-shell/releases/assets/551107873"
+
+[[tools."github:sxyazi/yazi"]]
+version = "26.9.1"
+backend = "github:sxyazi/yazi"
+specifiers = ["latest"]
+
+[tools."github:sxyazi/yazi".options]
+matching = "musl"
+
+[tools."github:sxyazi/yazi"."platforms.linux-arm64"]
+checksum = "sha256:dd569daecaae914185f295634109295ccd25c1b42b02eb89a74f651970024f2e"
+url = "https://github.com/sxyazi/yazi/releases/download/v26.9.1/yazi-aarch64-unknown-linux-musl.zip"
+url_api = "https://api.github.com/repos/sxyazi/yazi/releases/assets/539261411"
+
+[tools."github:sxyazi/yazi"."platforms.linux-x64"]
+checksum = "sha256:9b9c39decccf8cb0ff53a7d637d38f8a79d93bbd0099f4ea9c619ef6bb392f5d"
+url = "https://github.com/sxyazi/yazi/releases/download/v26.9.1/yazi-x86_64-unknown-linux-musl.zip"
+url_api = "https://api.github.com/repos/sxyazi/yazi/releases/assets/539261404"
 
 [[tools."github:umlx5h/gtrash"]]
 version = "0.0.6"
