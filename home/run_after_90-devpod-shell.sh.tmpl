@@ -1,4 +1,4 @@
-{{- if eq .profile "devpod" -}}
+{{- if get (index .profiles .profile) "devpod" -}}
 #!/usr/bin/env bash
 # Devpods reset /etc/shells on restart, so re-register fish on every apply.
 
@@ -9,7 +9,7 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
 # Find fish binary — check well-known install paths, then fall back to PATH
 FISH_PATH=""
-for p in /home/linuxbrew/.linuxbrew/bin/fish "$HOME/.linuxbrew/bin/fish" \
+for p in /home/linuxbrew/.linuxbrew/bin/fish "$HOME/.linuxbrew/bin/fish" "$HOME/.local/bin/fish" \
          /usr/local/bin/fish /usr/bin/fish; do
     if [[ -x "$p" ]]; then
         FISH_PATH="$p"

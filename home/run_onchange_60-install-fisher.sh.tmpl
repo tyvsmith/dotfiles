@@ -10,6 +10,9 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 {{ if and (hasKey $p "brew") $p.brew -}}
 ensure_brew_in_path
 {{ end -}}
+{{ if and (hasKey $p "mise") $p.mise -}}
+export PATH="$HOME/.local/bin:$PATH"   # mise and the fish symlink
+{{ end -}}
 require_cmd fish
 require_file ~/.config/fish/fish_plugins
 

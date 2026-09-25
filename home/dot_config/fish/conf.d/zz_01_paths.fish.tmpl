@@ -17,6 +17,14 @@ end
 set -gx OMARCHY_PATH /usr/share/omarchy
 {{ end -}}
 
+{{ if get $p "mise" -}}
+# mise-managed packages: the pinned mise lives in ~/.local/bin (prepended so
+# it wins over any mise the image might ship), and the shims dir keeps those
+# tools reachable where the activate hook never runs (non-interactive shells,
+# before the first prompt). Activation below puts real bin dirs ahead of both.
+fish_add_path --path ~/.local/share/mise/shims ~/.local/bin
+{{ end -}}
+
 # Mise - polyglot runtime version manager (Java, Python, Node, etc.)
 # PATH activation (not --shims): a fish_prompt hook runs `mise hook-env`, which
 # puts the real tool bin dirs (incl. ~/.cargo/bin) on PATH — so binaries added

@@ -2,7 +2,7 @@
 # Package definitions — single source of truth for all platforms
 # =============================================================================
 #
-# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Cascade order: mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
 # Each package goes to the first enabled manager that can handle it.
 # Cascade logic lives in .chezmoitemplates/cascade-filter.
 #
@@ -31,6 +31,9 @@
 #   brew_tap:   null              # Homebrew tap required before install
 #
 # Opt-in manager fields (present = available, absent = N/A):
+#   mise:       null              # mise backend spec (e.g. aqua:sharkdp/bat, github:owner/repo);
+#                                 # installs a prebuilt release binary at the version pinned in
+#                                 # dot_config/mise/mise.lock (regenerate with scripts/mise-lock)
 #   rpm_ostree: false             # true (use YAML key) or package name; immutable Fedora only
 #   flatpak:    null              # Flatpak app ID (Linux GUI), or false
 #   mas:        null              # Mac App Store ID
@@ -45,22 +48,27 @@ packages:
   fish:
     tags: [core]
     desc: "Modern shell"
+    mise: "github:fish-shell/fish-shell"
 
   atuin:
     tags: [core]
     desc: "Magical shell history"
+    mise: "aqua:atuinsh/atuin"
 
   zoxide:
     tags: [core]
     desc: "Smarter cd command"
+    mise: "aqua:ajeetdsouza/zoxide"
 
   starship:
     tags: [core]
     desc: "Cross-shell prompt"
+    mise: "aqua:starship/starship"
 
   direnv:
     tags: [core]
     desc: "Per-directory env vars"
+    mise: "aqua:direnv/direnv"
 
   fastfetch:
     tags: [core-extra]
@@ -72,6 +80,7 @@ packages:
   neovim:
     tags: [core]
     desc: "Hyperextensible text editor"
+    mise: "aqua:neovim/neovim"
 
   # ===========================================================================
   # Modern CLI Replacements
@@ -79,52 +88,64 @@ packages:
   eza:
     tags: [core]
     desc: "ls replacement"
+    mise: "aqua:eza-community/eza"
 
   bat:
     tags: [core]
     desc: "cat replacement"
+    mise: "aqua:sharkdp/bat"
 
   fd:
     tags: [core]
     desc: "find replacement"
+    mise: "aqua:sharkdp/fd"
     apt: fd-find
     dnf: fd-find
 
   ripgrep:
     tags: [core]
     desc: "grep replacement"
+    mise: "aqua:BurntSushi/ripgrep"
 
   sd:
     tags: [core]
     desc: "sed replacement"
+    mise: "aqua:chmln/sd"
 
   dust:
     tags: [core]
     desc: "du replacement"
+    mise: "aqua:bootandy/dust"
 
   duf:
     tags: [core]
     desc: "df replacement"
+    mise: "aqua:muesli/duf"
 
   procs:
     tags: [core]
     desc: "ps replacement"
+    mise: "github:dalance/procs"
 
   btop:
     tags: [core]
     desc: "System resource monitor TUI"
+    mise: "aqua:aristocratos/btop"
 
   difftastic:
     tags: [dev]
     desc: "Structural diff tool"
+    mise: "aqua:Wilfred/difftastic"
 
   git-delta:
     tags: [core]
     desc: "Git pager with syntax highlighting"
+    mise: "aqua:dandavison/delta"
 
   gtrash:
     tags: [core]
     desc: "Trash CLI (rm replacement, XDG trash spec)"
+    mise: "github:umlx5h/gtrash"
     apt: false
     dnf: false
 
@@ -140,6 +161,7 @@ packages:
   xh:
     tags: [core]
     desc: "curl replacement"
+    mise: "aqua:ducaale/xh"
 
   doggo:
     tags: [dev-extra]
@@ -152,10 +174,12 @@ packages:
   tealdeer:
     tags: [core]
     desc: "tldr pages client"
+    mise: "aqua:tealdeer-rs/tealdeer"
 
   yazi:
     tags: [core]
     desc: "Terminal file manager"
+    mise: "aqua:sxyazi/yazi"
 
   superfile:
     tags: [experiment]
@@ -175,15 +199,18 @@ packages:
   git-lfs:
     tags: [core]
     desc: "Git Large File Storage"
+    mise: "aqua:git-lfs/git-lfs"
 
   gh:
     tags: [core]
     desc: "GitHub CLI"
+    mise: "aqua:cli/cli"
     pacman: false # omarchy 4 provides gh as a lazy mise wrapper
 
   lazygit:
     tags: [core]
     desc: "Terminal UI for git"
+    mise: "aqua:jesseduffield/lazygit"
 
   # ===========================================================================
   # Essential Utilities
@@ -191,23 +218,28 @@ packages:
   chezmoi:
     tags: [core]
     desc: "Dotfile manager"
+    mise: "aqua:twpayne/chezmoi"
 
   fzf:
     tags: [core]
     desc: "Fuzzy finder"
+    mise: "aqua:junegunn/fzf"
 
   jq:
     tags: [core]
     desc: "JSON processor"
+    mise: "aqua:jqlang/jq"
 
   yq:
     tags: [core]
     desc: "YAML processor"
+    mise: "aqua:mikefarah/yq"
     pacman: go-yq
 
   tmux:
     tags: [core]
     desc: "Terminal multiplexer"
+    mise: "aqua:tmux/tmux-builds"
 
   zellij:
     tags: [experiment]
@@ -310,6 +342,7 @@ packages:
   uv:
     tags: [dev]
     desc: "Python package manager"
+    mise: "aqua:astral-sh/uv"
 
   # ===========================================================================
   # Build & Image Tools
@@ -330,6 +363,7 @@ packages:
   shellcheck:
     tags: [dev]
     desc: "Shell script linter"
+    mise: "aqua:koalaman/shellcheck"
     dnf: ShellCheck
 
   tokei:
@@ -351,10 +385,12 @@ packages:
   tree-sitter-cli:
     tags: [dev]
     desc: "Parser generator for editors"
+    mise: "aqua:tree-sitter/tree-sitter"
 
   usage:
     tags: [dev]
     desc: "CLI spec and completions tool"
+    mise: "aqua:jdx/usage"
 
   # ===========================================================================
   # AI Tools
@@ -364,6 +400,7 @@ packages:
   herdr:
     tags: [ai]
     desc: "Terminal multiplexer for AI coding agents"
+    mise: "aqua:herdrdev/herdr"
     apt: false
     dnf: false
 

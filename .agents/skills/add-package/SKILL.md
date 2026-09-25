@@ -87,14 +87,18 @@ Apply these rules in order:
      `.agents/skills/add-package/pkg-lookup flatpak` result's `name` field).
    - If only an AppImage exists from a GitHub release: set
      `appimage: <owner>/<repo>` and verify with `.agents/skills/add-package/pkg-lookup appimage`.
-6. **Requires a Homebrew tap**: set `brew_tap: "<tap>"` (e.g., `BarutSRB/tap`).
+6. **CLI tool for mise profiles (devpod-slim)**: if the tool publishes prebuilt
+   Linux release binaries, set `mise: "aqua:<owner>/<repo>"` (check with
+   `mise registry <name>`; fall back to `github:<owner>/<repo>`), then run
+   `scripts/mise-lock` and commit the updated `home/dot_config/mise/mise.lock`.
+7. **Requires a Homebrew tap**: set `brew_tap: "<tap>"` (e.g., `BarutSRB/tap`).
    See `omniwm` in the repo for the pattern.
-7. **AUR-only Arch package**: set `pacman: <aur-name>` if the AUR name differs
+8. **AUR-only Arch package**: set `pacman: <aur-name>` if the AUR name differs
    from the YAML key. Paru handles both repos.
 
 After applying these rules, you should have a minimal entry — only fields that
 differ from defaults. Read the schema comments at
-`home/.chezmoidata/packages.yaml:9-39` if uncertain about defaults.
+`home/.chezmoidata/packages.yaml:9-42` if uncertain about defaults.
 
 ### 4. Confirm tags and description
 
@@ -145,14 +149,14 @@ Default to **No** — let them apply on their schedule.
 
 ## Schema cheatsheet
 
-Authoritative source: `home/.chezmoidata/packages.yaml:9-39` (header comment).
+Authoritative source: `home/.chezmoidata/packages.yaml:9-42` (header comment).
 
-- Cascade order: `brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`.
+- Cascade order: `mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`.
 - Tri-state fields (`brew`, `pacman`, `apt`, `dnf`): **absent** = use YAML key,
   **string** = override, **false** = exclude from this manager.
 - Modifiers: `brew_cask: true` flips to cask on macOS; `brew_tap: "<tap>"`
   preinstalls a tap.
-- Opt-in: `rpm_ostree`, `flatpak`, `mas`, `appimage` are only used when the
+- Opt-in: `mise`, `rpm_ostree`, `flatpak`, `mas`, `appimage` are only used when the
   field is present AND truthy.
 - Required fields: `tags`, `desc`.
 

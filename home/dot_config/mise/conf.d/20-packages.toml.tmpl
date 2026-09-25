@@ -1,0 +1,10 @@
+{{- $p := index .profiles .profile -}}
+{{- if and (hasKey $p "mise") $p.mise -}}
+# Generated from .chezmoidata/packages.yaml (packages with a `mise:` backend).
+# Do not `mise use -g` against this file: chezmoi owns it. Versions are pinned
+# in ~/.config/mise/mise.lock, regenerated in the repo by scripts/mise-lock.
+[tools]
+{{- range $key, $pkg := .packages }}
+{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "mise" "fmt" "\"%s\" = \"latest\"  # %s") }}
+{{- end }}
+{{ end -}}

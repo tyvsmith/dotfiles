@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Install mise-managed packages
+#
+# Cascade order: mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Installs every tool in ~/.config/mise/conf.d/20-packages.toml as a prebuilt
+# release binary, at the version and checksum pinned in ~/.config/mise/mise.lock.
+# Regenerate the lock in the repo with scripts/mise-lock; never upgrade on the
+# machine, or chezmoi reverts the lock on the next apply.
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+# mise.lock hash: {{ include "dot_config/mise/mise.lock" | sha256sum }}
+
+{{ $p := index .profiles .profile -}}
+{{ if not (and (hasKey $p "mise") $p.mise) -}}
+# Profile '{{ .profile }}' does not use mise packages — nothing to do.
+exit 0
+{{ else -}}
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
+
+log "Using profile '{{ .profile }}' — installing mise packages"
+
+# =============================================================================
+# Bootstrap mise itself (pinned + checksummed; mise cannot install itself)
+# =============================================================================
+MISE_VERSION="2026.9.13"
+BIN_DIR="$HOME/.local/bin"
+MISE="$BIN_DIR/mise"
+
+case "$(uname -m)" in
+    x86_64)  arch=x64;   sha=a72f49916b33ba952ba398046c5cc91a58238f0b718fee1d938206ef2af21c6d ;;
+    aarch64) arch=arm64; sha=dbfdfe99fe56cffda0b1c91ccbbe81e75e8475d2680bee2a7248fd779cdacde8 ;;
+    *) fail "unsupported architecture: $(uname -m)" ;;
+esac
+
+if [[ "$("$MISE" --version 2>/dev/null | awk '{print $1}')" != "$MISE_VERSION" ]]; then
+    log "Installing mise $MISE_VERSION to $MISE"
+    mkdir -p "$BIN_DIR"
+    tmp="$(mktemp)"
+    curl -fsSL -o "$tmp" \
+        "https://github.com/jdx/mise/releases/download/v$MISE_VERSION/mise-v$MISE_VERSION-linux-$arch"
+    echo "$sha  $tmp" | sha256sum -c --quiet - || fail "mise download checksum mismatch"
+    chmod +x "$tmp"
+    mv "$tmp" "$MISE"
+fi
+
+export PATH="$BIN_DIR:$PATH"
+
+# =============================================================================
+# Install pinned packages
+# =============================================================================
+# Install only the tools chezmoi declares. A bare `mise install --locked`
+# would also demand lock entries for anything in an unmanaged global config
+# (a stray `mise use -g`) and fail before fish is linked. --locked on the
+# command, not MISE_LOCKED globally, so project configs (work monorepo) keep
+# their own behavior. Run from $HOME so no project config is in scope.
+cd "$HOME"
+mapfile -t tools < <(sed -n 's/^"\([^"]*\)" = .*/\1/p' "$HOME/.config/mise/conf.d/20-packages.toml")
+(( ${#tools[@]} )) || fail "no tools found in ~/.config/mise/conf.d/20-packages.toml"
+log "Running mise install --locked (${#tools[@]} tools)..."
+mise install --locked --yes "${tools[@]}"
+
+# Login shell needs a stable path; mise's install dir is versioned.
+fish_bin="$(mise which fish 2>/dev/null || true)"
+if [[ -n "$fish_bin" ]]; then
+    ln -sfn "$fish_bin" "$BIN_DIR/fish"
+    log "Linked $BIN_DIR/fish -> $fish_bin"
+fi
+
+# Drop superseded versions of our tools only. A bare `mise prune` could also
+# remove versions a work repo installed whose config mise isn't tracking.
+# Packages removed from packages.yaml stay installed until `mise uninstall`.
+mise prune --yes "${tools[@]}" || warn "mise prune failed; continuing"
+
+log "mise package installation complete!"
+{{ end -}}

@@ -2,7 +2,7 @@
   cascade-filter: Outputs a formatted line if the package belongs to the
   specified manager, with the manager-specific package name resolved.
 
-  Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+  Cascade order: mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
   A package goes to the first enabled manager that can handle it.
 
   Native manager fields are tri-state:
@@ -14,7 +14,7 @@
     absent/false = brew formula (or not a brew package)
     true         = brew cask (macOS only); name comes from brew: or YAML key
 
-  rpm_ostree/flatpak/appimage are opt-in: require their field to be present.
+  mise/rpm_ostree/flatpak/appimage are opt-in: require their field to be present.
 
   de field is a string match:
     absent  = no restriction (installs on all profiles)
@@ -54,6 +54,7 @@
 
 {{- /* Opt-in managers: require their field to exist and be truthy */ -}}
 {{- $field_ok := true -}}
+{{- if eq $mgr "mise" -}}{{- $field_ok = and (hasKey $pkg "mise") $pkg.mise -}}{{- end -}}
 {{- if eq $mgr "brew_cask" -}}{{- $field_ok = and (hasKey $pkg "brew_cask") $pkg.brew_cask -}}{{- end -}}
 {{- if eq $mgr "rpm_ostree" -}}{{- $field_ok = and (hasKey $pkg "rpm_ostree") $pkg.rpm_ostree -}}{{- end -}}
 {{- if eq $mgr "flatpak" -}}{{- $field_ok = and (hasKey $pkg "flatpak") $pkg.flatpak -}}{{- end -}}
@@ -61,6 +62,7 @@
 
 {{- /* Tri-state availability: profile enables manager AND field is not false
      absent = available (default name), string = available (override), false = excluded */ -}}
+{{- $avail_mise := and (and (hasKey $p "mise") $p.mise) (and (hasKey $pkg "mise") $pkg.mise) -}}
 {{- $avail_brew := and (and (hasKey $p "brew") $p.brew) (or (not (hasKey $pkg "brew")) $pkg.brew) (not (and (hasKey $pkg "brew_cask") $pkg.brew_cask)) -}}
 {{- $avail_brew_cask := and (and (hasKey $p "brew") $p.brew) (eq $os "darwin") (and (hasKey $pkg "brew_cask") $pkg.brew_cask) (or (not (hasKey $pkg "brew")) $pkg.brew) -}}
 {{- $avail_pacman := and (and (hasKey $p "pacman") $p.pacman) (or (not (hasKey $pkg "pacman")) $pkg.pacman) -}}
@@ -72,7 +74,8 @@
 
 {{- /* First enabled manager wins */ -}}
 {{- $winner := "none" -}}
-{{- if $avail_brew -}}{{- $winner = "brew" -}}
+{{- if $avail_mise -}}{{- $winner = "mise" -}}
+{{- else if $avail_brew -}}{{- $winner = "brew" -}}
 {{- else if $avail_brew_cask -}}{{- $winner = "brew_cask" -}}
 {{- else if $avail_pacman -}}{{- $winner = "pacman" -}}
 {{- else if $avail_apt -}}{{- $winner = "apt" -}}
@@ -84,7 +87,9 @@
 
 {{- if and $enabled $tags_ok $os_ok $de_ok $work_ok $decrypt_ok $backup_ok $field_ok (eq $winner $mgr) -}}
 {{-   $resolved := $display -}}
-{{-   if and (eq $mgr "brew") (hasKey $pkg "brew") -}}
+{{-   if eq $mgr "mise" -}}
+{{-     $resolved = index $pkg "mise" -}}
+{{-   else if and (eq $mgr "brew") (hasKey $pkg "brew") -}}
 {{-     $resolved = index $pkg "brew" -}}
 {{-   else if and (eq $mgr "brew_cask") (hasKey $pkg "brew") -}}
 {{-     $resolved = index $pkg "brew" -}}
