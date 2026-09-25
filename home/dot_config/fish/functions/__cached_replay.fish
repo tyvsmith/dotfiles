@@ -26,7 +26,9 @@ function __cached_replay --description 'Replay a bash script with mtime-based ca
         return 0
     end
 
-    # Cache miss or stale: regenerate synchronously
+    # Cache miss or stale: regenerate synchronously. replay.fish is a Fisher
+    # plugin, so it is missing until Fisher's first install; skip until then.
+    test -f ~/.config/fish/functions/replay.fish; or return 1
     mkdir -p $cache_dir
     # Clean up old versioned cache files (previous naming scheme)
     for old in $cache_dir/$name.*.fish
