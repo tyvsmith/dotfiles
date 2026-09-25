@@ -33,7 +33,7 @@
 # Opt-in manager fields (present = available, absent = N/A):
 #   mise:       null              # mise backend spec (e.g. aqua:sharkdp/bat, github:owner/repo);
 #                                 # installs a prebuilt release binary at the version pinned in
-#                                 # dot_config/mise/mise.lock (regenerate with scripts/mise-lock)
+#                                 # .chezmoitemplates/mise-packages.lock (regenerate with scripts/mise-lock)
 #   rpm_ostree: false             # true (use YAML key) or package name; immutable Fedora only
 #   flatpak:    null              # Flatpak app ID (Linux GUI), or false
 #   mas:        null              # Mac App Store ID

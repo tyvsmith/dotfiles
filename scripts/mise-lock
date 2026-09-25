@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# mise-lock — regenerate home/dot_config/mise/mise.lock from packages.yaml.
+# mise-lock — regenerate home/.chezmoitemplates/mise-packages.lock from packages.yaml.
 #
 # Renders the mise package drop-in for a mise-enabled profile into a scratch
 # config dir, runs `mise lock --global` there, and copies the lockfile back.
@@ -9,6 +9,11 @@
 #   scripts/mise-lock                  # lock new/removed packages, keep pins
 #   scripts/mise-lock --bump           # re-resolve every "latest" (upgrade)
 #   scripts/mise-lock --bump <profile> # profile defaults to devpod-slim
+#   scripts/mise-lock --force-overwrite
+#       On a mise-profile machine: replace ~/.config/mise/mise.lock with the
+#       repo lock (dropping stale entries), then reinstall managed packages.
+#       Local-only entries (toolchains, `mise use -g`) lose their pins; mise
+#       re-resolves them on the next install.
 #
 # Uses MISE_GITHUB_TOKEN, GITHUB_TOKEN, or `gh auth token` to avoid the
 # 60/hour unauthenticated GitHub API limit.
@@ -16,18 +21,34 @@
 set -euo pipefail
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
+# Fallback for plain shells on devpods, where chezmoi and mise live here.
+PATH="$PATH:$HOME/.local/bin"
 profile="devpod-slim"
 bump=()
+overwrite=0
 for arg in "$@"; do
     case "$arg" in
         --bump) bump=(--bump) ;;
+        --force-overwrite) overwrite=1 ;;
         -h|--help) sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         -*) echo "Unknown option: $arg" >&2; exit 1 ;;
         *) profile="$arg" ;;
     esac
 done
 
-lock="$repo/home/dot_config/mise/mise.lock"
+lock="$repo/home/.chezmoitemplates/mise-packages.lock"
+
+if (( overwrite )); then
+    # Machine-side reset; chezmoi's merge normally never removes entries.
+    enabled="$(chezmoi execute-template '{{ get (index .profiles .profile) "mise" }}')"
+    [[ "$enabled" == "true" ]] || { echo "This machine's profile does not use mise packages." >&2; exit 1; }
+    target="${MISE_CONFIG_DIR:-$HOME/.config/mise}/mise.lock"
+    cp "$lock" "$target"
+    echo "Replaced ${target/#$HOME/\~} with the repo lock"
+    mapfile -t tools < <(sed -n 's/^"\([^"]*\)" = .*/\1/p' "${MISE_CONFIG_DIR:-$HOME/.config/mise}/conf.d/20-packages.toml")
+    (cd "$HOME" && mise install --locked --yes "${tools[@]}")
+    exit 0
+fi
 platforms="linux-x64,linux-arm64"
 cz=(chezmoi --source "$repo")
 

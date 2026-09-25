@@ -4,12 +4,12 @@
 # Cascade order: mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
 # Installs every tool in ~/.config/mise/conf.d/20-packages.toml as a prebuilt
 # release binary, at the version and checksum pinned in ~/.config/mise/mise.lock.
-# Regenerate the lock in the repo with scripts/mise-lock; never upgrade on the
-# machine, or chezmoi reverts the lock on the next apply.
+# chezmoi merges the repo's pins (.chezmoitemplates/mise-packages.lock, from
+# scripts/mise-lock) into that lock without dropping local entries.
 #
 # packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
 # profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
-# mise.lock hash: {{ include "dot_config/mise/mise.lock" | sha256sum }}
+# mise-packages.lock hash: {{ include ".chezmoitemplates/mise-packages.lock" | sha256sum }}
 
 {{ $p := index .profiles .profile -}}
 {{ if not (and (hasKey $p "mise") $p.mise) -}}
@@ -24,27 +24,16 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 log "Using profile '{{ .profile }}' — installing mise packages"
 
 # =============================================================================
-# Bootstrap mise itself (pinned + checksummed; mise cannot install itself)
+# Bootstrap mise itself (pinned so every machine can read the committed lock)
 # =============================================================================
 MISE_VERSION="2026.9.13"
 BIN_DIR="$HOME/.local/bin"
 MISE="$BIN_DIR/mise"
 
-case "$(uname -m)" in
-    x86_64)  arch=x64;   sha=a72f49916b33ba952ba398046c5cc91a58238f0b718fee1d938206ef2af21c6d ;;
-    aarch64) arch=arm64; sha=dbfdfe99fe56cffda0b1c91ccbbe81e75e8475d2680bee2a7248fd779cdacde8 ;;
-    *) fail "unsupported architecture: $(uname -m)" ;;
-esac
-
 if [[ "$("$MISE" --version 2>/dev/null | awk '{print $1}')" != "$MISE_VERSION" ]]; then
     log "Installing mise $MISE_VERSION to $MISE"
-    mkdir -p "$BIN_DIR"
-    tmp="$(mktemp)"
-    curl -fsSL -o "$tmp" \
-        "https://github.com/jdx/mise/releases/download/v$MISE_VERSION/mise-v$MISE_VERSION-linux-$arch"
-    echo "$sha  $tmp" | sha256sum -c --quiet - || fail "mise download checksum mismatch"
-    chmod +x "$tmp"
-    mv "$tmp" "$MISE"
+    # The standard installer verifies the download against the release checksums.
+    curl -fsSL https://mise.run | MISE_VERSION="v$MISE_VERSION" MISE_INSTALL_PATH="$MISE" sh
 fi
 
 export PATH="$BIN_DIR:$PATH"

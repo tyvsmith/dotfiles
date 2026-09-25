@@ -90,7 +90,7 @@ Apply these rules in order:
 6. **CLI tool for mise profiles (devpod-slim)**: if the tool publishes prebuilt
    Linux release binaries, set `mise: "aqua:<owner>/<repo>"` (check with
    `mise registry <name>`; fall back to `github:<owner>/<repo>`), then run
-   `scripts/mise-lock` and commit the updated `home/dot_config/mise/mise.lock`.
+   `scripts/mise-lock` and commit the updated `home/.chezmoitemplates/mise-packages.lock`.
 7. **Requires a Homebrew tap**: set `brew_tap: "<tap>"` (e.g., `BarutSRB/tap`).
    See `omniwm` in the repo for the pattern.
 8. **AUR-only Arch package**: set `pacman: <aur-name>` if the AUR name differs
