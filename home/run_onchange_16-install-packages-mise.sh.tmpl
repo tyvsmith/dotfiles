@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# Chezmoi run_onchange script: Install mise-managed packages
+#
+# Cascade order: mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Installs every tool in ~/.config/mise/conf.d/20-packages.toml as a prebuilt
+# release binary, at the version and checksum pinned in ~/.config/mise/mise.lock.
+# chezmoi merges the repo's pins (.chezmoitemplates/mise-packages.lock, from
+# scripts/mise-lock) into that lock without dropping local entries.
+#
+# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
+# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+# mise-packages.lock hash: {{ include ".chezmoitemplates/mise-packages.lock" | sha256sum }}
+
+{{ $p := index .profiles .profile -}}
+{{ if not (and (hasKey $p "mise") $p.mise) -}}
+# Profile '{{ .profile }}' does not use mise packages — nothing to do.
+exit 0
+{{ else -}}
+set -euo pipefail
+
+# shellcheck source=/dev/null
+source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
+
+log "Using profile '{{ .profile }}' — installing mise packages"
+
+# =============================================================================
+# Bootstrap mise itself (pinned so every machine can read the committed lock)
+# =============================================================================
+MISE_VERSION="2026.9.13"
+BIN_DIR="$HOME/.local/bin"
+MISE="$BIN_DIR/mise"
+
+if [[ "$("$MISE" --version 2>/dev/null | awk '{print $1}')" != "$MISE_VERSION" ]]; then
+    log "Installing mise $MISE_VERSION to $MISE"
+    # The standard installer verifies the download against the release checksums.
+    curl -fsSL https://mise.run | MISE_VERSION="v$MISE_VERSION" MISE_INSTALL_PATH="$MISE" sh
+fi
+
+export PATH="$BIN_DIR:$PATH"
+
+# =============================================================================
+# Install pinned packages
+# =============================================================================
+# Install only the tools chezmoi declares. A bare `mise install --locked`
+# would also demand lock entries for anything in an unmanaged global config
+# (a stray `mise use -g`) and fail before fish is linked. --locked on the
+# command, not MISE_LOCKED globally, so project configs (work monorepo) keep
+# their own behavior. Run from $HOME so no project config is in scope.
+cd "$HOME"
+mapfile -t tools < <(sed -n 's/^"\([^"]*\)" = .*/\1/p' "$HOME/.config/mise/conf.d/20-packages.toml")
+(( ${#tools[@]} )) || fail "no tools found in ~/.config/mise/conf.d/20-packages.toml"
+log "Running mise install --locked (${#tools[@]} tools)..."
+mise install --locked --yes "${tools[@]}"
+
+# Login shell needs a stable path; mise's install dir is versioned.
+fish_bin="$(mise which fish 2>/dev/null || true)"
+if [[ -n "$fish_bin" ]]; then
+    ln -sfn "$fish_bin" "$BIN_DIR/fish"
+    log "Linked $BIN_DIR/fish -> $fish_bin"
+fi
+
+# Upstream gnu builds can require a newer glibc than the image ships (atuin,
+# yazi, tree-sitter did); ldd reports any missing symbol version. Warn rather
+# than fail so the rest of the apply (login shell, fisher) still runs.
+broken=()
+while IFS= read -r dir; do
+    for f in "$dir"/*; do
+        [[ -f "$f" && -x "$f" ]] || continue
+        ldd "$f" 2>&1 | grep -q "not found" && broken+=("${f##*/}")
+    done
+done < <(mise bin-paths "${tools[@]}" 2>/dev/null)
+if (( ${#broken[@]} )); then
+    warn "these binaries cannot run on this system's libc: ${broken[*]}"
+    warn "pick a musl build (mise_opts: { matching: \"musl\" }) or hold the version (mise_version)"
+fi
+
+# Drop superseded versions of our tools only. A bare `mise prune` could also
+# remove versions a work repo installed whose config mise isn't tracking.
+# Packages removed from packages.yaml stay installed until `mise uninstall`.
+mise prune --yes "${tools[@]}" || warn "mise prune failed; continuing"
+
+log "mise package installation complete!"
+{{ end -}}

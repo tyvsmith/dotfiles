@@ -7,6 +7,8 @@ name: Build devpod linuxbrew cache
 #
 # The build runs the full `chezmoi apply` for profile=devpod, so any chezmoi
 # template, package, or run_* script regression also fails this workflow.
+# Pull requests build and verify the PR branch (devpod and devpod-slim) but
+# never publish; only main publishes the release asset.
 
 on:
   schedule:
@@ -14,6 +16,13 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths:
+      - '.chezmoiroot'
+      - 'home/**'
+      - 'install.sh'
+      - 'scripts/**'
+      - '.github/workflows/devpod-linuxbrew-cache.yml'
+  pull_request:
     paths:
       - '.chezmoiroot'
       - 'home/**'
@@ -28,10 +37,14 @@ env:
   PLATFORM: debian12-x86_64
   RELEASE_TAG: linuxbrew-cache-debian12-x86_64
   ARCHIVE: linuxbrew-debian12-x86_64.tar.zst
+  # Branch under test: the PR head for pull requests, else the pushed/dispatched ref.
+  DOTFILES_REF: ${{ github.head_ref || github.ref_name }}
 
 jobs:
   build:
     name: Build linuxbrew tarball (debian:12)
+    # Fork PRs: their branch lives in the fork, which install.sh can't clone.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     container:
       image: debian:12
@@ -68,7 +81,8 @@ jobs:
           set -eux
           sudo -u builder -H \
             SKIP_LINUXBREW_FETCH=1 \
-            bash -lc 'cd ~ && curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh | bash -s -- --profile devpod'
+            DOTFILES_REF="$DOTFILES_REF" \
+            bash -lc 'cd ~ && curl -fsSL "https://raw.githubusercontent.com/tyvsmith/dotfiles/$DOTFILES_REF/install.sh" | bash -s -- --profile devpod --branch "$DOTFILES_REF"'
 
       - name: Verify brew is usable
         run: |
@@ -85,10 +99,24 @@ jobs:
           set -eux
           sudo -u builder -H bash -lc "
             cd \$HOME
+            # Runtime-only tree: drop translations, headers, static libs, and
+            # doc/info pages (keep man pages, which fish also uses for
+            # completions), plus the prefix symlinks that point at them.
             tar --use-compress-program='zstd -T0 -10' \
               --exclude='.linuxbrew/Caskroom' \
               --exclude='.linuxbrew/var/homebrew/locks' \
               --exclude='.linuxbrew/Library/Logs' \
+              --exclude='.linuxbrew/Cellar/*/*/share/locale' \
+              --exclude='.linuxbrew/Cellar/*/*/share/doc' \
+              --exclude='.linuxbrew/Cellar/*/*/share/info' \
+              --exclude='.linuxbrew/Cellar/*/*/share/gtk-doc' \
+              --exclude='.linuxbrew/Cellar/*/*/include' \
+              --exclude='.linuxbrew/share/locale' \
+              --exclude='.linuxbrew/share/doc' \
+              --exclude='.linuxbrew/share/info' \
+              --exclude='.linuxbrew/share/gtk-doc' \
+              --exclude='.linuxbrew/include' \
+              --exclude='.linuxbrew/*.a' \
               -cf /tmp/${ARCHIVE} \
               .linuxbrew
             ls -lh /tmp/${ARCHIVE}
@@ -130,10 +158,55 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
+  devpod-slim:
+    name: Verify devpod-slim apply (debian:12)
+    # Fork PRs: their branch lives in the fork, which install.sh can't clone.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    container:
+      image: debian:12
+      options: --user root
+    steps:
+      - name: Install container prerequisites
+        run: |
+          set -eux
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y --no-install-recommends curl ca-certificates git sudo procps file locales
+          locale-gen en_US.UTF-8 || true
+          useradd -m -s /bin/bash builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+          chmod 0440 /etc/sudoers.d/builder
+
+      - name: Apply dotfiles via install.sh (profile=devpod-slim)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -eux
+          sudo -u builder -H DOTFILES_REF="$DOTFILES_REF" MISE_GITHUB_TOKEN="$GITHUB_TOKEN" \
+            bash -lc 'cd ~ && curl -fsSL "https://raw.githubusercontent.com/tyvsmith/dotfiles/$DOTFILES_REF/install.sh" | bash -s -- --profile devpod-slim --branch "$DOTFILES_REF"'
+
+      - name: Verify managed tools run
+        run: |
+          set -eux
+          sudo -u builder -H bash -lc '
+            cd ~
+            tools=$(sed -n "s/^\"\([^\"]*\)\" = .*/\1/p" ~/.config/mise/conf.d/20-packages.toml)
+            broken=0
+            for d in $(~/.local/bin/mise bin-paths $tools); do
+              for f in "$d"/*; do
+                [ -f "$f" ] && [ -x "$f" ] || continue
+                if ldd "$f" 2>&1 | grep -q "not found"; then echo "BROKEN: $f"; broken=1; fi
+              done
+            done
+            ~/.local/bin/fish -c "rg --version; atuin --version; tmux -V; nvim --version | head -1"
+            exit $broken
+          '
+
   publish:
     name: Publish to GitHub Release
-    needs: build
-    if: github.event_name != 'pull_request'
+    needs: [build, devpod-slim]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write

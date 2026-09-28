@@ -26,7 +26,6 @@ require_cmd brew
 # =============================================================================
 # Install formulas via brew bundle
 # =============================================================================
-log "Running brew bundle (formulas)..."
 export HOMEBREW_NO_AUTO_UPDATE=1
 
 BREWFILE_CONTENT=$(cat <<'BREWFILE'
@@ -56,6 +55,22 @@ mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
 BREWFILE
 )
 
+skip_bundle=""
+{{- if get $p "devpod" }}
+
+# The linuxbrew cache tarball is built by running this same script, and the
+# Brewfile hash it stamps into the prefix rides along. When the stamp matches,
+# the restored tree already equals what bundle + cleanup would produce.
+BREWFILE_STAMP="$(brew --prefix)/var/dotfiles/brewfile.sha256"
+brewfile_sha=$(printf '%s' "$BREWFILE_CONTENT" | sha256sum | cut -d' ' -f1)
+if [[ -f "$BREWFILE_STAMP" && "$(cat "$BREWFILE_STAMP")" == "$brewfile_sha" ]]; then
+  log "Homebrew already matches this Brewfile; skipping brew bundle"
+  skip_bundle=1
+fi
+{{- end }}
+
+if [[ -z "$skip_bundle" ]]; then
+log "Running brew bundle (formulas)..."
 # Run brew bundle with retries (fresh Homebrew installs often have linking failures
 # on first pass that resolve after an explicit relink)
 MAX_RETRIES=3
@@ -72,14 +87,20 @@ for attempt in $(seq 1 "$MAX_RETRIES"); do
 done
 
 log "Homebrew formula installation complete!"
-{{- if eq .profile "devpod" }}
+{{- if get $p "devpod" }}
 
 # Devpod brew is fully managed by this Brewfile, so uninstall anything it no
 # longer lists (retagged packages, manual installs). Not safe on a Mac, where
 # ad-hoc `brew install`s are expected to survive.
 log "Removing formulas no longer in the Brewfile..."
-brew bundle cleanup --force --file=- <<<"$BREWFILE_CONTENT" || log "brew bundle cleanup failed; continuing"
+if brew bundle cleanup --force --file=- <<<"$BREWFILE_CONTENT"; then
+  mkdir -p "$(dirname "$BREWFILE_STAMP")"
+  printf '%s\n' "$brewfile_sha" > "$BREWFILE_STAMP"
+else
+  log "brew bundle cleanup failed; continuing"
+fi
 {{- end }}
+fi
 
 # =============================================================================
 # Disable vendor fish conf.d files we handle ourselves with caching

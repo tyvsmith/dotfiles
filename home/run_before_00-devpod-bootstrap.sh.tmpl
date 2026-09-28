@@ -1,7 +1,9 @@
-{{- if eq .profile "devpod" -}}
+{{- $p := index .profiles .profile -}}
+{{- if get $p "devpod" -}}
 #!/usr/bin/env bash
 # Bootstrap devpod environment before other run_before scripts.
-# Sets up Linuxbrew directory structure that brew install scripts expect.
+# Brew devpods: sets up the Linuxbrew directory structure the brew install
+# scripts expect. mise devpods (devpod-slim) keep everything under $HOME.
 
 set -euo pipefail
 
@@ -10,6 +12,7 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
 log "Bootstrapping devpod environment..."
 
+{{ if get $p "brew" -}}
 # Remove stale brew shims that block real Homebrew install
 sudo rm -f /usr/local/bin/brew /etc/homebrew/brew.no_install
 
@@ -38,6 +41,7 @@ if [ -f "/etc/gitconfig" ]; then
   ln -sfn "/etc/gitconfig" /home/linuxbrew/.linuxbrew/etc/gitconfig
 fi
 
+{{ end -}}
 # Migrate ~/.devpod directory to ~/.config/devpod so chezmoi can replace it with a symlink
 if [ -d "$HOME/.devpod" ] && [ ! -L "$HOME/.devpod" ]; then
   log "Migrating ~/.devpod to ~/.config/devpod..."

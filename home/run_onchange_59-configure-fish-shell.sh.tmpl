@@ -11,7 +11,7 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 FISH_PATH=""
 for p in /opt/homebrew/bin/fish /usr/local/bin/fish \
          /home/linuxbrew/.linuxbrew/bin/fish "$HOME/.linuxbrew/bin/fish" \
-         /usr/bin/fish; do
+         "$HOME/.local/bin/fish" /usr/bin/fish; do
     if [[ -x "$p" ]]; then
         FISH_PATH="$p"
         break

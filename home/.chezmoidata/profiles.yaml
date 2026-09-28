@@ -6,7 +6,9 @@
 #   desc:     human-readable description (shown during profile selection)
 #   tags:     comma-delimited category tags (core, core-extra, container, dev, dev-extra, dev-toolchains, ai, experiment, hardware, ui, ui-extra, gaming)
 #             *-extra = nice-to-have on machines you sit at; dev-toolchains = global mise runtimes (latest)
-#   brew/pacman/apt/dnf/rpm_ostree/flatpak/appimage: which package managers to enable
+#   mise/brew/pacman/apt/dnf/rpm_ostree/flatpak/appimage: which package managers to enable
+#             (mise installs packages that declare a `mise:` backend as pinned release binaries)
+#   devpod:   Uber devpod — runs the devpod bootstrap and login-shell scripts
 #   work:     work machine (system SSH agent, corporate configs)
 #   decrypt:  enable age decryption of private configs
 #   backup:   personal machine — install+schedule restic backups (default false; servers/containers stay off)
@@ -53,8 +55,17 @@ profiles:
   devpod:
     desc: "Work devpod (Debian) — lean CLI + dev tools via Linuxbrew; toolchains come from the image/repo"
     tags: core, dev, ai
+    devpod: true
     work: true
     brew: true
+    decrypt: false
+
+  devpod-slim:
+    desc: "Work devpod (Debian) — same tools as devpod, as mise-pinned release binaries (no Linuxbrew)"
+    tags: core, dev, ai
+    devpod: true
+    work: true
+    mise: true
     decrypt: false
 
   # --- Immutable Fedora ---

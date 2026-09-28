@@ -106,14 +106,6 @@ main() {
 
     ensure_zstd || return 0
 
-    log "downloading $RELEASE_BASE/$r_archive"
-    local tmp="/tmp/${r_archive}"
-    if ! curl -fL --retry 3 --max-time 1800 -o "$tmp" "$RELEASE_BASE/$r_archive"; then
-        warn "download failed; skipping (brew bundle will install from scratch)"
-        rm -f "$tmp"
-        return 0
-    fi
-
     # Extract into a sibling staging dir, then swap atomically. A simple
     # wipe-then-extract leaves a ~30-60s window where brew binaries don't
     # exist; an interactive fish shell (or background atuin/starship hook)
@@ -122,18 +114,34 @@ main() {
     local stage_parent
     stage_parent=$(mktemp -d -p "$HOME" .linuxbrew-stage.XXXXXX) || {
         warn "could not create staging dir; skipping"
-        rm -f "$tmp"
         return 0
     }
 
-    log "extracting to $stage_parent"
-    if ! tar -C "$stage_parent" --use-compress-program="$ZSTD -d -T0" -xf "$tmp"; then
-        warn "extract failed; leaving existing ~/.linuxbrew in place"
+    # Stream download into extraction so the two overlap (~30% faster than
+    # download-then-extract). A mid-stream failure can't be retried by curl,
+    # so fall back to the download-to-file path below.
+    log "streaming $RELEASE_BASE/$r_archive into $stage_parent"
+    if ! curl -fsSL --retry 3 --max-time 1800 "$RELEASE_BASE/$r_archive" \
+            | "$ZSTD" -d -T0 | tar -C "$stage_parent" -xf -; then
+        warn "streamed extract failed; retrying via download"
         rm -rf "$stage_parent"
+        stage_parent=$(mktemp -d -p "$HOME" .linuxbrew-stage.XXXXXX) || {
+            warn "could not create staging dir; skipping"
+            return 0
+        }
+        local tmp="/tmp/${r_archive}"
+        if ! curl -fL --retry 3 --max-time 1800 -o "$tmp" "$RELEASE_BASE/$r_archive"; then
+            warn "download failed; skipping (brew bundle will install from scratch)"
+            rm -rf "$stage_parent" "$tmp"
+            return 0
+        fi
+        if ! tar -C "$stage_parent" --use-compress-program="$ZSTD -d -T0" -xf "$tmp"; then
+            warn "extract failed; leaving existing ~/.linuxbrew in place"
+            rm -rf "$stage_parent" "$tmp"
+            return 0
+        fi
         rm -f "$tmp"
-        return 0
     fi
-    rm -f "$tmp"
 
     if [ ! -d "$stage_parent/.linuxbrew" ]; then
         warn "archive did not contain .linuxbrew/ at root; skipping"

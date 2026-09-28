@@ -50,7 +50,8 @@ DOTFILES_PROFILE=arch-desktop chezmoi init
 
 Each profile (defined in `home/.chezmoidata/profiles.yaml`) fully specifies:
 - **`tags`**: comma-delimited category tags (`core`, `core-extra`, `container`, `dev`, `dev-extra`, `dev-toolchains`, `ai`, `experiment`, `hardware`, `ui`, `ui-extra`, `gaming`)
-- **Package managers**: `brew`, `pacman`, `apt`, `dnf`, `rpm_ostree`, `flatpak`
+- **Package managers**: `mise`, `brew`, `pacman`, `apt`, `dnf`, `rpm_ostree`, `flatpak`
+- **`devpod`**: Uber devpod — runs the devpod bootstrap and login-shell scripts
 - **`work`**: work machine (system SSH agent, corporate configs)
 - **`decrypt`**: enable age decryption of private configs
 - **`backup`**: personal machine — install the restic stack and schedule backups (default off; servers/containers/Macs stay off, Macs use Time Machine)
@@ -65,6 +66,7 @@ If no profile is specified, auto-detects from distro (macOS → `macos-work`, Ar
 | `arch-desktop` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, hardware, ui, ui-extra, gaming | pacman, flatpak, appimage | | yes | yes | Arch Linux desktop |
 | `debian-server` | core | apt | | | | Debian/Ubuntu server — CLI only |
 | `devpod` | core, dev, ai | brew | yes | no | | Work devpod — lean; toolchains from image/repo |
+| `devpod-slim` | core, dev, ai | mise | yes | no | | Work devpod — same tools as pinned mise binaries, no Linuxbrew |
 | `silverblue` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, hardware, ui, ui-extra, gaming | brew, rpm_ostree, flatpak, appimage | | yes | | Silverblue/Bazzite immutable |
 
 **Package categories:**
@@ -103,11 +105,21 @@ Brew modifier fields:
 - `brew_tap:` — Homebrew tap required before install
 
 Opt-in manager fields are present when available:
+- `mise:` — mise backend spec (`aqua:owner/repo` preferred, `github:owner/repo` when aqua lacks it); installs a prebuilt release binary
 - `rpm_ostree:` — rpm-ostree package (`true` = use YAML key, string = override name; for immutable Fedora)
 - `flatpak:` — Flatpak app ID
 - `appimage:` — GitHub repo (`owner/name`) for AppImage download
 
-Cascade order: `brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `home/.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
+Cascade order: `mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `home/.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
+
+**mise packages (`devpod-slim`):**
+Profiles with `mise: true` install every package that declares a `mise:` backend as a prebuilt release binary, with no Linuxbrew. `home/dot_config/mise/conf.d/20-packages.toml.tmpl` renders them at `"latest"`; `home/.chezmoitemplates/mise-packages.lock` (committed, generated) pins each to an exact version, URL, and sha256 per platform. chezmoi merges those pins into the machine's own `~/.config/mise/mise.lock` (`home/dot_config/mise/modify_mise.lock`): it adds missing tools and takes newer repo pins, keeps versions upgraded locally, and never touches or removes entries it does not manage (toolchains, `mise use -g`). The install script runs `mise install --locked` on the managed tools. Packages without a `mise:` field (git, wget, tree, socat) come from the devpod image.
+
+- Add or remove a package: edit `packages.yaml`, run `scripts/mise-lock`, commit both files.
+- Upgrade: `scripts/mise-lock --bump`, review the lockfile diff, commit. Machines update on the next apply.
+- Local mise use is safe: `mise use -g`, toolchains, and `mise upgrade` write the same lockfile, and the merge keeps their entries.
+- Devpods run Debian 12 (glibc 2.36). Some upstream gnu builds need newer glibc: pick a static build with `mise_opts: { matching: "musl" }` or hold a version line with `mise_version`. The install script warns about any managed binary `ldd` cannot resolve.
+- Reset a machine's lockfile to exactly the repo's (drops stale entries, including local-only pins): `scripts/mise-lock --force-overwrite` on that machine.
 
 **Debian/Ubuntu apt availability:**
 The apt install script uses runtime `apt-cache` checks to determine package availability, so it works correctly across different Debian/Ubuntu versions without static exclusion lists. Packages available in Ubuntu 24.04 but missing in Debian Bookworm (e.g., eza, sd, git-delta, gping, yq, hyperfine) will be installed where available and skipped with warnings where not.
@@ -145,6 +157,7 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_13-install-packages-apt.sh.tmpl` | Debian/Ubuntu packages via apt |
 | `run_onchange_14-install-packages-dnf.sh.tmpl` | Fedora packages via dnf |
 | `run_onchange_15-install-packages-rpm-ostree.sh.tmpl` | Immutable Fedora packages via rpm-ostree |
+| `run_onchange_16-install-packages-mise.sh.tmpl` | mise packages at lockfile-pinned versions; installs a pinned mise via mise.run; links `~/.local/bin/fish` |
 | `run_onchange_20-configure-pacman-repos.sh.tmpl` | Splices `~/.config/pacman/custom-repos-{head,tail}.conf` into `/etc/pacman.conf` via the omarchy `pre-refresh-pacman` hook (one sudo); omarchy-only |
 | `run_onchange_30-install-packages-flatpak.sh.tmpl` | Flatpak GUI apps (Linux, tier 4+) |
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |

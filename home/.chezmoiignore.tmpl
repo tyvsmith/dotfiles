@@ -22,6 +22,11 @@
 .local/bin/devpod-linuxbrew-fetch
 {{ end }}
 
+{{ if not (get (index .profiles .profile) "mise") }}
+# mise package lockfile — only profiles that install packages via mise
+.config/mise/mise.lock
+{{ end }}
+
 {{ if ne .chezmoi.os "darwin" }}
 # macOS-only apps — skip on Linux
 .config/borders/
