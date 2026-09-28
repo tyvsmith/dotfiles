@@ -8,7 +8,8 @@
     - missing locally, or the repo pins a newer version -> take the repo entry
     - same version but different entry (e.g. new platform) -> take the repo entry
     - version spec changed in the repo (e.g. latest -> 0.25) -> take the repo entry
-    - local version newer under the same spec (upgraded here) -> keep local
+    - local version newer under the same spec (upgraded here) -> keep local;
+      non-semver versions (tmux 3.7c) compare numeric prefix, then suffix
   Tools the repo does not manage are never touched or removed. When nothing
   changes the file is emitted byte-for-byte, so mise's formatting survives.
 */ -}}
@@ -31,8 +32,19 @@
 {{-       $take = ne (toJson $entries) (toJson $local) -}}
 {{-     else if ne $rs $ls -}}
 {{-       $take = true -}}
-{{-     else if and (regexMatch $semver $rv) (regexMatch $semver $lv) (semverCompare (printf "> %s" $rv) $lv) -}}
-{{-       $take = false -}}
+{{-     else if and (regexMatch $semver $rv) (regexMatch $semver $lv) -}}
+{{-       $take = not (semverCompare (printf "> %s" $rv) $lv) -}}
+{{-     else -}}
+{{- /* Non-semver (e.g. tmux 3.7c): compare the numeric prefix, then the suffix. */ -}}
+{{-       $rn := regexFind `^v?[0-9]+(\.[0-9]+){0,2}` $rv -}}
+{{-       $ln := regexFind `^v?[0-9]+(\.[0-9]+){0,2}` $lv -}}
+{{-       if and $rn $ln -}}
+{{-         if eq $rn $ln -}}
+{{-           $take = not (gt (trimPrefix $ln $lv) (trimPrefix $rn $rv)) -}}
+{{-         else -}}
+{{-           $take = not (semverCompare (printf "> %s" $rn) $ln) -}}
+{{-         end -}}
+{{-       end -}}
 {{-     end -}}
 {{-   end -}}
 {{-   if $take }}{{ $_ := set $tools $name $entries }}{{ $changed = true }}{{ end -}}
