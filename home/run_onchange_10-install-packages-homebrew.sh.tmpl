@@ -26,7 +26,6 @@ require_cmd brew
 # =============================================================================
 # Install formulas via brew bundle
 # =============================================================================
-log "Running brew bundle (formulas)..."
 export HOMEBREW_NO_AUTO_UPDATE=1
 
 BREWFILE_CONTENT=$(cat <<'BREWFILE'
@@ -71,6 +70,7 @@ fi
 {{- end }}
 
 if [[ -z "$skip_bundle" ]]; then
+log "Running brew bundle (formulas)..."
 # Run brew bundle with retries (fresh Homebrew installs often have linking failures
 # on first pass that resolve after an explicit relink)
 MAX_RETRIES=3
