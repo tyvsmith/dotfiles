@@ -26,7 +26,9 @@ fish_add_path -a --path ~/.local/bin
 # puts the real tool bin dirs (incl. ~/.cargo/bin) on PATH — so binaries added
 # by `cargo install` / `npm i -g` work without a `mise reshim`. hook-env keeps
 # entries added after activation (like the overrides move below) in front.
-__cached_source mise activate fish
+# Not cached: the activate output embeds `set -gx PATH <current PATH>`, so a
+# cached copy would replay a stale PATH snapshot into every new shell.
+command -q mise; and mise activate fish | source
 
 # Override bins (Should come first on path)
 fish_add_path --move --path ~/.local/share/overrides/bin
