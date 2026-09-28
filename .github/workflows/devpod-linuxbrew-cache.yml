@@ -43,6 +43,8 @@ env:
 jobs:
   build:
     name: Build linuxbrew tarball (debian:12)
+    # Fork PRs: their branch lives in the fork, which install.sh can't clone.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     container:
       image: debian:12
@@ -158,6 +160,8 @@ jobs:
 
   devpod-slim:
     name: Verify devpod-slim apply (debian:12)
+    # Fork PRs: their branch lives in the fork, which install.sh can't clone.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     container:
       image: debian:12
