@@ -1,30 +1,50 @@
--- Personal window rules. Loaded after default.hypr.windows, so these win.
---
--- Precedence is the list order in hypr/apps.lua: Hyprland applies matching
--- rules in registration order and the last one wins. No pairs(), and no rule
--- appended after the loop whose correctness depends on where its line sits.
---
--- Static rules are not silent unless the entry says so. Everything autostart.lua
--- launches says so, because the exec rule that used to carry that job cannot be
--- relied on -- see the note in hypr/apps.lua. Placement is therefore only half
--- the story here: hypr/placement.lua focuses any window of those apps that is
--- not the one that came up at boot, so a later launch still takes you to it.
+-- Personal rules, registered after Omarchy defaults. Later exceptions win.
+local placement = require("hypr.placement")
 
-local apps = require("hypr.apps")
-
-for _, app in ipairs(apps.list) do
-  -- Fresh table per call. o.window writes .match into the table it is handed,
-  -- and app.rules is shared with hypr/autostart.lua through require's cache.
-  local rules = {}
-  for k, v in pairs(app.rules or {}) do
-    rules[k] = v
-  end
-
-  if app.workspace then
-    rules.workspace = apps.workspace_arg(app, app.silent)
-  end
-
-  if next(rules) then
-    o.window(app.match, rules)
-  end
+-- Keep each destination here; autostart only supplies launch identity.
+local function app(class, workspace, match)
+  o.window(match or class:gsub("%.", "\\."), { workspace = workspace .. " silent" })
+  placement.manage(class)
 end
+
+-- slack
+app("com.slack.Slack", 4)
+
+-- beeper
+app("Beeper", 4)
+
+-- vesktop
+app("vesktop", 4)
+
+-- steam
+app("steam", 5, { class = "^steam$", title = "negative:^Steam Input On-screen Keyboard$" })
+
+-- steamwebhelper
+app("steamwebhelper", 5)
+
+-- protonplus
+app("com.vysp3r.ProtonPlus", 5)
+
+-- Titled Steam windows tile; untitled popup menus retain the default float.
+o.window({ class = "^steam$", title = "negative:^$" }, { tile = true })
+
+-- Undo tiling for notification overlays.
+o.window({ class = "^steam$", title = "^notificationtoasts_\\d+_desktop$" }, { float = true, no_initial_focus = true })
+
+-- Keep the keyboard on the active workspace without initial focus.
+o.window({ class = "^steam$", title = "^Steam Input On-screen Keyboard$" }, { float = true, no_initial_focus = true })
+
+-- Keep popup menus focused while the pointer moves toward them.
+o.window({ class = "^steam$", title = "^$" }, { min_size = { 1, 1 }, stay_focused = true })
+
+-- streamcontroller
+app("com.core447.StreamController", 10)
+
+-- lan_mouse
+app("de.feschber.LanMouse", 10)
+
+-- battlenet
+o.window({ class = "^steam_app_battlenet$", title = "^Battle\\.net$" }, { tile = true })
+
+-- Hide the empty GameGuard dialog without terminating its process.
+o.window({ class = "^steam_app_553850$", initial_title = "^$" }, { no_focus = true, no_initial_focus = true, workspace = "special:hidden silent" })

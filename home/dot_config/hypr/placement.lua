@@ -1,108 +1,86 @@
--- Focus a managed app's window when it is NOT the one hypr/autostart.lua
--- brought up at boot.
---
--- hypr/apps.lua places every autostarted app with a SILENT workspace rule, so
--- login never yanks the session around. This module supplies the other half:
--- deliberately launching one of those apps later still takes you to it.
---
--- Why an event and not a non-silent workspace rule: a static rule cannot tell a
--- boot launch from a manual one, because it only ever sees the window. The exec
--- rule that used to draw that line binds only to windows that kept
--- HL_EXEC_RULE_TOKEN in their own environ or kept the pid Hyprland forked, and
--- Slack and StreamController keep neither -- see hypr/apps.lua for the full
--- account. Deciding at window.open instead of at map time is what makes the
--- distinction expressible at all.
---
--- Hyprland 0.56.2 facts this leans on, each checked on this machine:
---   * window.open fires AFTER static rules have placed the window: the payload
---     already reports the rule's workspace while the active workspace is
---     untouched. Reading placement here is safe and focusing is purely additive.
---   * the payload is userdata, not a table. w.class / w.title / w.address /
---     w.pid / w.floating and w.workspace.id / w.workspace.name all read;
---     w.initialTitle and w.initialClass are nil, and pairs(w) throws.
---   * w.floating is the value AFTER static rules, so it is a usable read of
---     whether the window joined the layout.
---   * hl.dsp.focus({ window = "address:0x..." }) switches to that window's
---     workspace and focuses it -- and warps the pointer to it, which is why this
---     never fires for a window that opened on the workspace you are already on.
---   * hl.get_active_workspace() returns userdata with .id and .name.
---   * hyprland.start does NOT fire on `hyprctl reload` -- the wait-for-sni scope
---     count is unchanged across one, i.e. autostart does not re-run. Arming
---     therefore happens once per session, and a reload deliberately leaves every
---     app in the plain "focus me" state, which is the right answer mid-session.
---
--- Consequence worth knowing: an app that never manages to start at boot stays
--- armed, so the FIRST manual launch of it is silent and the second focuses.
--- That is the deliberate direction to fail in. Disarming on a timer instead
--- hands back the exact login focus-steal this exists to prevent, every time an
--- app is slow to map.
-
+-- Static app rules place silently; only explicit manual launches follow.
+-- HYPR_WORKSPACE overrides app placement. Startup identity has no timeout.
 local M = {}
+local managed = {}
 
--- Windows of one app map in a burst, and Steam brings up more than one. Keep
--- the app armed a little past its first window so the siblings stay quiet too.
-local BOOT_SIBLING_GRACE_MS = 10000
-
-local managed = {} -- class -> true. Rebuilt on every config load.
-local armed   = {} -- class -> true, only between hyprland.start and boot window.
-
---- Declare that hypr/autostart.lua launches this class at boot.
 function M.manage(class)
-  assert(type(class) == "string" and class ~= "",
-    "hypr/placement.lua: manage() needs a class string")
+  assert(type(class) == "string" and class ~= "")
   managed[class] = true
 end
 
---- Decide what a freshly opened window should do. Split out from the event so
---- it can be exercised without a compositor.
---- @return "ignore"|"transient"|"boot"|"here"|"focus"
-function M.classify(class, window_ws, active_ws, floating)
-  if not class or not managed[class] then return "ignore" end
-  -- Whether the window joined the layout is the sharpest signal available for
-  -- "is this a window or an overlay". Steam is the reason: its notification
-  -- toasts and hover menus are real top-level windows under the app's own class,
-  -- and a toast firing while you are elsewhere would otherwise drag you to
-  -- workspace 5. Checked before the boot arm so an overlay can never be mistaken
-  -- for the boot window and spend it.
-  if floating then return "transient" end
-  if armed[class] then return "boot" end
-  -- Already on the window's workspace, so there is nowhere to take you. Focusing
-  -- anyway is not a no-op: the dispatcher warps the pointer to the new window,
-  -- which yanks the cursor out of a hover menu the moment it opens. Steam maps
-  -- its dropdowns as real windows under the app's own class, so this is the
-  -- common case, not an edge one.
-  if window_ws and active_ws and window_ws == active_ws then return "here" end
-  return "focus"
+local function read_proc(pid, name)
+  if type(pid) ~= "number" or pid <= 0 or pid % 1 ~= 0 then return nil end
+  local file = io.open("/proc/" .. string.format("%.0f", pid) .. "/" .. name, "rb")
+  if not file then return nil end
+  local content = file:read("a")
+  file:close()
+  return content
 end
 
-function M.arm_all()
-  for class in pairs(managed) do
-    armed[class] = true
+-- Chromium can rewrite environ. Its startup scope remains identifiable.
+-- Flatpak can change scopes; check surviving launcher ancestors as well.
+local function is_startup(pid)
+  local readable = false
+  for depth = 1, 32 do
+    local env = read_proc(pid, "environ")
+    if depth == 1 then readable = env ~= nil end
+    if env and ("\0" .. env):find("\0HYPR_AUTOSTART=1\0", 1, true) then return true end
+    local group = read_proc(pid, "cgroup")
+    if group and group:match("/app%-hypr%-autostart%-%d+%.scope[/\n]") then return true end
+    local status = read_proc(pid, "status")
+    local parent = status and tonumber(status:match("\nPPid:%s*(%d+)"))
+    if not parent or parent <= 1 or parent == pid then break end
+    pid = parent
+  end
+  if readable then return false end
+  return nil -- Unknown identity must not steal focus.
+end
+
+-- Read each new window's process directly; do not retain recycled PID results.
+local function dynamic_destination(pid)
+  local blob = read_proc(pid, "environ")
+  if not blob then return nil end
+
+  for entry in blob:gmatch("[^%z]+") do
+    local target, suffix = entry:match("^HYPR_WORKSPACE=([1-9]%d*)(.*)$")
+    if target and #target <= 10 and tonumber(target) <= 2147483647
+      and (suffix == "" or suffix == " silent") then
+      return target, suffix ~= " silent"
+    end
   end
 end
 
-function M.disarm(class)
-  armed[class] = nil
+-- Return true when dynamic placement owns this event, including silent no-ops.
+function M.place_from_env(window)
+  if not window or not window.address or not window.workspace then return false end
+  local workspace = window.workspace
+  if (workspace.id and workspace.id < 0)
+    or (workspace.name and workspace.name:match("^special:")) then return true end
+
+  local target, follow = dynamic_destination(window.pid)
+  if not target then return false end
+  local selector = "address:" .. window.address
+  if workspace.id ~= tonumber(target) then
+    hl.dispatch(hl.dsp.window.move({
+      window = selector, workspace = target, follow = follow,
+    }))
+  elseif follow then
+    local active = hl.get_active_workspace()
+    if active and active.id ~= tonumber(target) then
+      hl.dispatch(hl.dsp.focus({ window = selector }))
+    end
+  end
+  return true
 end
 
 if hl then
-  hl.on("hyprland.start", M.arm_all)
-
   hl.on("window.open", function(w)
-    local class = w and w.class
-    local action = M.classify(class, w and w.workspace and w.workspace.id,
-      hl.get_active_workspace().id, w and w.floating)
-
-    if action == "ignore" or action == "here" or action == "transient" then
-      return
-    elseif action == "boot" then
-      -- Disarm on a delay rather than now, so the rest of this app's startup
-      -- burst is covered by the same decision.
-      hl.timer(function() M.disarm(class) end,
-        { timeout = BOOT_SIBLING_GRACE_MS, type = "oneshot" })
-      return
-    end
-
+    if not w or not w.address or not w.workspace then return end
+    if M.place_from_env(w) then return end
+    if not managed[w.class] or w.floating then return end
+    local active = hl.get_active_workspace()
+    if not active or w.workspace.id == active.id then return end
+    if is_startup(w.pid) ~= false then return end
     hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
   end)
 end
