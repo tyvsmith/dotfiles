@@ -43,10 +43,20 @@ class CustomReposTest(unittest.TestCase):
         self.assertEqual(self.run_hook().returncode, 0)
         first = self.conf.read_text()
         self.assertEqual([x for x in first.splitlines() if x.startswith('[')],
-                         ['[options]', '[omarchy]', '[cachyos]', '[core]', '[warpdotdev]'])
+                         ['[options]', '[cachyos]', '[omarchy]', '[core]', '[warpdotdev]'])
         self.assertEqual(self.run_hook('--check').returncode, 0)
         self.assertEqual(self.run_hook().returncode, 0)
         self.assertEqual(self.conf.read_text(), first)
+
+    def test_head_precedes_repositories_with_or_without_omarchy(self):
+        for repositories in ['[core]\n[omarchy]\n', '[core]\n', ' [omarchy] \n[core]\n']:
+            with self.subTest(repositories=repositories):
+                self.conf.write_text('[options]\nColor\n' + repositories)
+                self.assertEqual(self.run_hook().returncode, 0)
+                sections = [line.strip() for line in self.conf.read_text().splitlines()
+                            if line.strip().startswith('[')]
+                self.assertEqual(sections[0:2], ['[options]', '[cachyos]'])
+                self.assertEqual(self.run_hook('--check').returncode, 0)
 
     def test_rejects_damaged_blocks_without_writing(self):
         cases = {

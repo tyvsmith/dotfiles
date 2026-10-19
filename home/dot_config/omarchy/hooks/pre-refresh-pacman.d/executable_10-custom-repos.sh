@@ -3,7 +3,7 @@
 # Include'd because cachyos-kernel-manager parses pacman.conf with a plain INI
 # reader and never follows Include lines.
 #
-#   ~/.config/pacman/custom-repos-head.conf -> above [core]  repos that should win over Arch
+#   ~/.config/pacman/custom-repos-head.conf -> before all repos  repos that should win over Omarchy and Arch
 #   ~/.config/pacman/custom-repos-tail.conf -> end of file   repos that must never shadow Arch
 #
 # Safe to re-run any time: existing marker blocks are removed and re-spliced
@@ -57,7 +57,9 @@ awk -v head="$HEAD" -v tail="$TAIL" '
   skip { next }
   eat_blank && /^$/ { eat_blank = 0; next }
   { eat_blank = 0 }
-  head && /^\[core\]/ && !done { emit(head); out[++n] = ""; done = 1 }
+  head && /^[[:space:]]*\[[^]]+\]/ && !/^[[:space:]]*\[options\]/ && !done {
+    emit(head); out[++n] = ""; done = 1
+  }
   { out[++n] = $0 }
   END {
     if (failed) exit 1
@@ -70,5 +72,5 @@ awk -v head="$HEAD" -v tail="$TAIL" '
 
 cmp -s "$tmp" "$CONF" && exit 0
 (( check )) && exit 2
-echo "pre-refresh-pacman: splicing${HEAD:+ $HEAD above [core]}${TAIL:+ $TAIL at end}"
+echo "pre-refresh-pacman: splicing${HEAD:+ $HEAD before all repositories}${TAIL:+ $TAIL at end}"
 sudo install -m 644 "$tmp" "$CONF"
