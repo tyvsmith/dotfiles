@@ -13,3 +13,4 @@ vim/bundle/*
 .mcp.json
 .mcp.json.bak
 .worktrees/
+docs/superpowers/
