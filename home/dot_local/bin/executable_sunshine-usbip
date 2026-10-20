@@ -1,0 +1,109 @@
+#!/usr/bin/bash
+# Sunshine application hooks; only USB/IP attach and detach run as root.
+set -euo pipefail
+export LC_ALL=C
+umask 077
+fail() { printf 'sunshine-usbip: %s\n' "$*" >&2; exit 1; }
+[[ $# == 1 && $1 =~ ^(start|stop|status)$ ]] || { echo 'usage: sunshine-usbip start|stop|status' >&2; exit 2; }
+action=$1
+best_effort() {
+    local result=$?
+    if (( result != 0 )) && [[ $action != status ]]; then
+        echo 'sunshine-usbip: USB unavailable; streaming can continue' >&2
+        exit 0
+    fi
+}
+trap best_effort EXIT
+[[ ${XDG_RUNTIME_DIR:-} == /* && -d $XDG_RUNTIME_DIR && -O $XDG_RUNTIME_DIR ]] || fail 'missing owned runtime directory'
+state=$XDG_RUNTIME_DIR/sunshine-usbip
+[[ ! -L $state ]] || fail 'invalid state directory'
+mkdir -p "$state"
+chmod 700 "$state"
+exec 9>"$state/lock"
+flock -w 15 9 || fail 'another USB operation is busy'
+shopt -s nullglob
+
+occupied_ports() {
+    local file
+    for file in /sys/devices/platform/vhci_hcd.*/status*; do
+        awk 'NR>1 && $2 ~ /^[0-9]+$/ && $3 != 4 {print $2+0}' "$file"
+    done
+}
+attachments() {
+    local file port status local_bus vendor product devnum
+    for file in /sys/devices/platform/vhci_hcd.*/status*; do
+        while read -r _ port status _ _ _ local_bus _; do
+            [[ $port =~ ^[0-9]+$ && $status != 4 && $local_bus != 0-0 ]] || continue
+            vendor=$(cat "/sys/bus/usb/devices/$local_bus/idVendor" 2>/dev/null) || continue
+            product=$(cat "/sys/bus/usb/devices/$local_bus/idProduct" 2>/dev/null) || continue
+            [[ $vendor:$product == "$1" ]] || continue
+            devnum=$(cat "/sys/bus/usb/devices/$local_bus/devnum" 2>/dev/null) || continue
+            printf '%s %s %s\n' "$((10#$port))" "$local_bus" "$devnum"
+        done < "$file"
+    done
+}
+finish_attach() {
+    local row port
+    local matches=()
+    while read -r row; do
+        [[ -n $row ]] || continue
+        port=${row%% *}
+        grep -Fxq -- "$port" "$state/before" || matches+=("$row")
+    done < <(attachments "$device")
+    if (( ${#matches[@]} == 1 )); then
+        printf '%s %s %s\n' "$remote" "$device" "${matches[0]}" > "$state/owned"
+        rm -f "$state/pending" "$state/before"
+    elif [[ -n $(comm -13 <(sort -u "$state/before") <(occupied_ports | sort -u)) ]]; then
+        fail 'attach has not enumerated; inspect usbip port and pending state'
+    else
+        rm -f "$state/pending" "$state/before"
+    fi
+}
+
+if [[ -f $state/owned ]]; then
+    read -r owned_remote owned_device port local_bus devnum < "$state/owned"
+    if ! grep -Fxq -- "$port $local_bus $devnum" < <(attachments "$owned_device"); then
+        rm -f "$state/owned"
+    fi
+fi
+[[ ! -f $state/pending ]] || fail 'interrupted attach; inspect usbip port and pending state before retrying'
+case $action in
+    start)
+        # shellcheck source=home/dot_config/sunshine-usbip.conf
+        source "${XDG_CONFIG_HOME:-$HOME/.config}/sunshine-usbip.conf"
+        remote=${SUNSHINE_CLIENT_NAME:-}
+        [[ $remote =~ ^[a-zA-Z0-9][a-zA-Z0-9._:-]*$ ]] || exit 0
+        device=${controllers[$remote]:-}
+        [[ -n $device ]] || exit 0
+        [[ $device =~ ^[0-9a-f]{4}:[0-9a-f]{4}$ ]] || fail 'invalid configured USB device ID'
+        if [[ -f $state/owned ]]; then
+            [[ $remote == "$owned_remote" && $device == "$owned_device" ]] || fail 'end the existing USB session before changing its target'
+            exit 0
+        fi
+        [[ -n $(compgen -G '/sys/devices/platform/vhci_hcd.*/status*') ]] || fail 'vhci_hcd is not loaded; run chezmoi USB setup'
+        [[ -z $(attachments "$device") ]] || fail 'matching device is attached manually; leaving it alone'
+        exports=$(timeout 5s /usr/bin/usbip list -r "$remote") || fail 'USB server unavailable'
+        mapfile -t buses < <(awk -v device="$device" '$0 ~ "\\(" device "\\)[[:space:]]*$" {bus=$1; sub(/:$/,"",bus); if (bus ~ /^[0-9]+-[0-9]+([.][0-9]+)*$/) print bus}' <<< "$exports")
+        (( ${#buses[@]} == 1 )) || fail 'expected exactly one matching exported controller'
+        occupied_ports > "$state/before"
+        printf '%s %s %s\n' "$remote" "$device" "${buses[0]}" > "$state/pending"
+        # A failed command can still have attached the device in the kernel.
+        timeout 8s sudo /usr/bin/usbip attach -r "$remote" -b "${buses[0]}" || :
+        for ((attempt=0; attempt<20; attempt++)); do
+            [[ -n $(attachments "$device") ]] && break
+            sleep 0.1
+        done
+        finish_attach
+        [[ -f $state/owned ]] || fail 'controller did not attach'
+        printf 'sunshine-usbip: attached %s at %s\n' "$device" "$remote"
+        ;;
+    stop)
+        [[ -f $state/owned ]] || exit 0
+        timeout 8s sudo /usr/bin/usbip detach -p "$port"
+        rm -f "$state/owned"
+        printf 'sunshine-usbip: detached port %s\n' "$port"
+        ;;
+    status)
+        if [[ -f $state/owned ]]; then cat "$state/owned"; else printf 'detached\n'; fi
+        ;;
+esac

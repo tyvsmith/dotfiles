@@ -23,7 +23,7 @@ assert(rules[4][1].title == 'negative:^Steam Input On-screen Keyboard$')
 assert(rules[9][2].no_initial_focus and rules[9][2].float)
 assert(rules[14][2].workspace == 'special:hidden silent')
 for _, start in ipairs(starts) do start() end
-assert(#commands == 8, 'two services and six tray apps; Steam stays disabled')
+assert(#commands == 8, 'two service commands and six tray apps; Steam stays disabled')
 local units = {}
 for i = 3, #commands do
   local unit = commands[i]:match('%-u (app%-hypr%-autostart%-%d+%.scope)')
