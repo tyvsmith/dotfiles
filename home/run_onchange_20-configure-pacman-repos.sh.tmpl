@@ -15,6 +15,10 @@ HOOK="${HOME}/.config/omarchy/hooks/pre-refresh-pacman.d/10-custom-repos.sh"
 # Nothing to do if pacman.conf already matches the snippets (no sudo needed).
 if "$HOOK" --check; then
     exit 0
+else
+    status=$?
+    # Only 2 means a safe update is available; malformed blocks need repair.
+    [[ $status == 2 ]] || exit "$status"
 fi
 
 # The hook needs one sudo (install over /etc/pacman.conf). Escalate when

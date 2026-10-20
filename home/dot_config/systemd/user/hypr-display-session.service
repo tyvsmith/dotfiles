@@ -1,0 +1,15 @@
+[Unit]
+Description=Reset Hyprland display activity for a new graphical session
+Wants=hyprmoncfgd.service
+After=graphical-session.target hyprmoncfgd.service
+PartOf=graphical-session.target
+ConditionEnvironment=HYPRLAND_INSTANCE_SIGNATURE
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/hypr-display-session reset
+RemainAfterExit=yes
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target

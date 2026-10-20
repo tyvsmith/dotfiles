@@ -1,0 +1,36 @@
+{
+  "name": "desktop",
+  "outputs": [
+    {
+      "key": "lg electronics|lg ultragear+|502ntpc9m944",
+      "match_key": "lg electronics|lg ultragear+|502ntpc9m944",
+      "name": "DP-1",
+      "description": "LG Electronics LG ULTRAGEAR+ 502NTPC9M944",
+      "make": "LG Electronics",
+      "model": "LG ULTRAGEAR+",
+      "serial": "502NTPC9M944",
+      "enabled": true,
+      "mode": "preferred",
+      "width": 5120,
+      "height": 2160,
+      "refresh": 165.058,
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "transform": 0,
+      "vrr": 2,
+      "bitdepth": 10,
+      "cm": "srgb",
+      "sdr_brightness": 1.35,
+      "sdr_saturation": 1,
+      "sdr_min_luminance": 0.2,
+      "sdr_max_luminance": 80,
+      "min_luminance": 0
+    }
+  ],
+  "workspaces": {
+    "enabled": false,
+    "persist": false
+  },
+  "exec": ""
+}
