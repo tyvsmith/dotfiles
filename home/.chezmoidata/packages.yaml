@@ -448,6 +448,7 @@ packages:
 
   # --- Hyprland-related additions not shipped by omarchy itself ---
   hyprmoncfg:
+    pacman: hyprmoncfg-bin
     tags: [hardware]
     desc: "GUI monitor configuration for Hyprland"
     os: linux
@@ -571,7 +572,7 @@ packages:
     tags: [ui-extra]
     desc: "Unified messaging"
     brew_cask: true
-    pacman: beeper-v4-bin
+    pacman: beeper-bin
     appimage: nickvdp/beeper
     work: false
 
