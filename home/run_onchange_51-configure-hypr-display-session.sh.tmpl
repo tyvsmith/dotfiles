@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+{{ if ne .de "hyprland-omarchy" -}}
+exit 0
+{{ else -}}
+set -euo pipefail
+# {{ include "dot_config/systemd/user/hypr-display-session.service" | sha256sum }}
+# {{ include "dot_config/systemd/user/hyprmoncfgd.service.d/session.conf" | sha256sum }}
+command -v hyprmoncfgd >/dev/null
+systemctl --user daemon-reload
+# Replace the packaged default.target enablement with graphical-session.target.
+systemctl --user reenable hyprmoncfgd.service hypr-display-session.service
+{{ end -}}

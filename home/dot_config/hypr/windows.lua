@@ -28,6 +28,9 @@ app("com.vysp3r.ProtonPlus", 5)
 -- Titled Steam windows tile; untitled popup menus retain the default float.
 o.window({ class = "^steam$", title = "negative:^$" }, { tile = true })
 
+-- Big Picture defaults to fullscreen for local and streamed sessions.
+o.window({ class = "^steam$", title = "^Steam Big Picture Mode$" }, { fullscreen = true })
+
 -- Undo tiling for notification overlays.
 o.window({ class = "^steam$", title = "^notificationtoasts_\\d+_desktop$" }, { float = true, no_initial_focus = true })
 

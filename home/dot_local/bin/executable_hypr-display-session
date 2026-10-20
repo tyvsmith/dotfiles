@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# Select saved profiles; streaming takes precedence over a running game.
+set -euo pipefail
+umask 077
+positive_integer='^[1-9][0-9]*$'
+positive_number='^[1-9][0-9]*([.][0-9]+)?$'
+fail() { printf 'hypr-display-session: %s\n' "$*" >&2; exit 1; }
+[[ ${XDG_RUNTIME_DIR:-} == /* && -d $XDG_RUNTIME_DIR && -O $XDG_RUNTIME_DIR ]] || fail 'missing owned runtime directory'
+[[ ${HYPRLAND_INSTANCE_SIGNATURE:-} =~ ^[a-zA-Z0-9_-]+$ ]] || fail 'missing compositor identity'
+state=$XDG_RUNTIME_DIR/hypr-display-session-$HYPRLAND_INSTANCE_SIGNATURE
+[[ ! -L $state ]] || fail 'invalid state directory'
+mkdir -p "$state"
+chmod 700 "$state"
+exec 9>"$state/lock"
+flock -w 30 9 || fail 'another profile change is busy'
+game=$(cat "$state/game" 2>/dev/null || :)
+stream=$(cat "$state/stream" 2>/dev/null || :)
+profile() {
+    if [[ -n $stream ]]; then printf streaming
+    elif [[ -n $game ]]; then printf gaming
+    else printf desktop; fi
+}
+prepare_stream_profile() {
+    local template=${XDG_CONFIG_HOME:-$HOME/.config}/hyprmoncfg/streaming.json
+    local stream_profile=$state/profiles/streaming.json
+    mkdir -p "${stream_profile%/*}"
+    # Generate outside the saved profile library so hardware matching stays independent.
+    if ! hyprctl -j monitors all | jq -e --slurpfile template "$template" \
+        --argjson width "$width" --argjson height "$height" --argjson fps "$fps" '
+        $template[0] as $p |
+        ($p.outputs[0]) as $output |
+        [.[] | select(.description == $output.description)] |
+        if length != 1 then error("streaming output is missing or ambiguous") else .[0] end as $monitor |
+        [$monitor.availableModes[] |
+            . as $mode |
+            capture("^(?<w>[0-9]+)x(?<h>[0-9]+)@(?<hz>[0-9.]+)Hz$") |
+            select((.w|tonumber) == $width and (.h|tonumber) == $height) |
+            (.hz|tonumber) as $hz |
+            (($hz - $fps)|fabs) as $difference |
+            select($difference <= 0.5) |
+            {mode:$mode,hz:$hz,difference:$difference}] |
+        sort_by(.difference) |
+        if length == 0 then error("requested stream mode is not advertised by the monitor") else .[0] end as $selected |
+        $p | .name = "streaming" |
+        .outputs[0] += {name:$monitor.name, mode:$selected.mode, width:$width, height:$height, refresh:$selected.hz}
+        ' > "$stream_profile.tmp"; then
+        rm -f "$stream_profile.tmp"
+        fail 'could not prepare streaming profile'
+    fi
+    mv "$stream_profile.tmp" "$stream_profile"
+}
+apply_profile() {
+    # Starting the user service does not guarantee its socket is ready yet.
+    local attempt
+    for ((attempt=0; attempt<50; attempt++)); do
+        [[ -S $XDG_RUNTIME_DIR/hyprmoncfgd.sock ]] && break
+        sleep 0.1
+    done
+    local arguments=(apply "$1" --confirm-timeout 0)
+    if [[ $1 == streaming ]]; then arguments+=(--config-dir "$state"); fi
+    [[ -S $XDG_RUNTIME_DIR/hyprmoncfgd.sock ]] && hyprmoncfg "${arguments[@]}"
+}
+before=$(profile)
+old_game=$game
+old_stream=$stream
+command=${1:-status}
+shift "$(( $# > 0 ? 1 : 0 ))"
+case $command in
+    game-start|game-stop)
+        [[ $# == 2 && $1 == --game && -n $2 && $2 != *$'\n'* ]] || fail 'expected --game APPID'
+        if [[ $command == game-start ]]; then
+            [[ -z $game || $game == "$2" ]] || fail 'another game is already active'
+            game=$2
+        elif [[ $game == "$2" ]]; then game=; fi
+        ;;
+    stream-start)
+        if [[ $# == 0 ]]; then
+            width=${SUNSHINE_CLIENT_WIDTH:-}
+            height=${SUNSHINE_CLIENT_HEIGHT:-}
+            fps=${SUNSHINE_CLIENT_FPS:-}
+        else
+            [[ $# == 6 && $1 == --width && $3 == --height && $5 == --fps ]] || fail 'expected --width WIDTH --height HEIGHT --fps FPS'
+            width=$2 height=$4 fps=$6
+        fi
+        [[ $width =~ $positive_integer && $height =~ $positive_integer && $fps =~ $positive_number ]] || fail 'missing or invalid stream dimensions/FPS'
+        prepare_stream_profile
+        stream="$width $height $fps"
+        ;;
+    stream-stop) [[ $# == 0 ]] || fail 'unexpected arguments'; stream= ;;
+    reset) [[ $# == 0 ]] || fail 'unexpected arguments'; game=; stream= ;;
+    stream-info)
+        printf '%s\n' "${stream:-0 0 0}"
+        exit ;;
+    status) profile; printf '\n'; exit ;;
+    *) fail 'expected game-start, game-stop, stream-start, stream-stop, reset, status, or stream-info' ;;
+esac
+save() {
+    printf '%s' "$game" > "$state/game"
+    printf '%s' "$stream" > "$state/stream"
+}
+save
+after=$(profile)
+if [[ $before != "$after" || $stream != "$old_stream" || $command == reset ]]; then
+    if ! apply_profile "$after"; then
+        case $command in
+            game-start|stream-start) game=$old_game; stream=$old_stream; save ;;
+        esac
+        fail 'profile application failed; run hypr-display-session reset to recover'
+    fi
+fi

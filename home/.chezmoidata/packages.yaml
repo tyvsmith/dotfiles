@@ -708,3 +708,10 @@ packages:
     brew_cask: true
     flatpak: com.valvesoftware.Steam
     rpm_ostree: true
+
+  usbip:
+    tags: [gaming]
+    os: linux
+    desc: "USB/IP device forwarding"
+    brew: false
+    rpm_ostree: true

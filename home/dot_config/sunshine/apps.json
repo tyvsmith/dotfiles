@@ -1,0 +1,42 @@
+{
+    "apps": [
+        {
+            "image-path": "desktop.png",
+            "name": "Desktop"
+        },
+        {
+            "image-path": "desktop.png",
+            "name": "Low Res Desktop",
+            "prep-cmd": [
+                {
+                    "do": "xrandr --output HDMI-1 --mode 1920x1080",
+                    "undo": "xrandr --output HDMI-1 --mode 1920x1200"
+                }
+            ]
+        },
+        {
+            "detached": [
+                "setsid steam steam://open/bigpicture"
+            ],
+            "image-path": "steam.png",
+            "name": "Steam Big Picture (Adaptive + Shield USB)",
+            "prep-cmd": [
+                {
+                    "do": "$(HOME)/.local/bin/hypr-display-session stream-start",
+                    "undo": "$(HOME)/.local/bin/hypr-display-session stream-stop"
+                },
+                {
+                    "do": "$(HOME)/.local/bin/sunshine-usbip start",
+                    "undo": "$(HOME)/.local/bin/sunshine-usbip stop"
+                },
+                {
+                    "do": "",
+                    "undo": "setsid steam steam://close/bigpicture"
+                }
+            ]
+        }
+    ],
+    "env": {
+        "PATH": "$(PATH):$(HOME)/.local/bin"
+    }
+}

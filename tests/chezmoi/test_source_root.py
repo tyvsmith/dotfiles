@@ -92,6 +92,20 @@ class SourceRootTest(unittest.TestCase):
                 self.assertIn('.agents/AGENTS.md', targets)
                 self.assertIn('.claude/CLAUDE.md', targets)
                 self.assertIn('.codex/AGENTS.md', targets)
+                for name in ('.local/bin/hypr-display-session',
+                             '.local/bin/sunshine-usbip',
+                             '.config/sunshine-usbip.conf',
+                             '.config/sunshine/apps.json',
+                             '.config/sunshine/sunshine.conf',
+                             '.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf',
+                             '.config/systemd/user/hypr-display-session.service',
+                             '.config/systemd/user/hyprmoncfgd.service.d/session.conf',
+                             '.config/hyprmoncfg/profiles/desktop.json',
+                             '.config/hyprmoncfg/profiles/gaming.json',
+                             '.config/hyprmoncfg/streaming.json'):
+                    self.assertEqual(name in targets, profile == 'arch-desktop')
+                self.assertNotIn('.config/hypr/hyprmoncfg-monitors.lua', targets)
+                self.assertNotIn('.config/sunshine/sunshine_state.json', targets)
                 self.assertFalse({'scripts', 'tests', 'README.md', 'home'} & targets.keys())
                 for entry in targets.values():
                     if entry['type'] != 'script':

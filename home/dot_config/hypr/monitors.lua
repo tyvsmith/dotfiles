@@ -1,9 +1,8 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 -- List current monitors and supported resolutions with: hyprctl monitors all
 --
--- The panel rests in SDR and goes sticky-HDR while a tagged game (or gamescope)
--- window lives; the mechanics come from the system-installed
--- hypr.sticky_hdr Lua module.
+-- hyprmoncfg owns the active layout. This fallback also covers first login
+-- before its generated configuration exists.
 
 -- Kept on their own lines: `omarchy hyprland monitor scaling` rewrites these two
 -- by regex. GDK_SCALE must stay 1 on this scale-1 5120x2160 panel; stock's 2
@@ -13,8 +12,8 @@ local omarchy_monitor_scale = 1
 
 hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
 
-require("hypr.sticky_hdr").setup({
-  monitor = {
+hl.config({ render = { cm_auto_hdr = 0 } })
+hl.monitor({
     output        = "",
     mode          = "preferred",
     position      = "auto",
@@ -23,7 +22,7 @@ require("hypr.sticky_hdr").setup({
     vrr           = 2,
     sdrbrightness = 1.35, -- only acts in HDR mode
     sdrsaturation = 1.0,
-  }
+    cm            = "srgb",
 })
 
 -- NVIDIA VA-API. Not redundant with default/hypr/nvidia.lua: that module gates

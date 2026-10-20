@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+{{ if ne .de "hyprland-omarchy" -}}
+exit 0
+{{ else -}}
+set -euo pipefail
+# {{ include "dot_config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf" | sha256sum }}
+command -v usbip >/dev/null
+staging=$(mktemp -d)
+trap 'rm -rf "$staging"' EXIT
+printf 'vhci_hcd\n' > "$staging/modules.conf"
+printf '%s ALL=(root) NOPASSWD: /usr/bin/usbip attach *, /usr/bin/usbip detach *\n' \
+    '{{ .chezmoi.username }}' > "$staging/sudoers"
+# Cache the last successful definitions: sudoers.d may not be readable as a user.
+digest=$(cat "$staging/modules.conf" "$staging/sudoers" | sha256sum | cut -d ' ' -f 1)
+record=${XDG_STATE_HOME:-$HOME/.local/state}/sunshine-usbip/setup.sha256
+if [[ $(cat "$record" 2>/dev/null || :) != "$digest" ]] || \
+    ! cmp -s "$staging/modules.conf" /etc/modules-load.d/sunshine-usbip.conf; then
+    sudo /usr/bin/bash -s -- "$staging" <<'ROOT'
+set -euo pipefail
+/usr/bin/visudo -c -f "$1/sudoers"
+/usr/bin/install -d -o root -g root -m 755 /etc/modules-load.d
+/usr/bin/install -d -o root -g root -m 750 /etc/sudoers.d
+/usr/bin/install -o root -g root -m 440 "$1/sudoers" /etc/sudoers.d/sunshine-usbip
+/usr/bin/install -o root -g root -m 644 "$1/modules.conf" /etc/modules-load.d/sunshine-usbip.conf
+/usr/bin/modprobe vhci_hcd
+ROOT
+    mkdir -p "${record%/*}"
+    printf '%s\n' "$digest" > "$record"
+fi
+systemctl --user daemon-reload
+{{ end -}}
