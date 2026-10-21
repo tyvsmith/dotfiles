@@ -61,11 +61,20 @@ hl.unbind("SUPER + SHIFT + CTRL + G") -- Google Messages
 hl.unbind("SUPER + SHIFT + ALT + X")  -- X Post
 hl.unbind("SUPER + SHIFT + G")        -- Signal
 hl.unbind("SUPER + SHIFT + S")        -- Google Maps
--- hl.unbind("SUPER + SHIFT + ALT + A")   -- Grok
+hl.unbind("SUPER + SHIFT + ALT + A")  -- Grok
+hl.unbind("SUPER + SHIFT + A")        -- ChatGPT
+o.bind("SUPER + SHIFT + A", "ChatGPT", { launch = "chatgpt", focus = "^Chatgpt$" })
 -- hl.unbind("SUPER + SHIFT + Y")         -- YouTube
--- hl.unbind("SUPER + SHIFT + P")         -- Google Photos
+hl.unbind("SUPER + SHIFT + P")        -- Google Photos
 -- hl.unbind("SUPER + SHIFT + X")         -- X
 -- hl.unbind("SUPER + SHIFT + W")         -- Omawrite
+
+-- Launch or focus preferred applications.
+o.bind("SUPER + SHIFT + C", "Beeper", { launch = "beeper", focus = "^Beeper$" })
+o.bind("SUPER + SHIFT + G", "Steam", { launch = "steam", focus = "^steam$" })
+o.bind("SUPER + SHIFT + ALT + G", "Github", { webapp = "https://github.com", focus = true })
+o.bind("SUPER + SHIFT + E", "Fastmail", { launch = "flatpak run com.fastmail.Fastmail", focus = "^com\\.fastmail\\.Fastmail$" })
+o.bind("SUPER + SHIFT + P", "Shelly", { launch = "shelly-ui", focus = "^com\\.shellyorg\\.shelly$" })
 
 -- Dictation toggle (F16 = evdev keycode 186 -> xkb keycode 194)
 o.bind("code:194", "Toggle dictation", "voxtype-smart-toggle")
@@ -83,7 +92,8 @@ o.bind("SUPER + SHIFT + mouse_down", "Move to next workspace", hl.dsp.window.mov
 o.bind("SUPER + SHIFT + mouse_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
 
 -- SUPER+SHIFT+S joins the SUPER+SHIFT+number move family (key freed from Google Maps above)
-o.bind("SUPER + SHIFT + S", "Move window to scratchpad", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
+o.bind("SUPER + SHIFT + S", "Move window to scratchpad",
+  hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
 
 -- Dock and overview
 -- o.bind("SUPER + D", "Toggle Dock", "hypr-dock")
@@ -114,6 +124,12 @@ o.bind("SUPER + ALT + C", "Center active column", hl.dsp.layout("center"))
 -- hl.unbind("SUPER + Home")
 -- o.bind("SUPER + Home", "Slide view to first column", hl.dsp.layout("fit tobeg"))
 -- o.bind("SUPER + End", "Slide view to last column", hl.dsp.layout("fit toend"))
+
+-- Resize columns instead of stopping at the viewport edge.
+hl.unbind("SUPER + code:20") -- Omarchy: expand window left
+hl.unbind("SUPER + code:21") -- Omarchy: shrink window left
+o.bind("SUPER + code:20", "Shrink column", hl.dsp.layout("colresize -0.05"))
+o.bind("SUPER + code:21", "Expand column", hl.dsp.layout("colresize +0.05"))
 
 -- Column width cycling (presets in scrolling.explicit_column_widths)
 o.bind("SUPER + R", "Cycle column width forward", hl.dsp.layout("colresize +conf"))
@@ -147,6 +163,8 @@ o.bind("SUPER + XF86AudioPlay", nil, "wl-freeze -a")
 local chat_vol = os.getenv("HOME") .. "/.local/share/overrides/bin/omarchy-audio-output-volume"
 local chat_sink = "alsa_output.usb-Audeze_LLC_Audeze_Maxwell_XBOX_Dongle_0000000000000000-00.pro-output-0"
 
-o.bind("CTRL + XF86AudioRaiseVolume", "Chat volume up", chat_vol .. " raise " .. chat_sink, { locked = true, repeating = true })
-o.bind("CTRL + XF86AudioLowerVolume", "Chat volume down", chat_vol .. " lower " .. chat_sink, { locked = true, repeating = true })
+o.bind("CTRL + XF86AudioRaiseVolume", "Chat volume up", chat_vol .. " raise " .. chat_sink,
+  { locked = true, repeating = true })
+o.bind("CTRL + XF86AudioLowerVolume", "Chat volume down", chat_vol .. " lower " .. chat_sink,
+  { locked = true, repeating = true })
 o.bind("CTRL + XF86AudioMute", "Chat mute", chat_vol .. " mute-toggle " .. chat_sink, { locked = true })
