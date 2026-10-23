@@ -99,6 +99,12 @@
 .config/gamemode.ini
 {{ end }}
 
+{{ if or (ne .de "hyprland-omarchy") (not (has "gaming" $tags)) }}
+# HELLDIVERS 2 stratagem scanner capture helper. Needs both halves: omasnap is
+# omarchy's screenshot tool, and the game it captures only exists where Steam is.
+.local/bin/hd2-screenshot
+{{ end }}
+
 {{ if not .work }}
 # Work-only: aifx + claude settings-repair overrides (paths are target-relative)
 .local/share/overrides/bin/claude
