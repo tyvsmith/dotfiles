@@ -43,10 +43,15 @@ elif args[:2]==['install','appimage']:
 elif args[:2]==['sync','appimage'] and os.environ.get('FAIL_SYNC'): sys.exit(7)
 ''')
         template = REPO / 'home/run_onchange_31-install-packages-appimage.sh.tmpl'
-        overrides = {'packages': {'selkies': {'enabled': False}, 'sample': {'tags': ['ui'], 'pacman': False,
+        overrides = {'profile': 'test', 'profiles': {'test': {'appimage': True}},
+                     'tags': 'ui', 'de': '', 'work': False, 'decrypt': False, 'backup': False,
+                     'packages': {'selkies': {'enabled': False}, 'sample': {'tags': ['ui'], 'pacman': False,
                      'brew': False, 'apt': False, 'dnf': False, 'appimage': 'owner/sample'}}}
+        config = self.root / 'chezmoi.toml'
+        config.write_text('')
         rendered = subprocess.check_output([
-            'chezmoi', '--source', str(REPO / 'home'), '--override-data', json.dumps(overrides),
+            'chezmoi', '--source', str(REPO / 'home'), '--config', str(config),
+            '--override-data', json.dumps(overrides),
             'execute-template', template.read_text()], text=True)
         self.script = self.root / 'install.sh'
         self.script.write_text(rendered)

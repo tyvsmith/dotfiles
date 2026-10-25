@@ -30,7 +30,7 @@ prepare_stream_profile() {
         $template[0] as $p |
         ($p.outputs[0]) as $output |
         [.[] | select(.description == $output.description)] |
-        if length != 1 then error("streaming output is missing or ambiguous") else .[0] end as $monitor |
+        (if length != 1 then error("streaming output is missing or ambiguous") else .[0] end) as $monitor |
         [$monitor.availableModes[] |
             . as $mode |
             capture("^(?<w>[0-9]+)x(?<h>[0-9]+)@(?<hz>[0-9.]+)Hz$") |
@@ -40,7 +40,7 @@ prepare_stream_profile() {
             select($difference <= 0.5) |
             {mode:$mode,hz:$hz,difference:$difference}] |
         sort_by(.difference) |
-        if length == 0 then error("requested stream mode is not advertised by the monitor") else .[0] end as $selected |
+        (if length == 0 then error("requested stream mode is not advertised by the monitor") else .[0] end) as $selected |
         $p | .name = "streaming" |
         .outputs[0] += {name:$monitor.name, mode:$selected.mode, width:$width, height:$height, refresh:$selected.hz}
         ' > "$stream_profile.tmp"; then

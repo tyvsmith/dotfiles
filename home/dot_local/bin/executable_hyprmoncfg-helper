@@ -1,0 +1,133 @@
+#!/usr/bin/python3
+"""Run shortcut actions through the hyprmoncfg daemon API.
+
+Share the display-session lock so shortcuts cannot race game/stream transitions.
+Reject temporary profiles; desktop and gaming retain independent scales.
+"""
+import argparse
+from contextlib import suppress
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import socket
+import sys
+
+
+def next_scale(client, direction, output):
+    info = client.call('scale_info', width=output['width'], height=output['height'],
+                       scale=output['scale'])
+    presets = info['presets']
+    if not presets:
+        raise RuntimeError('hyprmoncfg returned no scale presets for this mode')
+    # Snap rounded readback or custom scales to the nearest preset before stepping.
+    current = min(range(len(presets)), key=lambda i: abs(presets[i] - output['scale']))
+    step = 1 if direction == 'up' else -1
+    return presets[max(0, min(current + step, len(presets) - 1))]
+
+
+class Client:
+    def __init__(self, stream):
+        self.stream = stream
+        self.sequence = 0
+
+    def call(self, method, **params):
+        self.sequence += 1
+        identity = str(self.sequence)
+        request = dict(type='request', protocol_version=1, id=identity,
+                       method=method, params=params)
+        self.stream.write(json.dumps(request).encode() + b'\n')
+        self.stream.flush()
+        while line := self.stream.readline():
+            reply = json.loads(line)
+            if reply.get('type') != 'response' or reply.get('id') != identity:
+                continue
+            if reply.get('error'):
+                raise RuntimeError(reply['error']['message'])
+            return reply.get('result')
+        raise RuntimeError('hyprmoncfg daemon disconnected')
+
+
+def change_scale(client, direction):
+    state = client.call('editor_state')
+    focused = [display for display in state['displays'] if display['focused']]
+    if len(focused) != 1:
+        raise RuntimeError('no unique focused monitor')
+    key = focused[0]['key']
+    live = next(output for output in state['profile']['outputs'] if output['key'] == key)
+    scale = next_scale(client, direction, live)
+    if abs(scale - live['scale']) < 0.00001:
+        return
+    # Start from the saved profile to preserve preferred modes and color settings.
+    status = client.call('status')
+    name = (status.get('daemon', {}).get('profile_override')
+            or state.get('source_profile'))
+    profile = next((p for p in state['profiles'] if p['name'] == name), None)
+    if profile is None:
+        raise RuntimeError(
+            'select a saved hyprmoncfg profile before changing scale; '
+            'temporary stream layouts are left untouched')
+    edited = client.call('edit_profile', profile=profile,
+                         edit=dict(output_key=key, scale=scale))['profile']
+    fresh = client.call('editor_state')
+    if (fresh.get('monitor_set_hash') != state.get('monitor_set_hash')
+            or fresh['profile']['outputs'] != state['profile']['outputs']):
+        raise RuntimeError('display configuration changed; try again')
+    transaction = client.call('preview', profile=edited, save_on_commit=True)
+    try:
+        client.call('commit', transaction_id=transaction['id'], save=True)
+    except Exception:
+        # Preserve the original failure if the daemon also refuses rollback.
+        with suppress(OSError, RuntimeError):
+            client.call('revert', transaction_id=transaction['id'])
+        raise
+    print(f'{name}: scale {scale:g}')
+
+
+# Future features: add a handler(client, **arguments) and a table entry.
+# Keep validation and persistence policy in the handler; reuse the shared connection.
+COMMANDS = {
+    'scale': {
+        'handler': change_scale,
+        'help': 'step scale presets and save the active profile',
+        'arguments': [('direction', {'choices': ('up', 'down')})],
+    },
+}
+
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    commands = parser.add_subparsers(required=True)
+    for name, command in COMMANDS.items():
+        subparser = commands.add_parser(name, help=command['help'])
+        subparser.set_defaults(handler=command['handler'])
+        for argument, options in command['arguments']:
+            subparser.add_argument(argument, **options)
+    return parser.parse_args(argv)
+
+
+def main():
+    arguments = vars(parse_args())
+    handler = arguments.pop('handler')
+    runtime = Path(os.environ['XDG_RUNTIME_DIR'])
+    instance = os.environ['HYPRLAND_INSTANCE_SIGNATURE']
+    if not re.fullmatch(r'[A-Za-z0-9_-]+', instance):
+        raise RuntimeError('invalid compositor identity')
+    state = runtime / f'hypr-display-session-{instance}'
+    state.mkdir(mode=0o700, exist_ok=True)
+    with (state/'lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        with socket.socket(socket.AF_UNIX) as sock:
+            sock.settimeout(30)
+            sock.connect(str(runtime/'hyprmoncfgd.sock'))
+            with sock.makefile('rwb') as stream:
+                handler(Client(stream), **arguments)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (OSError, ValueError, KeyError, StopIteration, RuntimeError) as error:
+        print(f'hyprmoncfg-helper: {error}', file=sys.stderr)
+        sys.exit(1)
