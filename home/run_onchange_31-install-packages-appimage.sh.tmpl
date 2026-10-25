@@ -38,6 +38,36 @@ if [[ ${#APPIMAGE_CANDIDATES[@]} -eq 0 ]]; then
     exit 0
 fi
 
+# Shelly must use the same directory for installation and later updates.
+if command -v shelly >/dev/null 2>&1; then
+    shelly_dir=$(shelly config get AppImageInstallPath)
+    if [[ -n "$shelly_dir" ]]; then
+        APPIMAGE_DIR=$shelly_dir
+    else
+        shelly config set AppImageInstallPath "$APPIMAGE_DIR"
+    fi
+    mkdir -p "$APPIMAGE_DIR"
+fi
+
+link_appimage() {
+    local path link
+    path="$(realpath -m "$APPIMAGE_DIR")/${1}.AppImage"
+    link="$(realpath -m "$HOME/.local/bin")/${1}.AppImage"
+    mkdir -p "$HOME/.local/bin"
+    if [[ "$path" != "$link" ]]; then
+        ln -sfn "$path" "$link"
+    fi
+}
+
+register_shelly() {
+    local key=$1 repo=$2 path=$3
+    if [[ ! -f "$APPIMAGE_DIR/${key}.AppImage" ]] || ! shelly list appimage --json | jq -e --arg name "$key" \
+        'any(.[]; .Name == $name)' >/dev/null; then
+        shelly install appimage "$path" --no-confirm || return 1
+    fi
+    shelly sync appimage "$key" "$repo" GitHub --no-confirm
+}
+
 # =============================================================================
 # install_appimage: Download an AppImage and integrate its .desktop + icon
 #
@@ -55,17 +85,39 @@ install_appimage() {
     # --- Download ---
     log "  Fetching $key from GitHub ($repo)..."
     local appimage_url
-    appimage_url=$(curl -sL "https://api.github.com/repos/${repo}/releases/latest" \
-        | jq -r '.assets[] | select(.name | test("AppImage$")) | .browser_download_url' \
-        | head -1)
+    local arch_pattern
+    case $(uname -m) in
+        x86_64) arch_pattern='(^|[-_.])(x86_64|amd64|x64)([-_.]|$)' ;;
+        aarch64|arm64) arch_pattern='(^|[-_.])(aarch64|arm64)([-_.]|$)' ;;
+        *) warn "Unsupported AppImage architecture"; return 1 ;;
+    esac
+    appimage_url=$(curl -fsSL "https://api.github.com/repos/${repo}/releases/latest" \
+        | jq -er --arg arch "$arch_pattern" '
+            [.assets[] | select(.name | test("\\.appimage$"; "i"))]
+            | . as $all
+            | map(select(.name | test($arch; "i")))
+            | if length == 0 then
+                $all | map(select(.name | test("(^|[-_.])(aarch64|arm64|armv7|armhf|x86_64|amd64|x64|i386|i686)([-_.]|$)"; "i") | not))
+              else . end
+            | if length == 1 then .[0].browser_download_url
+              else error("expected one compatible AppImage asset") end
+        ') || return 1
 
-    if [[ -z "$appimage_url" || "$appimage_url" == "null" ]]; then
-        warn "  Failed: $key — no AppImage asset found in $repo"
+    local download_dir
+    download_dir=$(mktemp -d)
+    if ! curl -fL "$appimage_url" -o "$download_dir/${key}.AppImage"; then
+        rm -rf "$download_dir"
         return 1
     fi
-
-    curl -sL "$appimage_url" -o "$appimage_path"
-    chmod +x "$appimage_path"
+    chmod +x "$download_dir/${key}.AppImage"
+    if command -v shelly >/dev/null 2>&1; then
+        local status=0
+        register_shelly "$key" "$repo" "$download_dir/${key}.AppImage" || status=$?
+        rm -rf "$download_dir"
+        return "$status"
+    fi
+    mv "$download_dir/${key}.AppImage" "$appimage_path"
+    rmdir "$download_dir"
 
     # --- Extract .desktop and icon ---
     local extract_dir
@@ -130,11 +182,17 @@ for key in "${!APPIMAGE_CANDIDATES[@]}"; do
 
     if [[ -f "$APPIMAGE_DIR/${key}.AppImage" ]]; then
         log "  Already installed: $key"
-        SKIPPED=$((SKIPPED + 1))
+        if command -v shelly >/dev/null 2>&1 && ! register_shelly "$key" "$repo" "$APPIMAGE_DIR/${key}.AppImage"; then
+            FAILED=$((FAILED + 1))
+        else
+            link_appimage "$key"
+            SKIPPED=$((SKIPPED + 1))
+        fi
         continue
     fi
 
     if install_appimage "$key" "$repo"; then
+        link_appimage "$key"
         log "  Installed: $key"
         INSTALLED=$((INSTALLED + 1))
     else
@@ -144,4 +202,5 @@ done
 
 log ""
 log "AppImage installation complete! ($INSTALLED installed, $SKIPPED already present, $FAILED failed)"
+[[ $FAILED -eq 0 ]]
 {{ end -}}

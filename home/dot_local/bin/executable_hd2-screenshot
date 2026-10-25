@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Capture the focused monitor for the HELLDIVERS 2 stratagem scanner.
+# The plugin's Screenshot folder setting must name the same directory.
+set -euo pipefail
+umask 077
+fail() { printf 'hd2-screenshot: %s\n' "$*" >&2; exit 1; }
+
+out_dir=${HD2_SCREENSHOT_DIR:-$HOME/Pictures/Screenshots}
+runtime=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+export XDG_RUNTIME_DIR=$runtime
+
+# StreamController launches this on the host, possibly without session variables,
+# so fall back to the newest compositor instance and its first live socket.
+if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+  newest=
+  for instance in "$runtime"/hypr/*/; do
+    if [[ -d $instance && ( -z $newest || $instance -nt $newest ) ]]; then
+      newest=$instance
+    fi
+  done
+  [[ -n $newest ]] || fail 'missing compositor identity'
+  instance=${newest%/}
+  export HYPRLAND_INSTANCE_SIGNATURE=${instance##*/}
+fi
+if [[ -z ${WAYLAND_DISPLAY:-} ]]; then
+  for socket in "$runtime"/wayland-[0-9]*; do
+    if [[ -S $socket ]]; then
+      export WAYLAND_DISPLAY=${socket##*/}
+      break
+    fi
+  done
+fi
+[[ -n ${WAYLAND_DISPLAY:-} ]] || fail 'missing Wayland display'
+
+mkdir -p "$out_dir"
+# Stage beside the watched folder, on its filesystem. The scanner aborts when
+# more than one new entry appears while it waits, so only the finished capture
+# may land there, and only by rename.
+staging=$(mktemp -d "$(dirname "$out_dir")/.hd2-screenshot.XXXXXX") ||
+  fail 'cannot create staging directory'
+trap 'rm -rf "$staging"' EXIT
+OMASNAP_SCREENSHOT_DIR=$staging omarchy-capture-screenshot fullscreen save
+
+shopt -s nullglob
+captures=("$staging"/*)
+(( ${#captures[@]} == 1 )) || fail "expected one capture, got ${#captures[@]}"
+mv "${captures[0]}" "$out_dir/hd2-$(date +%Y%m%d-%H%M%S).${captures[0]##*.}"

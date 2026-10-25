@@ -25,9 +25,9 @@ assert(rules[8][2].fullscreen == true)
 assert(rules[10][2].no_initial_focus and rules[10][2].float)
 assert(rules[15][2].workspace == 'special:hidden silent')
 for _, start in ipairs(starts) do start() end
-assert(#commands == 8, 'two service commands and six tray apps; Steam stays disabled')
+assert(#commands == 7, 'hyprpm and six tray apps; Steam and dock stay disabled')
 local units = {}
-for i = 3, #commands do
+for i = 2, #commands do
   local unit = commands[i]:match('%-u (app%-hypr%-autostart%-%d+%.scope)')
   assert(unit and not units[unit], 'each startup app needs a distinct marked scope')
   units[unit] = true

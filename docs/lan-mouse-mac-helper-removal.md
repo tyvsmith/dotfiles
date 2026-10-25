@@ -2,7 +2,7 @@
 
 Tracks the upstream lan-mouse features that would make `~/.config/hypr/lan_mouse.lua` unnecessary.
 
-The helper is a workaround: while the cursor is on the Mac client it swaps Alt/Super, remaps Print Screen to F13, and turns on natural scrolling, all via Hyprland's `input` options. lan-mouse's per-client `enter_hook`/`leave_hook` call into it with `hyprctl eval 'lan_mouse.enter()'` / `'lan_mouse.leave()'`; a `layer.closed` guard on lan-mouse's barrier layer restores defaults if lan-mouse deactivates, quits, or crashes without firing `leave_hook`.
+The helper is a workaround: while the cursor is on the Mac client it swaps Alt/Super and turns on natural scrolling, all via Hyprland's `input` options. lan-mouse's per-client `enter_hook`/`leave_hook` call into it with `hyprctl eval 'lan_mouse.enter()'` / `'lan_mouse.leave()'`; a `layer.closed` guard on lan-mouse's barrier layer restores defaults if lan-mouse deactivates, quits, or crashes without firing `leave_hook`.
 
 ## What needs to happen upstream
 
@@ -22,15 +22,8 @@ lan-mouse needs per-client scroll direction configuration so natural scrolling c
 
 General macOS support tracker: [feschber/lan-mouse#36 — Tracking issue for MacOS support](https://github.com/feschber/lan-mouse/issues/36)
 
-### Remap PrtScr to F13 per client
-
-lan-mouse needs per-client key remapping so Print Screen can be sent as F13 to a macOS client (macOS has no Print Screen key), eliminating the custom XKB `kb_options` workaround. The remap is the `custom:printscreen_f13` XKB option defined in `~/.config/xkb/rules/evdev` and `~/.config/xkb/symbols/custom`.
-
-**Tracking:** No dedicated issue; covered by the general per-client remapping need. Related: [feschber/lan-mouse#361 — [Feature Request] Swap alt/meta](https://github.com/feschber/lan-mouse/issues/361)
-
 ## What to remove when ready
 
 1. Delete `~/.config/hypr/lan_mouse.lua` and its `require("hypr.lan_mouse")` in `~/.config/hypr/hyprland.lua`
 2. Drop `enter_hook`/`leave_hook` from the client in `~/.config/lan-mouse/config.toml`
-3. Delete `~/.config/xkb/rules/evdev` and `~/.config/xkb/symbols/custom` (the `custom:printscreen_f13` option)
-4. Delete this file
+3. Delete this file

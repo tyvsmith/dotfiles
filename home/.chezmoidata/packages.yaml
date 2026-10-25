@@ -439,14 +439,19 @@ packages:
   # ===========================================================================
   # Basic UI — Desktop Environment
   # ===========================================================================
-  hypr-dock:
-    tags: [ui]
-    de: hyprland-omarchy
-    desc: "Interactive dock panel for Hyprland"
-    enabled: false  # re-enable after 1.2.1 release
-
 
   # --- Hyprland-related additions not shipped by omarchy itself ---
+  selkies:
+    tags: [ui]
+    desc: "Remote screen session accessible in a browser"
+    os: linux
+    de: hyprland-omarchy
+    brew: false
+    pacman: false
+    apt: false
+    dnf: false
+    appimage: selkies-project/selkies
+
   hyprmoncfg:
     pacman: hyprmoncfg-bin
     tags: [hardware]

@@ -9,7 +9,8 @@ name = "terminal"
 [theme.custom]
 # The active tab is drawn as panel_bg text on an accent background, so panel_bg
 # has to be dark for it to read - same colors as status-left's "#[fg=black,bg=blue]"
-panel_bg = "black"
+panel_bg = "reset"
+surface_dim = "black"
 
 [terminal]
 # Matches -c "#{pane_current_path}" on every split, window, and session

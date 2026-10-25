@@ -13,7 +13,6 @@ local function tray_app_on_start(command)
 end
 
 exec_on_start("hyprpm reload -n")
-exec_on_start("uwsm app -s a -- hypr-dock")
 
 -- Wait for the tray watcher before Chromium initializes its tray integration.
 tray_app_on_start("beeper")

@@ -60,7 +60,7 @@ hl.unbind("SUPER + SHIFT + ALT + G")  -- WhatsApp
 hl.unbind("SUPER + SHIFT + CTRL + G") -- Google Messages
 hl.unbind("SUPER + SHIFT + ALT + X")  -- X Post
 hl.unbind("SUPER + SHIFT + G")        -- Signal
-hl.unbind("SUPER + SHIFT + S")        -- Google Maps
+-- hl.unbind("SUPER + SHIFT + S")        -- Stock screenshot binding
 hl.unbind("SUPER + SHIFT + ALT + A")  -- Grok
 hl.unbind("SUPER + SHIFT + A")        -- ChatGPT
 o.bind("SUPER + SHIFT + A", "ChatGPT", { launch = "chatgpt", focus = "^Chatgpt$" })
@@ -81,21 +81,24 @@ o.bind("code:194", "Toggle dictation", "voxtype-smart-toggle")
 -- Free F9 for app shortcuts (v4 binds it for push-to-talk, press and release)
 -- hl.unbind("F9")
 
--- Workspace navigation
-o.bind("SUPER + page_down", "Next workspace", hl.dsp.focus({ workspace = "e+1" }))
-o.bind("SUPER + page_up", "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
-o.bind("SUPER + SHIFT + page_down", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
-o.bind("SUPER + SHIFT + page_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
+-- Workspace navigation within the focused monitor.
+o.bind("SUPER + page_down", "Next workspace", hl.dsp.focus({ workspace = "m+1" }))
+o.bind("SUPER + page_up", "Previous workspace", hl.dsp.focus({ workspace = "m-1" }))
+o.bind("SUPER + SHIFT + page_down", "Move to next workspace", hl.dsp.window.move({ workspace = "m+1" }))
+o.bind("SUPER + SHIFT + page_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "m-1" }))
 
--- SUPER+SHIFT+scroll moves the window, same direction as v4's SUPER+scroll
-o.bind("SUPER + SHIFT + mouse_down", "Move to next workspace", hl.dsp.window.move({ workspace = "e+1" }))
-o.bind("SUPER + SHIFT + mouse_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "e-1" }))
+-- SUPER+SHIFT+scroll moves the window within the focused monitor.
+o.bind("SUPER + SHIFT + mouse_down", "Move to next workspace", hl.dsp.window.move({ workspace = "m+1" }))
+o.bind("SUPER + SHIFT + mouse_up", "Move to previous workspace", hl.dsp.window.move({ workspace = "m-1" }))
 
--- SUPER+SHIFT+S joins the SUPER+SHIFT+number move family (key freed from Google Maps above)
-o.bind("SUPER + SHIFT + S", "Move window to scratchpad",
-  hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
+-- Custom scratchpad shortcut disabled while testing stock bindings.
+-- o.bind("SUPER + SHIFT + S", "Move window to scratchpad",
+--   hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
 
 -- Dock and overview
+o.rebind("SUPER + SLASH", "Monitor settings", "omarchy launch tui hyprmoncfg tui")
+hl.unbind("SUPER + ALT + SLASH")
+
 -- o.bind("SUPER + D", "Toggle Dock", "hypr-dock")
 o.bind("SUPER + E", "Overview", hl.plugin.scrolloverview.overview("toggle"))
 
@@ -113,6 +116,8 @@ o.bind("SUPER + SHIFT + bracketleft", "Move column left", hl.dsp.layout("swapcol
 o.bind("SUPER + SHIFT + bracketright", "Move column right", hl.dsp.layout("swapcol r"))
 
 -- Fit / zoom (SUPER+CTRL+I is Omarchy's idle-lock toggle)
+hl.unbind("SUPER + I") -- Stock input-language selector
+hl.unbind("SUPER + SHIFT + I") -- Stock input-language selector (reverse)
 o.bind("SUPER + I", "Fit active column", hl.dsp.layout("fit active"))
 o.bind("SUPER + ALT + I", "Fit visible columns", hl.dsp.layout("fit visible"))
 o.bind("SUPER + SHIFT + I", "Fit entire tape", hl.dsp.layout("fit all"))
