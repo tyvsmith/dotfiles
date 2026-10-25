@@ -6,10 +6,14 @@ ConditionEnvironment=WAYLAND_DISPLAY
 
 [Service]
 EnvironmentFile=%h/.config/remote-desktop/auth.env
+RuntimeDirectory=selkies
+EnvironmentFile=-%t/selkies/display.env
+# Read the first physical output at each start; never fall back to a resize.
+ExecStartPre=/bin/sh -ec "hyprctl monitors -j | jq -er '.[0] | select(.width > 0 and .height > 0) | \"SELKIES_MANUAL_WIDTH=\\(.width)\\nSELKIES_MANUAL_HEIGHT=\\(.height)\"' > %t/selkies/display.env"
 ExecStart=%h/.local/bin/selkies.AppImage \
     --addr=0.0.0.0 --port=6080 \
     --wayland=true --wayland-host-display=${WAYLAND_DISPLAY} \
-    --enable-resize=false --manual-width=5120 --manual-height=2160 \
+    --enable-resize=false \
     --encoder=av1enc,h265enc \
     --file-manager-path="%h/Downloads/Remote Desktop" \
     --enable-https=true \
