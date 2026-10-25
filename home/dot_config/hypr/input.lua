@@ -8,7 +8,8 @@
 --   leave_hook = "hyprctl eval 'lan_mouse.leave()'"
 lan_mouse = require("hypr.lan_mouse").setup({
   -- altwin:swap_alt_win: Alt/Super in the Mac's Option/Cmd positions.
-  kb_options     = "altwin:swap_alt_win",
+  -- custom:printscreen_f13: PrtSc -> F13 for the Mac screenshot shortcut.
+  kb_options     = "altwin:swap_alt_win,custom:printscreen_f13",
   natural_scroll = true,
 })
 
