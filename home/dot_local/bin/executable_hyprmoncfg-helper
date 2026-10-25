@@ -12,28 +12,19 @@ import os
 from pathlib import Path
 import re
 import socket
-import subprocess
 import sys
 
 
-def next_scale(direction, output):
-    # Reuse the installed implementation without running its live set_scale path.
-    source = (Path(os.environ.get('OMARCHY_PATH', '/usr/share/omarchy')) /
-              'bin/omarchy-hyprland-monitor-scaling').read_text()
-    definitions, marker, _ = source.partition('\ncase "${1:-}" in\n')
-    if not marker or 'scale_from_current()' not in definitions:
-        raise RuntimeError('Omarchy scaling script changed; integration needs updating')
-    command = definitions + '\n' + '''
-requested=$(scale_from_current "$1" "$2" "$3")
-clean_scale "$requested" "$2" "$3"
-'''
-    result = subprocess.run(
-        ['bash', '-c', command, 'hyprmoncfg-helper',
-         'next' if direction == 'up' else 'previous',
-         str(output['width']), str(output['height'])],
-        input=str(output['scale']) + '\n', capture_output=True,
-        text=True, check=True, timeout=5)
-    return float(result.stdout)
+def next_scale(client, direction, output):
+    info = client.call('scale_info', width=output['width'], height=output['height'],
+                       scale=output['scale'])
+    presets = info['presets']
+    if not presets:
+        raise RuntimeError('hyprmoncfg returned no scale presets for this mode')
+    # Snap rounded readback or custom scales to the nearest preset before stepping.
+    current = min(range(len(presets)), key=lambda i: abs(presets[i] - output['scale']))
+    step = 1 if direction == 'up' else -1
+    return presets[max(0, min(current + step, len(presets) - 1))]
 
 
 class Client:
@@ -65,7 +56,7 @@ def change_scale(client, direction):
         raise RuntimeError('no unique focused monitor')
     key = focused[0]['key']
     live = next(output for output in state['profile']['outputs'] if output['key'] == key)
-    scale = next_scale(direction, live)
+    scale = next_scale(client, direction, live)
     if abs(scale - live['scale']) < 0.00001:
         return
     # Start from the saved profile to preserve preferred modes and color settings.
@@ -99,7 +90,7 @@ def change_scale(client, direction):
 COMMANDS = {
     'scale': {
         'handler': change_scale,
-        'help': "step Omarchy's scale presets and save the active profile",
+        'help': 'step scale presets and save the active profile',
         'arguments': [('direction', {'choices': ('up', 'down')})],
     },
 }
@@ -137,7 +128,6 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except (OSError, ValueError, KeyError, StopIteration, RuntimeError,
-            subprocess.SubprocessError) as error:
+    except (OSError, ValueError, KeyError, StopIteration, RuntimeError) as error:
         print(f'hyprmoncfg-helper: {error}', file=sys.stderr)
         sys.exit(1)

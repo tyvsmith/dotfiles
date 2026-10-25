@@ -43,3 +43,24 @@ class CommandParsingTest(unittest.TestCase):
                 with self.assertRaises(SystemExit) as error:
                     MODULE['parse_args'](arguments)
                 self.assertEqual(error.exception.code, 2)
+
+
+class ScalePresetTest(unittest.TestCase):
+    def test_daemon_presets_step_clamp_and_handle_rounded_readback(self):
+        output = {'width': 5120, 'height': 2160, 'scale': 1}
+        client = Mock()
+        client.call.return_value = {'presets': [1, 1.25, 1.6, 2, 3.2, 4]}
+        for current, direction, expected in (
+                (1, 'up', 1.25), (1.25, 'up', 1.6),
+                (1.59999, 'down', 1.25), (1, 'down', 1), (4, 'up', 4)):
+            with self.subTest(current=current, direction=direction):
+                output['scale'] = current
+                self.assertEqual(MODULE['next_scale'](client, direction, output), expected)
+                client.call.assert_called_with('scale_info', width=5120, height=2160,
+                                               scale=current)
+
+    def test_no_presets_fails_without_apply(self):
+        client = Mock()
+        client.call.return_value = {'presets': []}
+        with self.assertRaisesRegex(RuntimeError, 'no scale presets'):
+            MODULE['next_scale'](client, 'up', {'width': 5120, 'height': 2160, 'scale': 1})

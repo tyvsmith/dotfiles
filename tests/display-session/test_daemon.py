@@ -152,7 +152,7 @@ class InstalledDaemonTest(unittest.TestCase):
     def test_scale_shortcuts_save_through_daemon_and_preserve_profile(self):
         self.run_command('reset')
         helper = ROOT/'home/dot_local/bin/executable_hyprmoncfg-helper'
-        env = self.env | {'OMARCHY_PATH': '/usr/share/omarchy'}
+        env = self.env
         for direction, expected in [('up', 1.25), ('up', 1.6), ('down', 1.25)]:
             result = subprocess.run(['/usr/bin/python3', str(helper), 'scale', direction], env=env,
                                     capture_output=True, text=True, timeout=20)
@@ -172,7 +172,7 @@ class InstalledDaemonTest(unittest.TestCase):
         before = saved.read_bytes()
         self.run_command('stream-start','--width','1920','--height','1080','--fps','60')
         result = subprocess.run(['/usr/bin/python3', str(ROOT/'home/dot_local/bin/executable_hyprmoncfg-helper'), 'scale', 'up'],
-                                env=self.env | {'OMARCHY_PATH': '/usr/share/omarchy'},
+                                env=self.env,
                                 capture_output=True, text=True, timeout=20)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('temporary stream layouts', result.stderr)
