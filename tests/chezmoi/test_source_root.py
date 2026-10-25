@@ -20,6 +20,9 @@ class SourceRootTest(unittest.TestCase):
         self.source = self.root / 'repo'
         self.source.mkdir()
         shutil.copytree(REPO / 'home', self.source / 'home', symlinks=True)
+        # Fixtures must never depend on the user's private decryption key.
+        for encrypted in (self.source / 'home').rglob('encrypted_*.age'):
+            encrypted.unlink()
         shutil.copytree(REPO / 'scripts', self.source / 'scripts', symlinks=True)
         shutil.copy2(REPO / '.chezmoiroot', self.source)
         self.config = self.root / 'config.toml'
@@ -58,9 +61,6 @@ class SourceRootTest(unittest.TestCase):
                                    text=True, check=True).stdout
         for name in ('.age-public-key', '.age-public-key-work'):
             (self.source / 'home' / name).write_text(recipient)
-        # Remove real ciphertext from this disposable copy before using a test key.
-        for encrypted in (self.source / 'home').rglob('encrypted_*.age'):
-            encrypted.unlink()
         plaintext = self.source / 'home/decrypted_probe'
         plaintext.write_text('round-trip fixture\n')
         nested = self.source / '.claude/worktrees/probe'

@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y age jq lua5.4
+          curl -fsSL -o "$RUNNER_TEMP/chezmoi.tar.gz" \
+            https://github.com/twpayne/chezmoi/releases/download/v2.73.1/chezmoi_2.73.1_linux_amd64.tar.gz
+          echo "a3f958acb7d0e5d53fa43c2eec9bc8ae3b4fba8bcbfdce29a8881ca3ffc20a53  $RUNNER_TEMP/chezmoi.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/chezmoi.tar.gz" -C "$RUNNER_TEMP" chezmoi
+          sudo install -m 755 "$RUNNER_TEMP/chezmoi" /usr/local/bin/chezmoi
+      - name: Run regression suites
+        run: tests/run.sh

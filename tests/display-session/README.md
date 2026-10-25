@@ -1,6 +1,6 @@
 # Display-session tests
 
-- run portable helper tests in GitHub Actions on relevant pull requests and main pushes
+- run portable checks through the shared Tests workflow on pull requests and main pushes
 - cover scale stepping, boundaries, rounded readback, command parsing, and rollback errors
 
 Run the portable checks without Hyprland or hyprmoncfg:
