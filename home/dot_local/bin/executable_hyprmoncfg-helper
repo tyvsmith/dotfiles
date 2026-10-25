@@ -1,9 +1,10 @@
 #!/usr/bin/python3
-"""Apply Omarchy's scale steps through hyprmoncfg and save the current profile.
+"""Run shortcut actions through the hyprmoncfg daemon API.
 
 Share the display-session lock so shortcuts cannot race game/stream transitions.
 Reject temporary profiles; desktop and gaming retain independent scales.
 """
+import argparse
 from contextlib import suppress
 import fcntl
 import json
@@ -27,7 +28,7 @@ requested=$(scale_from_current "$1" "$2" "$3")
 clean_scale "$requested" "$2" "$3"
 '''
     result = subprocess.run(
-        ['bash', '-c', command, 'hypr-monitor-scale',
+        ['bash', '-c', command, 'hyprmoncfg-helper',
          'next' if direction == 'up' else 'previous',
          str(output['width']), str(output['height'])],
         input=str(output['scale']) + '\n', capture_output=True,
@@ -57,7 +58,7 @@ class Client:
         raise RuntimeError('hyprmoncfg daemon disconnected')
 
 
-def change(client, direction):
+def change_scale(client, direction):
     state = client.call('editor_state')
     focused = [display for display in state['displays'] if display['focused']]
     if len(focused) != 1:
@@ -93,9 +94,31 @@ def change(client, direction):
     print(f'{name}: scale {scale:g}')
 
 
+# Future features: add a handler(client, **arguments) and a table entry.
+# Keep validation and persistence policy in the handler; reuse the shared connection.
+COMMANDS = {
+    'scale': {
+        'handler': change_scale,
+        'help': "step Omarchy's scale presets and save the active profile",
+        'arguments': [('direction', {'choices': ('up', 'down')})],
+    },
+}
+
+
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+    commands = parser.add_subparsers(required=True)
+    for name, command in COMMANDS.items():
+        subparser = commands.add_parser(name, help=command['help'])
+        subparser.set_defaults(handler=command['handler'])
+        for argument, options in command['arguments']:
+            subparser.add_argument(argument, **options)
+    return parser.parse_args(argv)
+
+
 def main():
-    if sys.argv[1:] not in (['up'], ['down']):
-        raise RuntimeError('usage: hypr-monitor-scale up|down')
+    arguments = vars(parse_args())
+    handler = arguments.pop('handler')
     runtime = Path(os.environ['XDG_RUNTIME_DIR'])
     instance = os.environ['HYPRLAND_INSTANCE_SIGNATURE']
     if not re.fullmatch(r'[A-Za-z0-9_-]+', instance):
@@ -108,7 +131,7 @@ def main():
             sock.settimeout(30)
             sock.connect(str(runtime/'hyprmoncfgd.sock'))
             with sock.makefile('rwb') as stream:
-                change(Client(stream), sys.argv[1])
+                handler(Client(stream), **arguments)
 
 
 if __name__ == '__main__':
@@ -116,5 +139,5 @@ if __name__ == '__main__':
         main()
     except (OSError, ValueError, KeyError, StopIteration, RuntimeError,
             subprocess.SubprocessError) as error:
-        print(f'hypr-monitor-scale: {error}', file=sys.stderr)
+        print(f'hyprmoncfg-helper: {error}', file=sys.stderr)
         sys.exit(1)
