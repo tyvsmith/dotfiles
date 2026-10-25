@@ -149,4 +149,34 @@ class InstalledDaemonTest(unittest.TestCase):
         self.assertEqual(self.current()['colorManagementPreset'],'srgb')
 
 
+    def test_scale_shortcuts_save_through_daemon_and_preserve_profile(self):
+        self.run_command('reset')
+        helper = ROOT/'home/dot_local/bin/executable_hypr-monitor-scale'
+        env = self.env | {'OMARCHY_PATH': '/usr/share/omarchy'}
+        for direction, expected in [('up', 1.25), ('up', 1.6), ('down', 1.25)]:
+            result = subprocess.run(['/usr/bin/python3', str(helper), direction], env=env,
+                                    capture_output=True, text=True, timeout=20)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertAlmostEqual(self.current()['scale'], expected)
+            saved = json.loads((self.config/'hyprmoncfg/profiles/desktop.json').read_text())
+            self.assertEqual(saved['outputs'][0]['scale'], expected)
+            self.assertEqual(saved['outputs'][0]['mode'], 'preferred')
+            self.assertEqual(saved['outputs'][0]['bitdepth'], 10)
+        self.run_command('game-start', '--game', '123')
+        self.assertEqual(self.current()['colorManagementPreset'], 'hdr')
+        self.assertEqual(self.current()['scale'], 1)
+
+    def test_scale_does_not_save_temporary_streaming_as_desktop(self):
+        self.run_command('reset')
+        saved = self.config/'hyprmoncfg/profiles/desktop.json'
+        before = saved.read_bytes()
+        self.run_command('stream-start','--width','1920','--height','1080','--fps','60')
+        result = subprocess.run(['/usr/bin/python3', str(ROOT/'home/dot_local/bin/executable_hypr-monitor-scale'), 'up'],
+                                env=self.env | {'OMARCHY_PATH': '/usr/share/omarchy'},
+                                capture_output=True, text=True, timeout=20)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('temporary stream layouts', result.stderr)
+        self.assertEqual(saved.read_bytes(), before)
+        self.assertEqual(self.current()['width'], 1920)
+
 if __name__=='__main__':unittest.main()

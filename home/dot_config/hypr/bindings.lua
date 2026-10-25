@@ -96,8 +96,9 @@ o.bind("SUPER + SHIFT + mouse_up", "Move to previous workspace", hl.dsp.window.m
 --   hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
 
 -- Dock and overview
-o.rebind("SUPER + SLASH", "Monitor settings", "omarchy launch tui hyprmoncfg tui")
-hl.unbind("SUPER + ALT + SLASH")
+o.rebind("SUPER + SLASH", "Monitor scaling up", "hypr-monitor-scale up")
+o.rebind("SUPER + ALT + SLASH", "Monitor scaling down", "hypr-monitor-scale down")
+o.bind("SUPER + CTRL + SLASH", "Monitor settings", "omarchy launch tui hyprmoncfg tui")
 
 -- o.bind("SUPER + D", "Toggle Dock", "hypr-dock")
 o.bind("SUPER + E", "Overview", hl.plugin.scrolloverview.overview("toggle"))
