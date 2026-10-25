@@ -14,15 +14,15 @@ hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
 
 hl.config({ render = { cm_auto_hdr = 0 } })
 hl.monitor({
-    output        = "",
-    mode          = "preferred",
-    position      = "auto",
-    scale         = omarchy_monitor_scale,
-    bitdepth      = 10,
-    vrr           = 2,
-    sdrbrightness = 1.35, -- only acts in HDR mode
-    sdrsaturation = 1.0,
-    cm            = "srgb",
+  output        = "",
+  mode          = "preferred",
+  position      = "auto",
+  scale         = omarchy_monitor_scale,
+  bitdepth      = 10,
+  vrr           = 2,
+  sdrbrightness = 1.35, -- only acts in HDR mode
+  sdrsaturation = 1.0,
+  cm            = "srgb",
 })
 
 -- NVIDIA VA-API. Not redundant with default/hypr/nvidia.lua: that module gates
