@@ -7,6 +7,7 @@ tests/run.sh
 ```
 
 - require Python 3, chezmoi, age, jq, and Lua
+- install the latest chezmoi in CI using the same installer as `install.sh`
 - discover Python suites under `tests/*/` and run Hyprland Lua checks
 - run the same entry point in the shared Tests workflow on pull requests and main pushes
 - skip installed-daemon, ScopeBuddy, and systemd checks when their dependencies are absent

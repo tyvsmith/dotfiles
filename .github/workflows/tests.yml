@@ -19,10 +19,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y age jq lua5.4
-          curl -fsSL -o "$RUNNER_TEMP/chezmoi.tar.gz" \
-            https://github.com/twpayne/chezmoi/releases/download/v2.73.1/chezmoi_2.73.1_linux_amd64.tar.gz
-          echo "a3f958acb7d0e5d53fa43c2eec9bc8ae3b4fba8bcbfdce29a8881ca3ffc20a53  $RUNNER_TEMP/chezmoi.tar.gz" | sha256sum --check
-          tar -xzf "$RUNNER_TEMP/chezmoi.tar.gz" -C "$RUNNER_TEMP" chezmoi
-          sudo install -m 755 "$RUNNER_TEMP/chezmoi" /usr/local/bin/chezmoi
+      - name: Install latest chezmoi using the bootstrap installer
+        run: |
+          sh -c "$(curl -fsLS get.chezmoi.io/lb)" -- -b "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/chezmoi" --version
       - name: Run regression suites
         run: tests/run.sh
