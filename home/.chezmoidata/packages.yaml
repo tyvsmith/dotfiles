@@ -402,10 +402,28 @@ packages:
   # ===========================================================================
  
 
+  claude-desktop:
+    tags: [ui]
+    desc: "Official Claude desktop app with Claude Code"
+    brew: claude
+    brew_cask: true
+    pacman: omarchy/claude-desktop # pinned: cachyos ships a stale, broken build under the same name
+    apt: false
+    dnf: false
+
   herdr:
     tags: [ai]
     desc: "Terminal multiplexer for AI coding agents"
     mise: "aqua:herdrdev/herdr"
+    apt: false
+    dnf: false
+
+  openai-codex-desktop:
+    tags: [ui]
+    desc: "Official ChatGPT desktop app with Codex"
+    brew: chatgpt
+    brew_cask: true
+    pacman: omarchy/openai-codex-desktop # pinned: cachyos chatgpt-desktop-bin lags and Replaces this
     apt: false
     dnf: false
 
