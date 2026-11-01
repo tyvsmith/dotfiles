@@ -1,164 +1,41 @@
-#!/usr/bin/python
-"""Read one output's Wayland color-management v1 luminance (not physical brightness).
-
-Uses only registry, output, image-description and sync requests; never creates a
-surface or changes state. Wire definitions: wayland.xml and color-management-v1.xml
-from wayland-protocols. Version 1 is pinned; wl_output v4 supplies the output name.
-"""
-import array
+#!/usr/bin/python3
+"""Read one output's advertised HDR luminance using wayland-info 1.3+."""
 import json
-import os
-from pathlib import Path
-import socket
-import struct
+import re
+import subprocess
 import sys
-import time
 
 
-def words(*values):
-    return struct.pack('=' + 'I' * len(values), *values)
+def parse(text, output):
+    ids, color = [], ''
+    for block in re.split(r'(?=^interface: )', text, flags=re.M):
+        header = re.match(r"interface: 'wl_output',\s+version:\s+\d+, name:\s+(\d+)\n", block)
+        if header and f'\tname: {output}\n' in block:
+            ids.append(header[1])
+        elif block.startswith("interface: 'wp_color_manager_v1',"):
+            color = block
+    if len(ids) != 1:
+        raise RuntimeError(f'output not found or ambiguous: {output}')
 
-
-def wire_string(value):
-    data = value.encode() + b'\0'
-    return words(len(data)) + data + b'\0' * (-len(data) % 4)
-
-
-def read_string(data, offset=0):
-    size, = struct.unpack_from('=I', data, offset)
-    return data[offset + 4:offset + 4 + size - 1].decode(), offset + 4 + ((size + 3) & ~3)
+    for block in re.split(r'(?=^\toutput: )', color, flags=re.M):
+        if not block.startswith(f'\toutput: {ids[0]}\n'):
+            continue
+        if not re.search(r'^\t\timage description id: \d+$', block, re.M):
+            raise RuntimeError(f'color description unavailable: {output}')
+        result = dict(output=output, max_luminance=None, reference_luminance=None)
+        if re.search(r'^\t\ticc file: size \d+$', block, re.M):
+            return result  # An ICC description has no parametric luminance event.
+        values = re.search(r'^\t\tluminances \(cd/m²\): min [\d.]+ max (\d+) reference (\d+)$', block, re.M)
+        if not values:
+            raise RuntimeError(f'unrecognized luminance data: {output}')
+        result.update(max_luminance=int(values[1]), reference_luminance=int(values[2]))
+        return result
+    raise RuntimeError(f'color management output unavailable: {output}')
 
 
 def query(output):
-    display = os.environ.get('WAYLAND_DISPLAY', 'wayland-0')
-    path = Path(display)
-    if not path.is_absolute():
-        path = Path(os.environ['XDG_RUNTIME_DIR']) / path
-    deadline = time.monotonic() + 2
-    with socket.socket(socket.AF_UNIX) as sock:
-        sock.settimeout(2)
-        sock.connect(str(path))
-        next_id = 2
-        handlers = {}
-        globals_ = {}
-        names = {}
-        removed = set()
-
-        def new_id():
-            nonlocal next_id
-            result = next_id
-            next_id += 1
-            return result
-
-        def send(obj, opcode, payload=b''):
-            sock.sendall(words(obj, ((len(payload) + 8) << 16) | opcode) + payload)
-
-        def receive(size):
-            data = b''
-            while len(data) < size:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise TimeoutError('color metadata query timed out')
-                sock.settimeout(remaining)
-                chunk, ancillary, _, _ = sock.recvmsg(size - len(data), socket.CMSG_SPACE(16 * 4))
-                # ICC information can include an fd even though we only need luminance.
-                for level, kind, payload in ancillary:
-                    if level == socket.SOL_SOCKET and kind == socket.SCM_RIGHTS:
-                        fds = array.array('i'); fds.frombytes(payload)
-                        for fd in fds:
-                            os.close(fd)
-                if not chunk:
-                    raise RuntimeError('Wayland connection closed')
-                data += chunk
-            return data
-
-        def dispatch():
-            obj, header = struct.unpack('=II', receive(8))
-            size, opcode = header >> 16, header & 65535
-            if size < 8 or size % 4:
-                raise RuntimeError('invalid Wayland message')
-            data = receive(size - 8)
-            if obj == 1 and opcode == 0:
-                raise RuntimeError('Wayland protocol error: ' + read_string(data, 8)[0])
-            if obj in handlers:
-                handlers[obj](opcode, data)
-
-        def roundtrip():
-            callback = new_id()
-            done = []
-            handlers[callback] = lambda op, data: done.append(True)
-            send(1, 0, words(callback))
-            while not done:
-                dispatch()
-            del handlers[callback]
-
-        registry = new_id()
-        def registry_event(op, data):
-            name, = struct.unpack_from('=I', data)
-            if op == 0:
-                interface, offset = read_string(data, 4)
-                version, = struct.unpack_from('=I', data, offset)
-                globals_[name] = (interface, version)
-            elif op == 1:
-                removed.add(name)
-        handlers[registry] = registry_event
-        send(1, 1, words(registry))
-        roundtrip()
-
-        def bind(name, interface, version):
-            obj = new_id()
-            send(registry, 0, words(name) + wire_string(interface) + words(version, obj))
-            return obj
-
-        manager = None
-        outputs = {}
-        for name, (interface, version) in globals_.items():
-            if name in removed:
-                continue
-            if interface == 'wp_color_manager_v1':
-                manager = bind(name, interface, 1)
-            elif interface == 'wl_output' and version >= 4:
-                obj = bind(name, interface, 4)
-                outputs[obj] = name
-                def output_event(op, data, obj=obj):
-                    if op == 4:
-                        names[obj] = read_string(data)[0]
-                handlers[obj] = output_event
-        if manager is None:
-            raise RuntimeError('Wayland color management unavailable')
-        roundtrip()
-        matches = [obj for obj, name in names.items() if name == output and outputs[obj] not in removed]
-        if len(matches) != 1:
-            raise RuntimeError('output not found or ambiguous: ' + output)
-        obj = matches[0]
-        color_output, description = new_id(), new_id()
-        send(manager, 1, words(color_output, obj))
-        ready = []
-        def description_event(op, data):
-            if op == 0:
-                raise RuntimeError('image description failed: ' + read_string(data, 4)[0])
-            if op == 1:
-                ready.append(True)
-        handlers[description] = description_event
-        send(color_output, 1, words(description))
-        while not ready:
-            dispatch()
-        info = new_id()
-        result = dict(output=output, max_luminance=None, reference_luminance=None)
-        done = []
-        def info_event(op, data):
-            if op == 0:
-                done.append(True)
-            elif op == 6:
-                _, peak, reference = struct.unpack('=III', data)
-                result.update(max_luminance=peak, reference_luminance=reference)
-        handlers[info] = info_event
-        send(description, 1, words(info))
-        while not done:
-            dispatch()
-        if outputs[obj] in removed:
-            raise RuntimeError('output disappeared during query')
-        return result
+    text = subprocess.check_output(['wayland-info'], text=True, timeout=2)
+    return parse(text, output)
 
 
 if __name__ == '__main__':
@@ -166,6 +43,6 @@ if __name__ == '__main__':
         if len(sys.argv) != 2:
             raise ValueError('usage: scb-output-luminance OUTPUT')
         print(json.dumps(query(sys.argv[1])))
-    except (OSError, RuntimeError, ValueError, KeyError, struct.error) as exc:
+    except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:
         print(f'scb-output-luminance: {exc}', file=sys.stderr)
         sys.exit(1)

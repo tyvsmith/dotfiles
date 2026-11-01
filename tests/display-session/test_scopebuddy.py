@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 @unittest.skipUnless(shutil.which('scb'), 'ScopeBuddy is not installed')
 class ScopeBuddyTest(unittest.TestCase):
-    def run_game(self, mode='native', fail_start=False, exit_code=0, hyprland=True, punktfunk="idle", fail_hdr=False, reported_peak=80, probe_failed=False, reference=203, fallback=None, never_hdr=False, never_peak=False):
+    def run_game(self, mode='native', fail_start=False, exit_code=0, hyprland=True, punktfunk="idle", fail_hdr=False, reported_peak=80, probe_failed=False, reference=203, fallback=None, never_hdr=False, never_peak=False, sdr_white=203):
         with tempfile.TemporaryDirectory(prefix='scopebuddy-hooks-') as temporary:
             root=Path(temporary)
             config=root/'.config/scopebuddy'
@@ -27,7 +27,7 @@ class ScopeBuddyTest(unittest.TestCase):
             monitor=dict(name='PF-test', focused=punktfunk != 'local', disabled=False,
                 width=2364,height=1080,refreshRate=120,x=-2364,y=140,scale=1,
                 transform=0,colorManagementPreset='srgb' if punktfunk == 'sdr' else 'hdr',
-                sdrBrightness=1,sdrSaturation=1,sdrMinLuminance=0.2,sdrMaxLuminance=203,
+                sdrBrightness=1,sdrSaturation=1,sdrMinLuminance=0.2,sdrMaxLuminance=sdr_white,
                 vrr=False)
             (binary/'hyprctl').write_text('''#!/usr/bin/env python3
 import json,os,sys
@@ -129,9 +129,7 @@ exit "$GAME_EXIT"
                 self.assertTrue(events[0].startswith('hdr hl.monitor('),events)
                 self.assertIn('PF-test',events[0])
                 self.assertIn('max_luminance=1000',events[0])
-                self.assertIn('-2364x140',events[0])
-                self.assertIn('2364x1080@120',events[0])
-                self.assertIn('sdr_max_luminance=203',events[0])
+                self.assertEqual(events[0], 'hdr hl.monitor({output="PF-test",max_luminance=1000})')
                 self.assertNotIn('hdr-on',events)
                 self.assertNotIn('game-stop',events)
                 self.assertTrue(any(e.startswith('game  ') and 'fps_limit=120' in e for e in events),events)
@@ -160,6 +158,11 @@ exit "$GAME_EXIT"
         result, events = self.run_game(punktfunk='hdr', reference=1200)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(events, [])
+
+    def test_protocol_white_wins_over_unrelated_sdr_rule(self):
+        result, events = self.run_game(punktfunk='hdr', reference=203, sdr_white=1000)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('max_luminance=1000', events[0])
 
     def test_explicit_opt_out_skips_even_a_broken_probe(self):
         result, events = self.run_game(punktfunk='hdr', probe_failed=True, fallback=0)

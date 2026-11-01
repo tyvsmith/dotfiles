@@ -1,99 +1,64 @@
-"""Exercise the read-only query against a minimal Wayland socket peer."""
-import json
-import os
+"""Parse wayland-info 1.3's output without confusing registry IDs or color fields."""
+import importlib.machinery
+import importlib.util
 from pathlib import Path
-import socket
-import struct
 import subprocess
-import tempfile
-import threading
 import unittest
-ROOT = Path(__file__).resolve().parents[2]
+from unittest.mock import patch
 
-HELPER=ROOT/'home/dot_local/bin/executable_scb-output-luminance'
+HELPER = Path(__file__).resolve().parents[2]/'home/dot_local/bin/executable_scb-output-luminance'
+loader = importlib.machinery.SourceFileLoader('luminance', str(HELPER))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+luminance = importlib.util.module_from_spec(spec)
+loader.exec_module(luminance)
 
-def words(*values): return struct.pack('='+'I'*len(values), *values)
-def string(value):
-    data=value.encode()+b'\0'
-    return words(len(data))+data+b'\0'*(-len(data)%4)
+# Same structure as wayland-info 1.3; color blocks precede wl_output globals.
+INFO = """interface: 'wp_color_manager_v1', version: 3, name: 66
+\toutput: 286
+\t\timage description id: 9
+\t\tluminances (cd/m²): min 0.2000 max 80 reference 203
+\t\ttarget_luminances (cd/m²): min 0.2000 max 4000
+\t\tmax_cll (cd/m²): 5000
+\toutput: 262
+\t\timage description id: 8
+\t\tluminances (cd/m²): min 0.2000 max 1600 reference 203
+interface: 'zxdg_output_manager_v1', version: 3, name: 7
+\toutput: 286
+\t\tname: PF-test
+interface: 'wl_output', version:  4, name: 262
+\tname: DP-1
+interface: 'wl_output', version:  4, name: 286
+\tname: PF-test
+"""
 
 class OutputLuminanceTest(unittest.TestCase):
-    def query(self, peak=80, missing=False, fail=False, target='PF-test'):
-        errors=[]
-        with tempfile.TemporaryDirectory() as tmp:
-            path=str(Path(tmp)/'wayland-test')
-            with socket.socket(socket.AF_UNIX) as server:
-                server.bind(path);server.listen();server.settimeout(3)
-                def serve():
-                    try:
-                        with server.accept()[0] as peer:
-                            peer.settimeout(3)
-                            objects={1:'display'}
-                            def emit(obj,op,data=b''):
-                                packet=words(obj,((8+len(data))<<16)|op)+data
-                                # Split headers as well as payloads to exercise stream framing.
-                                peer.sendall(packet[:3]);peer.sendall(packet[3:])
-                            def read(n):
-                                data=b''
-                                while len(data)<n:
-                                    chunk=peer.recv(n-len(data))
-                                    if not chunk: raise EOFError
-                                    data+=chunk
-                                return data
-                            while True:
-                                obj,head=struct.unpack('=II',read(8));op=head&65535
-                                body=read((head>>16)-8)
-                                kind=objects[obj]
-                                if kind=='display' and op==1:
-                                    reg,=struct.unpack('=I',body);objects[reg]='registry'
-                                    emit(reg,0,words(11)+string('wl_output')+words(4))
-                                    emit(reg,0,words(22)+string('wp_color_manager_v1')+words(1))
-                                elif kind=='display' and op==0:
-                                    cb,=struct.unpack('=I',body);emit(cb,0,words(0))
-                                elif kind=='registry':
-                                    global_id,=struct.unpack_from('=I',body)
-                                    new_id,=struct.unpack_from('=I',body,len(body)-4)
-                                    objects[new_id]='output' if global_id==11 else 'manager'
-                                    if global_id==11: emit(new_id,4,string('PF-test'));emit(new_id,2)
-                                elif kind=='manager':
-                                    self.assertEqual(op,1)  # get_output, never a surface or creator
-                                    new_id,output=struct.unpack('=II',body)
-                                    self.assertEqual(objects[output],'output');objects[new_id]='color_output'
-                                elif kind=='color_output':
-                                    self.assertEqual(op,1)
-                                    new_id,=struct.unpack('=I',body);objects[new_id]='description'
-                                    emit(new_id,0,words(0)+string('unavailable')) if fail else emit(new_id,1,words(1))
-                                elif kind=='description':
-                                    self.assertEqual(op,1)
-                                    new_id,=struct.unpack('=I',body)
-                                    if not missing: emit(new_id,6,words(2000,peak,203))
-                                    emit(new_id,0)
-                    except (EOFError,BrokenPipeError,ConnectionResetError): pass
-                    except Exception as exc: errors.append(exc)
-                thread=threading.Thread(target=serve);thread.start()
-                result=subprocess.run(['/usr/bin/python',str(HELPER),target],env=os.environ|{'WAYLAND_DISPLAY':path},capture_output=True,text=True,timeout=5)
-                thread.join(4)
-                self.assertFalse(thread.is_alive())
-                self.assertEqual(errors,[])
-                return result
+    def test_exact_connector_and_primary_luminance(self):
+        self.assertEqual(luminance.parse(INFO, 'PF-test'),
+                         dict(output='PF-test', max_luminance=80, reference_luminance=203))
+        self.assertEqual(luminance.parse(INFO, 'DP-1')['max_luminance'], 1600)
 
-    def test_reads_exact_output_luminance(self):
-        for peak in [80,400,1600]:
-            result=self.query(peak=peak)
-            self.assertEqual(result.returncode,0,result.stderr)
-            self.assertEqual(json.loads(result.stdout),{'output':'PF-test','max_luminance':peak,'reference_luminance':203})
+    def test_explicit_icc_has_no_parametric_luminance(self):
+        text = INFO.replace('luminances (cd/m²): min 0.2000 max 80 reference 203', 'icc file: size 512')
+        self.assertEqual(luminance.parse(text, 'PF-test'),
+                         dict(output='PF-test', max_luminance=None, reference_luminance=None))
 
-    def test_missing_luminance_is_distinct_from_failed_query(self):
-        result=self.query(missing=True)
-        self.assertEqual(result.returncode,0,result.stderr)
-        self.assertIsNone(json.loads(result.stdout)['max_luminance'])
+    def test_failed_or_malformed_description_is_an_error(self):
+        for text in (INFO.replace('image description id: 9', 'description failed'),
+                     INFO.replace('max 80 reference 203', 'unrecognized fields'),
+                     INFO.replace('wp_color_manager_v1', 'unrelated_interface')):
+            with self.subTest(text=text), self.assertRaises(RuntimeError):
+                luminance.parse(text, 'PF-test')
 
-    def test_failed_description_has_no_metadata(self):
-        result=self.query(fail=True)
-        self.assertNotEqual(result.returncode,0)
-        self.assertEqual(result.stdout,'')
+    def test_missing_or_duplicate_output_is_an_error(self):
+        with self.assertRaises(RuntimeError): luminance.parse(INFO, 'PF-other')
+        with self.assertRaises(RuntimeError): luminance.parse(INFO.replace('name: DP-1', 'name: PF-test'), 'PF-test')
 
-    def test_wrong_output_is_not_used(self):
-        result=self.query(target='PF-other')
-        self.assertNotEqual(result.returncode,0)
-        self.assertEqual(result.stdout,'')
+    def test_zero_reference_is_not_disguised_as_missing(self):
+        text = INFO.replace('max 80 reference 203', 'max 0 reference 0')
+        self.assertEqual(luminance.parse(text, 'PF-test')['reference_luminance'], 0)
+
+    @patch.object(luminance.subprocess, 'check_output', side_effect=subprocess.TimeoutExpired('wayland-info', 2))
+    def test_timeout_is_not_missing_metadata(self, run):
+        with self.assertRaises(subprocess.TimeoutExpired): luminance.query('PF-test')
+
+if __name__ == '__main__': unittest.main()

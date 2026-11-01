@@ -39,10 +39,12 @@ Focus the intended screen before launching; this is a launch-time decision.
 - use a 1,000-nit fallback only for an HDR output with absent peak metadata or a peak no higher than reference white
 - abort launch on a metadata query failure rather than change an unknown output
 
-`scb-output-luminance` reads the Wayland color-management event used by Wine.
+`scb-output-luminance` extracts the output's color metadata from standard
+`wayland-info` (wayland-utils 1.3+), which reads the same protocol used by Wine.
 The fallback is compatibility metadata, not measured device brightness.
 `SCB_PUNKTFUNK_HDR_MAX_LUMINANCE=0` disables it; a positive value up to 10,000
-changes the fallback and must exceed reference white when applied. SDR streams
+changes the fallback and must exceed reference white when applied. The correction
+updates only `max_luminance` on Punktfunk's existing monitor rule. SDR streams
 are unchanged. Stream exit leaves the virtual output's color mode to Punktfunk.
 
 ## Scale controls
@@ -50,7 +52,7 @@ are unchanged. Stream exit leaves the virtual output's color mode to Punktfunk.
 `Super+/` increases scale and `Super+Alt+/` decreases it on the focused screen.
 
 - physical outputs use stock `omarchy hyprland monitor scaling`
-- `PF-*` outputs use `hypr-monitor-scale`, applying only a runtime rule with the current mode, position and color settings
+- `PF-*` outputs use `hypr-monitor-scale`, updating only the existing rule's scale at runtime; no color probe or config reload is needed
 - round presets to clean fractional scales with sufficient precision; 2800×1752 steps from 1 to 4/3 rather than invalid 1.25
 - keep virtual scale changes temporary; reconnecting or a config reload may restore Punktfunk's settings
 

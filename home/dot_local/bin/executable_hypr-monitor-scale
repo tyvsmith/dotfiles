@@ -13,10 +13,6 @@ def run(*args):
     return subprocess.check_output(args, text=True, timeout=4).strip()
 
 
-def read_luminance(output):
-    return json.loads(run('scb-output-luminance', output))
-
-
 def next_scale(monitor, direction):
     divisor = math.gcd(monitor['width'] * 120, monitor['height'] * 120)
 
@@ -41,26 +37,11 @@ def next_scale(monitor, direction):
     return result
 
 
-def monitor_rule(monitor, scale):
-    rule = dict(output=monitor['name'],
-                mode=f"{monitor['width']}x{monitor['height']}@{monitor['refreshRate']:.6f}",
-                position=f"{monitor['x']}x{monitor['y']}", scale=scale,
-                transform=monitor.get('transform', 0),
-                bitdepth=10 if '2101010' in monitor['currentFormat'] else 8,
-                cm=monitor['colorManagementPreset'],
-                vrr=1 if monitor.get('vrr') else 0,
-                sdrbrightness=monitor['sdrBrightness'],
-                sdrsaturation=monitor['sdrSaturation'],
-                sdr_min_luminance=monitor['sdrMinLuminance'],
-                sdr_max_luminance=monitor['sdrMaxLuminance'])
-    if rule['cm'] in ('hdr', 'hdredid'):
-        metadata = read_luminance(monitor['name'])
-        peak = metadata.get('max_luminance')
-        if peak is not None:
-            if not isinstance(peak, (int, float)) or not math.isfinite(peak) or peak <= 0:
-                raise ValueError('invalid HDR peak; leaving output unchanged')
-            rule['max_luminance'] = peak
-    return rule
+def apply_scale(output, value):
+    # Punktfunk creates an exact-name rule; Hyprland merges this one-field update.
+    reply = run('hyprctl', 'eval', f'hl.monitor({{output={json.dumps(output)},scale={value}}})')
+    if reply != 'ok':
+        raise RuntimeError(reply)
 
 
 def main():
@@ -83,11 +64,7 @@ def main():
     value = next_scale(monitor, args.direction)
     if abs(value - monitor['scale']) < .005:
         return
-    rule = monitor_rule(monitor, value)
-    lua = 'hl.monitor({' + ','.join(f'{key}={json.dumps(val)}' for key, val in rule.items()) + '})'
-    reply = run('hyprctl', 'eval', lua)
-    if reply != 'ok':
-        raise RuntimeError(reply)
+    apply_scale(monitor['name'], value)
     print(f"{monitor['name']}: scale {value:.12g} (runtime only)")
 
 
