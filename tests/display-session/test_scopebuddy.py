@@ -94,9 +94,11 @@ exit "$GAME_EXIT"
                 self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
 
     def test_accepted_but_unapplied_hdr_aborts_and_restores(self):
-        result, events = self.run_game(never_hdr=True)
-        self.assertNotEqual(result.returncode, 0)
-        self.assertEqual(events, ['hdr-on', 'hdr-off'])
+        for mode in ['native', 'gamescope']:
+            with self.subTest(mode=mode):
+                result, events = self.run_game(mode=mode, never_hdr=True)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(events, ['hdr-on', 'hdr-off'])
 
     def test_gamescope_hook_precedes_compositor(self):
         result,events=self.run_game(mode='gamescope')
@@ -104,6 +106,18 @@ exit "$GAME_EXIT"
         self.assertEqual(events[0],'hdr-on')
         self.assertEqual(events[-1],'hdr-off')
         self.assertTrue(events[1].startswith('gamescope '))
+
+    def test_mode_switches_keep_one_display_lifecycle(self):
+        for mode in ['gamescope\nmode native', 'native\nmode gamescope']:
+            for target in ['local', 'hdr']:
+                with self.subTest(mode=mode, target=target):
+                    result, events = self.run_game(mode=mode, punktfunk=target)
+                    self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+                    self.assertEqual(sum(e.startswith('game ') for e in events), 1)
+                    self.assertEqual(sum(e.startswith('gamescope ') for e in events), int(mode.endswith('gamescope')))
+                    self.assertEqual(events.count('hdr-on'), int(target == 'local'))
+                    self.assertEqual(events.count('hdr-off'), int(target == 'local'))
+                    self.assertEqual(sum(e.startswith('hdr hl.monitor') for e in events), int(target == 'hdr'))
 
     def test_stream_dimensions_and_frame_cap_reach_gamescope(self):
         result, events = self.run_game(mode='gamescope', punktfunk='hdr')

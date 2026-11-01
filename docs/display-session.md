@@ -6,6 +6,51 @@
 - leave Punktfunk output creation, connection lifetime, placement, and negotiated SDR/HDR mode to Punktfunk
 - retire hyprmoncfg, its profile wrapper, and automatic sticky-HDR detection
 
+## ScopeBuddy configuration
+
+- `scb.conf`: user defaults, local workspace 6 versus the stream workspace, fullscreen, frame cap, performance wrappers, and default mode
+- `lib/display.sh`: sourced functions that share cleanup state with ScopeBuddy's exit hook
+- `modes/native.conf` and `modes/gamescope.conf`: rendering flags and the launch sequence for each mode
+
+The display helper exposes three lifecycle functions:
+
+| Function | Responsibility |
+| --- | --- |
+| `scb_display_init` | snapshot the launch target and stream dimensions; initialize cleanup ownership without changing a monitor |
+| `scb_display_start` | prepare that target and wait for HDR readiness before launch |
+| `scb_display_stop` | restore LG SDR only if this launch enabled HDR |
+
+ScopeBuddy skips its pre-command hook in native mode, so the native command uses
+`scb_display_start && game`. Gamescope uses `scb_display_start || exit 1` in its
+pre-hook because ScopeBuddy otherwise continues after a failure. Both modes use
+the same exit hook. Source the helper in the runner's shell; separate executable
+hooks would lose its in-memory cleanup state.
+
+### Per-game overrides
+
+`AppID/<appid>.conf` loads after these defaults. Select `mode native` or
+`mode gamescope` first, then apply overrides. Each mode rebuilds the command from
+the original game command, so switching modes does not stack wrappers.
+
+```bash
+unset PROTON_ENABLE_WAYLAND  # opt out of Wine-Wayland in native mode
+unset DXVK_HDR              # opt out of native game HDR; LG still enters HDR
+unset HYPR_FULLSCREEN       # opt out of the Hyprland fullscreen rule
+unset PROTON_DLSS_UPGRADE   # keep the shipped DLSS library
+export MANGOHUD=0           # disable the native HUD
+```
+
+Gamescope's own fullscreen/HDR flags remain independent. To drop the performance
+wrappers while preserving display preparation, set
+`command="scb_display_start && $game_command"` in native mode or
+`command="$game_command"` in Gamescope mode. Append game arguments after the mode
+selection. Avoid shell compounds in the Gamescope command: ScopeBuddy embeds it
+inside Gamescope's argument list.
+
+`game-performance` handles the idle/power hold; `gamemoderun` activates GameMode.
+In Gamescope mode, mangoapp draws the HUD and the hidden in-game MangoHud layer
+provides the exact FPS cap. Set `SCB_DEBUG=1` to log the expanded launch command.
+
 ## Local HDR
 
 `monitors.lua` supplies the SDR baseline and `lg_hdr(enabled)`. This function only
@@ -45,6 +90,7 @@ inheriting the marker, including launchers, receive the same treatment. Add
 SCB chooses the streaming path when a Punktfunk session is active and the focused
 output is `PF-*`. Merely connecting the tablet does not redirect a local game.
 Focus the intended screen before launching; this is a launch-time decision.
+An unavailable Punktfunk status query retains the existing local-launch fallback.
 
 - omit the local workspace-6 rule and LG HDR hooks for streamed launches
 - size Gamescope and its frame cap to the actual stream dimensions and refresh
