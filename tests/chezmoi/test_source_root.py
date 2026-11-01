@@ -94,15 +94,17 @@ class SourceRootTest(unittest.TestCase):
                 self.assertIn('.codex/AGENTS.md', targets)
                 for name in ('.local/bin/hypr-monitor-scale',
                              '.local/bin/scb-output-luminance',
-                             '.config/punktfunk/hooks.json',
                              '.local/bin/sunshine-usbip',
-                             '.config/sunshine-usbip.conf',
+                             '.config/sunshine-usbip.conf'):
+                    self.assertEqual(name in targets, profile == 'arch-desktop')
+                for name in ('.config/punktfunk/hooks.json',
+                             '.config/scopebuddy/AppID/3669870.conf',
                              '.config/sunshine/apps.json',
                              '.config/sunshine/sunshine.conf',
-                             '.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf'):
-                    self.assertEqual(name in targets, profile == 'arch-desktop')
-                self.assertNotIn('.config/hypr/hyprmoncfg-monitors.lua', targets)
-                self.assertNotIn('.config/sunshine/sunshine_state.json', targets)
+                             '.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf',
+                             '.config/sunshine/sunshine_state.json',
+                             '.config/hypr/hyprmoncfg-monitors.lua'):
+                    self.assertNotIn(name, targets)
                 self.assertFalse({'scripts', 'tests', 'README.md', 'home'} & targets.keys())
                 for entry in targets.values():
                     if entry['type'] != 'script':

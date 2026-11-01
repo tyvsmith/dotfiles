@@ -34,7 +34,7 @@ Focus the intended screen before launching; this is a launch-time decision.
 
 - omit the local workspace-6 rule and LG HDR hooks for streamed launches
 - size Gamescope and its frame cap to the actual stream dimensions and refresh
-- retain native Wayland/HDR flags and per-game fixes, including Control's NVIDIA workarounds
+- retain native Wayland/HDR flags; keep per-game workarounds in local AppID files
 - preserve valid HDR luminance metadata, even when its peak is below 1,000 nits
 - use a 1,000-nit fallback only for an HDR output with absent peak metadata or a peak no higher than reference white
 - abort launch on a metadata query failure rather than change an unknown output
@@ -65,14 +65,14 @@ Physical-screen scaling uses Omarchy's normal persistence/reload path, so it can
 also reset virtual runtime changes. Set the LG scale first when adjusting both.
 The former hyprmoncfg TUI shortcut is removed.
 
-## Apply and retire
+## Local-only configuration
 
-The one-time chezmoi migration disables the old units; `.chezmoiremove` removes
-the generated include, wrappers, and custom unit files. Saved hyprmoncfg profiles
-remain local but unmanaged. Punktfunk retains its packaged pairing, stream, and
-idle hooks. Sunshine retains USB forwarding and cleanup, without adaptive display
-profile switching. It remains disabled unless explicitly enabled later.
+Punktfunk supplies its stock hooks during installation. Sunshine's app/server
+configuration and service drop-in, and Control's AppID overrides, stay local;
+chezmoi does not manage them.
 
-After applying, reload user unit definitions and Hyprland. Remove `hyprmoncfg-bin`
-and `hypr-sticky-hdr` with pacman after reviewing the transaction. Neither is in
-the package manifest, so subsequent chezmoi applies will not reinstall them.
+Retiring hyprmoncfg is a one-time local operation: disable its daemon and the old
+display-session/waiter units, remove their custom files and generated monitor
+include, then uninstall `hyprmoncfg-bin` and `hypr-sticky-hdr`. Reload user unit
+definitions and Hyprland after replacing the monitor configuration. The repository
+contains no retirement script or automatic file-removal manifest.
