@@ -3,28 +3,25 @@
 # start prepares that target before launch; stop restores only HDR enabled by this launch.
 
 scb_display_init() {
-    local scb_pf_status scb_pf_monitors scb_pf_mode
+    local status monitors mode
     _scb_local_hdr_enabled=0
     _scb_local_hyprland=${HYPRLAND_INSTANCE_SIGNATURE:+1}
     scb_punktfunk_stream=0
     scb_punktfunk_output=
     scb_stream_width=0 scb_stream_height=0 scb_stream_fps=0
-    if command -v punktfunk-host >/dev/null && command -v hyprctl >/dev/null; then
-        scb_pf_status=$(timeout 2 punktfunk-host ctl status --json 2>/dev/null) || scb_pf_status=
-        scb_pf_monitors=$(timeout 2 hyprctl -j monitors 2>/dev/null) || scb_pf_monitors=
-        if jq -e '.data.active_sessions > 0' <<< "$scb_pf_status" >/dev/null 2>&1; then
-            scb_pf_mode=$(jq -er '
-                [.[] | select(.focused == true and .disabled != true and (.name | startswith("PF-")))] |
-                if length == 1 then .[0] else empty end |
-                select(.width > 0 and .height > 0 and .refreshRate > 0) |
-                [.name, .width, .height, (.refreshRate | round)] | @tsv
-            ' <<< "$scb_pf_monitors" 2>/dev/null) || scb_pf_mode=
-            if [[ -n $scb_pf_mode ]]; then
-                read -r scb_punktfunk_output scb_stream_width scb_stream_height scb_stream_fps <<< "$scb_pf_mode"
-                scb_punktfunk_stream=1
-            fi
-        fi
-    fi
+
+    command -v punktfunk-host >/dev/null && command -v hyprctl >/dev/null || return 0
+    status=$(timeout 2 punktfunk-host ctl status --json 2>/dev/null) || return 0
+    jq -e '.data.active_sessions > 0' <<< "$status" >/dev/null 2>&1 || return 0
+    monitors=$(timeout 2 hyprctl -j monitors 2>/dev/null) || return 0
+    mode=$(jq -er '
+        [.[] | select(.focused == true and .disabled != true and (.name | startswith("PF-")))] |
+        if length == 1 then .[0] else empty end |
+        select(.width > 0 and .height > 0 and .refreshRate > 0) |
+        [.name, .width, .height, (.refreshRate | round)] | @tsv
+    ' <<< "$monitors" 2>/dev/null) || return 0
+    read -r scb_punktfunk_output scb_stream_width scb_stream_height scb_stream_fps <<< "$mode"
+    scb_punktfunk_stream=1
 }
 
 scb_display_start() {
