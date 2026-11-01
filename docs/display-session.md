@@ -26,6 +26,20 @@ restoration. A config reload restores the SDR baseline, including during a game.
 Games launched without SCB need the manual commands. The monitor being in HDR does
 not make an SDR game render HDR.
 
+## Game window placement
+
+ScopeBuddy exports `HYPR_WORKSPACE=6` for local games and removes it for streams.
+`hypr/placement.lua` reads this marker from each new window's process environment
+and moves it to the requested workspace. This is a personal integration, not a
+built-in ScopeBuddy or Hyprland variable.
+
+ScopeBuddy also exports `HYPR_FULLSCREEN=1` for both paths. The same handler sets
+fullscreen after placement, or on the existing workspace for streams. It runs
+once when each window opens; subsequent fullscreen toggles remain available.
+Hidden anti-cheat windows retain their special-workspace exception. Other windows
+inheriting the marker, including launchers, receive the same treatment. Add
+`unset HYPR_FULLSCREEN` to a per-game ScopeBuddy config to opt out.
+
 ## Punktfunk launches
 
 SCB chooses the streaming path when a Punktfunk session is active and the focused

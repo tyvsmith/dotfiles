@@ -13,13 +13,14 @@ ROOT = Path(__file__).resolve().parents[2]
 
 @unittest.skipUnless(shutil.which('scb'), 'ScopeBuddy is not installed')
 class ScopeBuddyTest(unittest.TestCase):
-    def run_game(self, mode='native', fail_start=False, exit_code=0, hyprland=True, punktfunk="idle", fail_hdr=False, reported_peak=80, probe_failed=False, reference=203, fallback=None, never_hdr=False, never_peak=False, sdr_white=203):
+    def run_game(self, mode='native', fail_start=False, exit_code=0, hyprland=True, punktfunk="idle", fail_hdr=False, reported_peak=80, probe_failed=False, reference=203, fallback=None, never_hdr=False, never_peak=False, sdr_white=203, fullscreen=True):
         with tempfile.TemporaryDirectory(prefix='scopebuddy-hooks-') as temporary:
             root=Path(temporary)
             config=root/'.config/scopebuddy'
             shutil.copytree(ROOT/'home/dot_config/scopebuddy',config)
             (config/'AppID/1234.conf').write_text('mode '+mode+'\n' +
-                ('' if fallback is None else 'export SCB_PUNKTFUNK_HDR_MAX_LUMINANCE='+str(fallback)+'\n'))
+                ('' if fallback is None else 'export SCB_PUNKTFUNK_HDR_MAX_LUMINANCE='+str(fallback)+'\n') +
+                ('' if fullscreen else 'unset HYPR_FULLSCREEN\n'))
             binary=root/'bin';binary.mkdir()
             (binary/'punktfunk-host').write_text("#!/usr/bin/env python3\n" +
                 ("raise SystemExit(1)\n" if punktfunk == 'unavailable' else
@@ -66,12 +67,13 @@ exec "$@"
 ''')
             (binary/'fake-game').write_text('''#!/bin/sh
 printf 'game %s %s\\n' "$HYPR_WORKSPACE" "$MANGOHUD_CONFIG" >> "$EVENT_LOG"
+test "${HYPR_FULLSCREEN:-}" = "$EXPECTED_FULLSCREEN" || exit 98
 exit "$GAME_EXIT"
 ''')
             for p in binary.iterdir():p.chmod(0o755)
             log=root/'events'
             env=os.environ|dict(HOME=str(root),XDG_CONFIG_HOME=str(root/'.config'),
-                PATH=str(binary)+':/usr/bin:/bin',SCB_APPID='1234',
+                PATH=str(binary)+':/usr/bin:/bin',SCB_APPID='1234',EXPECTED_FULLSCREEN='1' if fullscreen else '',
                 NEVER_HDR=str(int(never_hdr)),NEVER_PEAK=str(int(never_peak)),FALLBACK_PEAK=str(1000 if fallback is None else fallback),FAIL_START=str(int(fail_start)),GAME_EXIT=str(exit_code),
                 EVENT_LOG=str(log),LD_PRELOAD='',SCB_NESTEDFIX='0',
                 MONITORS=json.dumps([monitor, dict(name="DP-1", focused=punktfunk in ("idle","local"), colorManagementPreset="srgb")]),FAIL_HDR=str(int(fail_hdr)),
@@ -84,6 +86,12 @@ exit "$GAME_EXIT"
         result,events=self.run_game(exit_code=7)
         self.assertEqual(result.returncode,7,result.stdout+result.stderr)
         self.assertEqual(events,['hdr-on','game 6 preset=2,fps_limit=161','hdr-off'])
+
+    def test_per_game_fullscreen_opt_out(self):
+        for mode in ['native', 'gamescope']:
+            with self.subTest(mode=mode):
+                result, events = self.run_game(mode=mode, fullscreen=False)
+                self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
 
     def test_accepted_but_unapplied_hdr_aborts_and_restores(self):
         result, events = self.run_game(never_hdr=True)
