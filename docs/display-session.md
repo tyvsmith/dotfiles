@@ -34,7 +34,7 @@ Focus the intended screen before launching; this is a launch-time decision.
 
 - omit the local workspace-6 rule and LG HDR hooks for streamed launches
 - size Gamescope and its frame cap to the actual stream dimensions and refresh
-- retain native Wayland/HDR flags; keep per-game workarounds in local AppID files
+- retain native Wayland/HDR flags and existing per-game workarounds
 - preserve valid HDR luminance metadata, even when its peak is below 1,000 nits
 - use a 1,000-nit fallback only for an HDR output with absent peak metadata or a peak no higher than reference white
 - abort launch on a metadata query failure rather than change an unknown output
@@ -68,8 +68,7 @@ The former hyprmoncfg TUI shortcut is removed.
 ## Local-only configuration
 
 Punktfunk supplies its stock hooks during installation. Sunshine's app/server
-configuration and service drop-in, and Control's AppID overrides, stay local;
-chezmoi does not manage them.
+configuration and service drop-in stay local; chezmoi does not manage them.
 
 Retiring hyprmoncfg is a one-time local operation: disable its daemon and the old
 display-session/waiter units, remove their custom files and generated monitor

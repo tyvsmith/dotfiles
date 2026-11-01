@@ -98,7 +98,6 @@ class SourceRootTest(unittest.TestCase):
                              '.config/sunshine-usbip.conf'):
                     self.assertEqual(name in targets, profile == 'arch-desktop')
                 for name in ('.config/punktfunk/hooks.json',
-                             '.config/scopebuddy/AppID/3669870.conf',
                              '.config/sunshine/apps.json',
                              '.config/sunshine/sunshine.conf',
                              '.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf',
