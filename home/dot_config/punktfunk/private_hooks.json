@@ -1,0 +1,25 @@
+{
+  "hooks": [
+    {
+      "on": "pairing.pending",
+      "run": "/usr/share/punktfunk/omarchy/hooks/pairing-pending",
+      "debounce_ms": 2000
+    },
+    {
+      "on": "stream.started",
+      "run": "/usr/share/punktfunk/omarchy/hooks/stream-started"
+    },
+    {
+      "on": "stream.stopped",
+      "run": "/usr/share/punktfunk/omarchy/hooks/stream-stopped"
+    },
+    {
+      "on": "stream.started",
+      "run": "/usr/share/punktfunk/omarchy/hooks/idle-guard on"
+    },
+    {
+      "on": "stream.stopped",
+      "run": "/usr/share/punktfunk/omarchy/hooks/idle-guard off"
+    }
+  ]
+}

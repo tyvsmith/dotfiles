@@ -19,12 +19,8 @@
                 "setsid steam steam://open/bigpicture"
             ],
             "image-path": "steam.png",
-            "name": "Steam Big Picture (Adaptive + Shield USB)",
+            "name": "Steam Big Picture (Shield USB)",
             "prep-cmd": [
-                {
-                    "do": "$(HOME)/.local/bin/hypr-display-session stream-start",
-                    "undo": "$(HOME)/.local/bin/hypr-display-session stream-stop"
-                },
                 {
                     "do": "$(HOME)/.local/bin/sunshine-usbip start",
                     "undo": "$(HOME)/.local/bin/sunshine-usbip stop"

@@ -1,6 +1,6 @@
 # Sunshine controller forwarding
 
-Use **Steam Big Picture (Adaptive + Shield USB)** from any client. USB forwarding is optional: clients absent from the controller map skip it, and a listed client without its controller still streams. Use Moonlight touch controls, keyboard/mouse or its regular gamepad forwarding for those clients.
+Use **Steam Big Picture (Shield USB)** from any client. USB forwarding is optional: clients absent from the controller map skip it, and a listed client without its controller still streams. Use Moonlight touch controls, keyboard/mouse or its regular gamepad forwarding for those clients.
 
 On the Shield, forward a Steam Controller puck through USB/IP. Runtime needs one user-owned Bash script and usbip-utils. No Python, privileged helper or background USB manager runs.
 
