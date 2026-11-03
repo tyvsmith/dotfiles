@@ -17,6 +17,8 @@ require("default.hypr.omarchy")
 -- defaults so package updates can improve the defaults without rewriting your
 -- ~/.config/hypr files.
 require("hypr.monitors")
+-- Allow 10-bit stream capture; leave output luminance to Punktfunk.
+hl.config({ misc = { screencopy_force_8b = false } })
 require("hypr.input")
 require("hypr.bindings")
 require("hypr.looknfeel")

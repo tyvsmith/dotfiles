@@ -92,12 +92,16 @@ class SourceRootTest(unittest.TestCase):
                 self.assertIn('.agents/AGENTS.md', targets)
                 self.assertIn('.claude/CLAUDE.md', targets)
                 self.assertIn('.codex/AGENTS.md', targets)
+                if profile == 'arch-desktop':
+                    entry = targets['.config/scopebuddy/gamemode.conf']
+                    self.assertEqual(entry['type'], 'symlink')
+                    self.assertEqual(entry['linkname'], 'scb.conf')
                 for name in ('.local/bin/hypr-monitor-scale',
-                             '.local/bin/scb-output-luminance',
                              '.local/bin/sunshine-usbip',
                              '.config/sunshine-usbip.conf'):
                     self.assertEqual(name in targets, profile == 'arch-desktop')
-                for name in ('.config/punktfunk/hooks.json',
+                for name in ('.local/bin/scb-output-luminance',
+                             '.config/punktfunk/hooks.json',
                              '.config/sunshine/apps.json',
                              '.config/sunshine/sunshine.conf',
                              '.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf',

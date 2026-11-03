@@ -16,6 +16,7 @@ hl = {
     window = {
       move = function(spec) return record("move", spec) end,
       fullscreen = function(spec) return record("fullscreen", spec) end,
+      set_prop = function(spec) return record("set_prop", spec) end,
     },
     focus = function(spec) return record("focus", spec) end,
   },
@@ -73,12 +74,17 @@ assert(#actions == 0, "missing window identity must never target the active wind
 
 -- Fullscreen is independent of placement, including streams without a workspace marker.
 open("HYPR_WORKSPACE=6\0HYPR_FULLSCREEN=1\0")
-assert(#actions == 2 and actions[1].kind == "move" and actions[2].kind == "fullscreen")
+assert(#actions == 3 and actions[1].kind == "move" and actions[2].kind == "fullscreen")
 assert(actions[2].spec.window == "address:0xabc" and actions[2].spec.action == "set")
+assert(actions[3].kind == "set_prop" and actions[3].spec.window == "address:0xabc")
+assert(actions[3].spec.prop == "sync_fullscreen" and actions[3].spec.value == "0",
+  "client windowed requests must not cancel compositor fullscreen")
 open("HYPR_FULLSCREEN=1\0")
-assert(#actions == 1 and actions[1].kind == "fullscreen", "stream fullscreen must not move workspaces")
+assert(#actions == 2 and actions[1].kind == "fullscreen" and actions[2].kind == "set_prop",
+  "stream fullscreen must not move workspaces")
 open("HYPR_WORKSPACE=6 silent\0HYPR_FULLSCREEN=1\0", { id = 6, name = "6" })
-assert(#actions == 1 and actions[1].kind == "fullscreen", "fullscreen even when already placed")
+assert(#actions == 2 and actions[1].kind == "fullscreen" and actions[2].kind == "set_prop",
+  "fullscreen even when already placed")
 open("HYPR_FULLSCREEN=1\0", { id = -99, name = "special:hidden" })
 assert(#actions == 0, "never expose hidden anti-cheat windows")
 for _, env in ipairs({ "HYPR_FULLSCREEN=0\0", "OTHER_HYPR_FULLSCREEN=1\0", "X=HYPR_FULLSCREEN=1\0" }) do
