@@ -17,6 +17,8 @@ require("default.hypr.omarchy")
 -- defaults so package updates can improve the defaults without rewriting your
 -- ~/.config/hypr files.
 require("hypr.monitors")
+-- Allow 10-bit stream capture; leave output luminance to Punktfunk.
+hl.config({ misc = { screencopy_force_8b = false } })
 require("hypr.input")
 require("hypr.bindings")
 require("hypr.looknfeel")
@@ -28,6 +30,3 @@ require("default.hypr.toggles")
 -- Add any other personal Hyprland configuration below.
 -- o.window("qemu", { workspace = "5" })
 require("hypr.windows")
-
--- Added by hyprmoncfg: its generated monitor rules load last, so nothing before this can override the applied layout.
-do local path = (os.getenv("XDG_CONFIG_HOME") or os.getenv("HOME") .. "/.config") .. "/hypr/hyprmoncfg-monitors.lua"; local file = io.open(path, "r"); if file then file:close(); dofile(path) end end

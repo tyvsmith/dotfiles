@@ -3,7 +3,6 @@
 exit 0
 {{ else -}}
 set -euo pipefail
-# {{ include "dot_config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf" | sha256sum }}
 command -v usbip >/dev/null
 staging=$(mktemp -d)
 trap 'rm -rf "$staging"' EXIT

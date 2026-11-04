@@ -1,0 +1,46 @@
+{
+  "hooks": [
+    {
+      "on": "pairing.pending",
+      "run": "/usr/share/punktfunk/omarchy/hooks/pairing-pending",
+      "timeout_s": 30,
+      "debounce_ms": 2000
+    },
+    {
+      "on": "stream.started",
+      "run": "/usr/share/punktfunk/omarchy/hooks/stream-started",
+      "timeout_s": 30,
+      "debounce_ms": 0
+    },
+    {
+      "on": "stream.stopped",
+      "run": "/usr/share/punktfunk/omarchy/hooks/stream-stopped",
+      "timeout_s": 30,
+      "debounce_ms": 0
+    },
+    {
+      "on": "stream.started",
+      "run": "/usr/share/punktfunk/omarchy/hooks/idle-guard on",
+      "timeout_s": 30,
+      "debounce_ms": 0
+    },
+    {
+      "on": "stream.stopped",
+      "run": "/usr/share/punktfunk/omarchy/hooks/idle-guard off",
+      "timeout_s": 30,
+      "debounce_ms": 0
+    },
+    {
+      "on": "stream.started",
+      "run": "omarchy-shell notifications setDnd on",
+      "timeout_s": 10,
+      "debounce_ms": 0
+    },
+    {
+      "on": "stream.stopped",
+      "run": "omarchy-shell notifications setDnd off",
+      "timeout_s": 10,
+      "debounce_ms": 0
+    }
+  ]
+}
