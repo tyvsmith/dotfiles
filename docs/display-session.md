@@ -251,10 +251,9 @@ The former hyprmoncfg TUI shortcut is removed.
 
 ## Streaming notifications
 
-`punktfunk-dnd` enables Omarchy DND for non-extended Punktfunk sessions and restores
-the previous state after the last such session ends. Devices configured with
-`topology: extend` keep notifications unchanged. A service stop also restores DND.
-The managed `hooks.json` contains the stock hooks and the two DND session hooks.
+The managed `hooks.json` calls `omarchy-shell notifications setDnd on` when a
+stream starts and `setDnd off` when it stops. This applies to all streams,
+including extended displays, and turns DND off regardless of its previous state.
 
 ## Local-only configuration
 
