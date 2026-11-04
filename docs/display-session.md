@@ -249,10 +249,17 @@ Physical-screen scaling uses Omarchy's normal persistence/reload path, so it can
 also reset virtual runtime changes. Set the LG scale first when adjusting both.
 The former hyprmoncfg TUI shortcut is removed.
 
+## Streaming notifications
+
+`punktfunk-dnd` enables Omarchy DND for non-extended Punktfunk sessions and restores
+the previous state after the last such session ends. Devices configured with
+`topology: extend` keep notifications unchanged. A service stop also restores DND.
+The managed `hooks.json` contains the stock hooks and the two DND session hooks.
+
 ## Local-only configuration
 
-Punktfunk supplies its stock hooks during installation. Sunshine's app/server
-configuration and service drop-in stay local; chezmoi does not manage them.
+Sunshine's app/server configuration and service drop-in stay local; chezmoi does
+not manage them.
 
 Retiring hyprmoncfg is a one-time local operation: disable its daemon and the old
 display-session/waiter units, remove their custom files and generated monitor

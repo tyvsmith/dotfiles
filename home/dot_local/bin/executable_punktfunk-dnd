@@ -1,0 +1,65 @@
+#!/usr/bin/python3
+"""Hold desktop DND for Punktfunk sessions that do not extend the desktop."""
+import fcntl
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+
+def notifications(*args):
+    return subprocess.check_output(
+        ['omarchy-shell', 'notifications', *args], text=True, timeout=3).strip()
+
+
+reset = sys.argv[1:] == ['reset']
+event = {} if reset else json.load(sys.stdin)
+if not reset and event['kind'] not in ('session.started', 'session.ended'):
+    sys.exit(0)
+
+if not reset:
+    session = event['session']
+    key = f"{session['plane']}:{session['id']}"
+    if event['kind'] == 'session.started':
+        policy = json.loads(subprocess.check_output(
+            ['punktfunk-host', 'ctl', 'display', '--json'], text=True, timeout=3))['data']
+        override = policy.get('clients', {}).get(session.get('fingerprint'), {})
+        topology = override.get('topology') or policy['effective']['topology']
+        if (policy['auto_topology'] if topology == 'auto' else topology) == 'extend':
+            sys.exit(0)
+
+runtime = Path(os.environ['XDG_RUNTIME_DIR'])
+state_file = runtime / 'punktfunk-dnd.json'
+with (runtime / 'punktfunk-dnd.lock').open('w') as lock:
+    fcntl.flock(lock, fcntl.LOCK_EX)
+    state = json.loads(state_file.read_text()) if state_file.exists() else {'active': [], 'prior': None}
+    active = set(state['active'])
+    ended = set(state.get('ended', []))
+    if reset:
+        active.clear()
+        ended.clear()
+    elif event['kind'] == 'session.started':
+        # Hook processes can acquire the lock after their session's end hook.
+        if key in ended:
+            sys.exit(0)
+        if not active:
+            state['prior'] = notifications('isDnd')
+            if state['prior'] not in ('on', 'off'):
+                raise RuntimeError('Cannot read the current DND state')
+            notifications('setDnd', 'on')
+        active.add(key)
+    else:
+        active.discard(key)
+        ended.add(key)
+
+    if not active:
+        if state['prior'] is not None:
+            notifications('setDnd', state['prior'])
+            state['prior'] = None
+    if not active and not ended:
+        state_file.unlink(missing_ok=True)
+    else:
+        state['active'] = sorted(active)
+        state['ended'] = sorted(ended)
+        state_file.write_text(json.dumps(state) + '\n')
