@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
-source "${THPM_THEME_ENV:-$HOME/.local/share/thpm/lib/theme-env.sh}"
+
+# Palette comes from Omarchy's own resolver (the same cascade the native
+# templates use). Variable names keep the primary_/normal_/bright_ scheme so
+# the generated theme body below stays readable.
+colors_toml="$HOME/.local/state/omarchy/current/theme/colors.toml"
+declare -A pal=()
+while IFS=$'\t' read -r k v; do pal[$k]="${v#\#}"; done \
+    < <(omarchy-theme-color --file "$colors_toml" --all 2>/dev/null)
+primary_background="${pal[background]:-000000}"
+primary_foreground="${pal[foreground]:-ffffff}"
+selection_background="${pal[selection_background]:-$primary_foreground}"
+selection_foreground="${pal[selection_foreground]:-$primary_background}"
+normal_black="${pal[color0]}" normal_blue="${pal[color4]}"
+bright_black="${pal[color8]}" bright_red="${pal[color9]}" bright_green="${pal[color10]}"
+bright_yellow="${pal[color11]}" bright_blue="${pal[color12]}" bright_magenta="${pal[color13]}"
+bright_cyan="${pal[color14]}"
+skipped() { echo "skipped: $*"; exit 0; }
+success() { echo "$*"; }
 
 target="$HOME/.config/tmux/omarchy-powerkit-theme.sh"
 shipped="$HOME/.local/state/omarchy/current/theme/tmux-powerkit.sh"
-colors_toml="$HOME/.local/state/omarchy/current/theme/colors.toml"
 themes_dir="$HOME/.config/tmux/plugins/tmux-powerkit/src/themes"
 theme_name_file="$HOME/.local/state/omarchy/current/theme.name"
 entry_script="$HOME/.config/tmux/plugins/tmux-powerkit/tmux-powerkit.tmux"
