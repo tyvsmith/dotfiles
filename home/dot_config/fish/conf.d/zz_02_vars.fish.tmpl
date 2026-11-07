@@ -4,9 +4,37 @@
 # =============================================================================
 
 # Editor
+{{ if eq .de "hyprland-omarchy" -}}
+# omarchy's launcher honors the editor chosen in Omarchy defaults (nvim fallback).
+# A list, not a string: fish expands $EDITOR to two words and exports it
+# space-joined, so both `$EDITOR file` and tools reading the env work.
+set -gx EDITOR omarchy-launch-editor --inline
+{{ else -}}
 set -gx EDITOR nvim
+{{ end -}}
 set -gx VISUAL $EDITOR
 set -gx SUDO_EDITOR $EDITOR
+
+{{ if eq .de "hyprland-omarchy" -}}
+# Terminal programs (gh, etc.) open URLs detached from the terminal process
+# tree. Shell-scoped on purpose: exporting BROWSER session-wide makes
+# xdg-settings refuse to change the default browser.
+set -gx BROWSER omarchy-launch-browser
+
+{{ end -}}
+{{ if ne .chezmoi.os "darwin" -}}
+# /etc/profile.d/locale.sh only runs for login shells. Shells started by SSH or
+# herdr's remote bridge miss it and land in the C locale, where printf emits
+# \u escapes literally. Mirror locale.sh for those sessions.
+if not set -q LANG; and test -r /etc/locale.conf
+    for line in (string match -rv '^\s*(#|$)' </etc/locale.conf)
+        set -l kv (string split -m1 = -- $line)
+        set -gx $kv[1] (string trim -c '"' -- $kv[2])
+    end
+end
+set -q LANG; or set -gx LANG C.UTF-8
+
+{{ end -}}
 
 # Bat — use ansi theme so terminal colors aren't overridden
 set -gx BAT_THEME ansi
@@ -16,7 +44,7 @@ set -gx MANROFFOPT -c
 set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
 
 # Disable Homebrew vendor conf.d auto-activation — we handle these ourselves
-# with caching and interactive guards (see zz_03_interactive.fish, zz_06_direnv.fish)
+# with caching and interactive guards (see zz_03_interactive.fish)
 set -gx MISE_FISH_AUTO_ACTIVATE 0
 
 # Podman — point Docker-compatible tools (lazydocker, etc.) at podman socket

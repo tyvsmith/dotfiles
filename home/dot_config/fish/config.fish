@@ -1,3 +1,2 @@
-if status is-interactive
-    # Fish configuration for interactive shells. This file is sourced by all interactive
-end
+# Fish configuration lives in conf.d/ (zz_* files run after plugins) and
+# functions/ (autoloaded). This file is intentionally empty.
