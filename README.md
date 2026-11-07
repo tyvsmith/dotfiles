@@ -10,14 +10,15 @@ curl -fsSL https://raw.githubusercontent.com/tyvsmith/dotfiles/main/install.sh |
 
 Or with options:
 ```bash
-# Non-interactive with auto-detected profile
-curl ... | bash -s -- --defaults
-
 # Specific profile
 curl ... | bash -s -- --profile macos-work
 
 # From a specific branch
 curl ... | bash -s -- --branch feature-branch
+
+# Seed the age key so encrypted configs decrypt on first apply
+curl ... | DOTFILES_AGE_KEY="$(op read op://dev-keys/dotfiles-age-key/key)" bash
+# or: --age-key "$(op read ...)"; the env form keeps the key out of process arguments
 ```
 
 This will:
@@ -34,32 +35,28 @@ This will:
 
 | Flag | Environment Variable | Description |
 |------|---------------------|-------------|
-| `--profile <name>` | `DOTFILES_PROFILE` | Machine profile (see below) |
-| `--branch <name>` | `DOTFILES_BRANCH` | Git branch for remote install |
-| `--defaults` | - | Use auto-detected profile, no prompts |
-| `--quiet`, `-q` | - | Minimal output |
+| `--profile <name>` | `DOTFILES_PROFILE` | Machine profile (see below); skips the interactive prompt |
+| `--branch <name>` | `DOTFILES_BRANCH` | Git branch for remote install (default `main`) |
+| `--age-key <key>` | `DOTFILES_AGE_KEY` | Age secret key, written to `~/.config/chezmoi/age-key.txt` |
 
 ## Profiles
 
 Each profile fully specifies a machine setup: category tags, package managers, work mode, decryption, and backups. See `home/.chezmoidata/profiles.yaml` for the source of truth.
 
-| Profile | Pkg Managers | Work | Decrypt | Backup | Description |
-|---------|--------------|------|---------|--------|-------------|
-| `macos-work` | brew | yes | yes | | Work Mac — corporate dev + GUI (Time Machine) |
-| `arch-desktop` | pacman, flatpak, appimage | | yes | yes | Arch Linux desktop — paru + flatpak |
-| `debian-server` | apt | | | | Debian/Ubuntu server — CLI only |
-| `devpod` | brew | yes | | | Debian/Ubuntu dev — Homebrew |
-| `silverblue` | brew, rpm-ostree, flatpak, appimage | | yes | | Fedora Silverblue/Bazzite — immutable |
-| `silverblue` | 3 | Silverblue/Bazzite — Homebrew + flatpak |
+| Profile | Tags | Pkg Managers | Devpod | Work | Decrypt | Backup | Description |
+|---------|------|--------------|--------|------|---------|--------|-------------|
+| `macos-work` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, ui, ui-extra | brew | | yes | yes | | Work Mac — full dev setup with corporate config |
+| `arch-desktop` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, hardware, ui, ui-extra, gaming | pacman, flatpak, appimage | | | yes | yes | Arch Linux desktop — full setup with paru + flatpak |
+| `debian-server` | core | apt | | | | | Debian/Ubuntu server — CLI tools only |
+| `devpod` | core, dev, ai | brew | yes | yes | | | Work devpod (Debian) — lean CLI + dev tools via Linuxbrew; toolchains come from the image/repo |
+| `devpod-slim` | core, dev, ai | mise | yes | yes | | | Work devpod (Debian) — same tools as devpod, as mise-pinned release binaries (no Linuxbrew) |
+| `silverblue` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, hardware, ui, ui-extra, gaming | brew, rpm-ostree, flatpak, appimage | | | yes | | Fedora Silverblue/Bazzite — immutable desktop |
 
-**Package tiers:**
-- **Tier 1:** Modern CLI tools (eza, bat, fd, ripgrep, etc.), shell (fish, atuin, zoxide), git, neovim, tmux
-- **Tier 2:** + Development SDKs (mise, uv, node), AI tools (llm, claude), dev utilities (shellcheck, tokei)
-- **Tier 3:** + GUI applications (VS Code, JetBrains, browsers, productivity apps)
+Package categories behind each tag are described in `AGENTS.md`.
 
 ## Encrypted Configs
 
-Some configs (SSH trusted hosts, git identity) are age-encrypted. Decryption is **opt-in** via `--decrypt` flag.
+Some configs (SSH trusted hosts, git identity) are age-encrypted. Decryption is enabled per profile (`decrypt: true` in `profiles.yaml`).
 
 **Requirements:**
 - 1Password CLI (`op`) signed in, OR
@@ -117,7 +114,6 @@ chezmoi add --encrypt ~/.config/sensitive/file.conf
 | `diff` | `delta` / `difft` | Beautiful diffs |
 | `du` | `dust` | Visual disk usage |
 | `ps` | `procs` | Colored, searchable |
-| `top` | `btm` | System monitor TUI |
 | `rm` | `trash-put` | Safe delete |
 
 ### Git
