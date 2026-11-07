@@ -9,19 +9,14 @@
 {{- $profiles := (include ".chezmoidata/profiles.yaml" | fromYaml).profiles -}}
 
 {{- /* Detect distribution and map to default profile */ -}}
-{{- $distro := "unknown" -}}
 {{- $defaultProfile := "" -}}
 {{- if eq .chezmoi.os "darwin" -}}
-{{-   $distro = "macos" -}}
 {{-   $defaultProfile = "macos-work" -}}
 {{- else if stat "/run/ostree-booted" -}}
-{{-   $distro = "silverblue" -}}
 {{-   $defaultProfile = "silverblue" -}}
 {{- else if stat "/etc/arch-release" -}}
-{{-   $distro = "arch" -}}
 {{-   $defaultProfile = "arch-desktop" -}}
 {{- else if stat "/etc/debian_version" -}}
-{{-   $distro = "debian" -}}
 {{-   $defaultProfile = "debian-server" -}}
 {{- end -}}
 
@@ -45,15 +40,10 @@
 {{-   $profile = promptChoiceOnce . "profile" "Machine profile" $choices $defaultProfile -}}
 {{- end -}}
 
-{{- /* Read profile properties from profiles.yaml */ -}}
-{{- $profileData := index $profiles $profile -}}
-{{- $tags := $profileData.tags -}}
-{{- $wantsDecrypt := or (get $profileData "decrypt") false -}}
-{{- $work := or (get $profileData "work") false -}}
-{{- $backup := or (get $profileData "backup") false -}}
-{{- $de := "" -}}
-{{- if hasKey $profileData "de" -}}{{- $de = $profileData.de -}}
-{{- end -}}
+{{- /* Everything else about the profile (tags, work, de, backup, ...) is read
+     live from profiles.yaml by templates via `index .profiles .profile`, so it
+     follows the repo without a re-init. Only encryption must be known here. */ -}}
+{{- $wantsDecrypt := or (get (index $profiles $profile) "decrypt") false -}}
 
 {{- /* Enable encryption when the profile declares it. run_before_01-decrypt ensures the
      age key exists (via env var, 1Password, or manual placement) before chezmoi
@@ -63,13 +53,7 @@
 encryption = "age"
 {{ end }}
 [data]
-    distro = "{{ $distro }}"
     profile = "{{ $profile }}"
-    tags = "{{ $tags }}"
-    work = {{ $work }}
-    decrypt = {{ $wantsDecrypt }}
-    backup = {{ $backup }}
-    de = "{{ $de }}"
 {{ if $wantsDecrypt }}
 [age]
     identity = "~/.config/chezmoi/age-key.txt"

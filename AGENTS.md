@@ -50,7 +50,7 @@ DOTFILES_PROFILE=arch-desktop chezmoi init
 ```
 
 Each profile (defined in `home/.chezmoidata/profiles.yaml`) fully specifies:
-- **`tags`**: comma-delimited category tags (`core`, `core-extra`, `container`, `dev`, `dev-extra`, `dev-toolchains`, `ai`, `experiment`, `hardware`, `ui`, `ui-extra`, `gaming`)
+- **`tags`**: list of category tags (`core`, `core-extra`, `container`, `dev`, `dev-extra`, `dev-toolchains`, `ai`, `experiment`, `hardware`, `ui`, `ui-extra`, `gaming`)
 - **Package managers**: `mise`, `brew`, `pacman`, `apt`, `rpm_ostree`, `flatpak`, `appimage`
 - **`devpod`**: Uber devpod — runs the devpod bootstrap and login-shell scripts
 - **`work`**: work machine (system SSH agent, corporate configs)
@@ -58,6 +58,8 @@ Each profile (defined in `home/.chezmoidata/profiles.yaml`) fully specifies:
 - **`backup`**: personal machine — install the restic stack and schedule backups (default off; servers/containers/Macs stay off, Macs use Time Machine)
 
 If no profile is specified, auto-detects from distro (macOS → `macos-work`, Arch → `arch-desktop`, etc.).
+
+Only the profile name lands in the chezmoi config (`[data] profile`). Templates read every other property live with `{{ $p := index .profiles .profile }}` (`$p.tags`, `get $p "work"`, ...), so editing `profiles.yaml` takes effect on the next `chezmoi apply`. The exception is `decrypt`, which `chezmoi init` also reads to enable age encryption: flipping it needs a re-init.
 
 **Available profiles:**
 

@@ -1,15 +1,16 @@
+{{- $p := index .profiles .profile -}}
 # Plaintext versions of encrypted files are for local editing only, never deployed
 **/decrypted_*
 
 # Sample/template files exist as in-repo documentation only, never deployed
 **/*.sample
 
-{{ if not .decrypt }}
+{{ if not (get $p "decrypt") }}
 # Encryption not configured for this profile — skip encrypted files
 **/*.age
 {{ end }}
 
-{{ if not .backup }}
+{{ if not (get $p "backup") }}
 # restic backups only run on personal machines (profile backup: true).
 # Skipping the whole config dir keeps the decrypt() in the profile template from
 # even running on servers/containers (which lack the age key).
@@ -17,7 +18,6 @@
 .config/resticprofile/**
 {{ end }}
 
-{{- $p := index .profiles .profile }}
 {{ if not (get $p "work") }}
 # Work-only: devpod CLI config and the ~/.devpod symlink to it. Gated on work,
 # not devpod, to match personal.devpod.yaml.tmpl: the work Mac runs the CLI.
@@ -41,7 +41,7 @@
 .config/borders/
 {{ end }}
 
-{{ if ne .de "hyprland-omarchy" }}
+{{ if ne (get $p "de") "hyprland-omarchy" }}
 # Hyprland+omarchy ecosystem — skip on non-Hyprland systems
 .config/remote-desktop/
 .local/bin/hypr-monitor-scale
@@ -71,7 +71,7 @@
 .local/share/overrides/bin/ydotool
 {{ end }}
 
-{{- $tags := splitList ", " .tags }}
+{{- $tags := $p.tags }}
 {{ if not (has "ui" $tags) }}
 # GUI terminal/browser configs — nothing to run them on a headless machine
 .config/ghostty
@@ -105,13 +105,13 @@
 .config/gamemode.ini
 {{ end }}
 
-{{ if or (ne .de "hyprland-omarchy") (not (has "gaming" $tags)) }}
+{{ if or (ne (get $p "de") "hyprland-omarchy") (not (has "gaming" $tags)) }}
 # HELLDIVERS 2 stratagem scanner capture helper. Needs both halves: omasnap is
 # omarchy's screenshot tool, and the game it captures only exists where Steam is.
 .local/bin/hd2-screenshot
 {{ end }}
 
-{{ if not .work }}
+{{ if not (get $p "work") }}
 # Work-only: aifx + claude settings-repair overrides (paths are target-relative)
 .local/share/overrides/bin/claude
 .local/share/overrides/bin/aifx

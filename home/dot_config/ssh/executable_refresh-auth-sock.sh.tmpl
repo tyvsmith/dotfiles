@@ -1,3 +1,4 @@
+{{- $p := index .profiles .profile -}}
 #!/bin/sh
 # Keep ~/.ssh/ssh_auth_sock pointing at the live ssh-agent socket.
 #
@@ -25,7 +26,7 @@ fi
 # a Background launchd context where plain `launchctl getenv` sees nothing.
 sock=$(launchctl print "gui/$(id -u)" 2>/dev/null | sed -n 's/.*SSH_AUTH_SOCK => \(.*\)/\1/p' | tail -n1)
 {{- else -}}
-{{- if not .work }}
+{{- if not (get $p "work") }}
 sock="$HOME/.1password/agent.sock"
 [ -S "$sock" ] && { ln -snf "$sock" "$link"; exit 0; }
 {{- end }}

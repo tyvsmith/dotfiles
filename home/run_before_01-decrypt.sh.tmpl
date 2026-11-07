@@ -1,4 +1,5 @@
-{{- if .decrypt -}}
+{{- $p := index .profiles .profile -}}
+{{- if get $p "decrypt" -}}
 #!/usr/bin/env bash
 # Ensure the age decryption key is on disk BEFORE chezmoi processes any encrypted (.age) files.
 # Fetched from 1Password only when missing; once present it is reused (delete it to re-fetch).

@@ -1,10 +1,11 @@
+{{- $p := index .profiles .profile -}}
 # =============================================================================
 # Environment Variables
 # Editor, SDK managers, and other global exports
 # =============================================================================
 
 # Editor
-{{ if eq .de "hyprland-omarchy" -}}
+{{ if eq (get $p "de") "hyprland-omarchy" -}}
 # omarchy's launcher honors the editor chosen in Omarchy defaults (nvim fallback).
 # A list, not a string: fish expands $EDITOR to two words and exports it
 # space-joined, so both `$EDITOR file` and tools reading the env work.
@@ -15,7 +16,7 @@ set -gx EDITOR nvim
 set -gx VISUAL $EDITOR
 set -gx SUDO_EDITOR $EDITOR
 
-{{ if eq .de "hyprland-omarchy" -}}
+{{ if eq (get $p "de") "hyprland-omarchy" -}}
 # Terminal programs (gh, etc.) open URLs detached from the terminal process
 # tree. Shell-scoped on purpose: exporting BROWSER session-wide makes
 # xdg-settings refuse to change the default browser.

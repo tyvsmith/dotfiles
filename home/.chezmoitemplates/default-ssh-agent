@@ -1,4 +1,5 @@
-{{- if .work -}}
+{{- $p := index .profiles .profile -}}
+{{- if get $p "work" -}}
 $SSH_AUTH_SOCK
 {{- else -}}
 {{ template "op-ssh-agent" . }}

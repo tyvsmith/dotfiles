@@ -1,3 +1,4 @@
+{{- $p := index .profiles .profile -}}
 [credential "https://github.com"]
 	helper =
 	helper = !gh auth git-credential
@@ -61,7 +62,7 @@
 	autoupdate = true
 [url "git@github.com:"]
 	followRedirects = true
-{{ if not .work -}}
+{{ if not (get $p "work") -}}
 [include]
 	path = ~/.config/git/conf.d/personal
 {{ end -}}

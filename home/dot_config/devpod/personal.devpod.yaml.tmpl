@@ -1,4 +1,5 @@
-{{- if .work }}
+{{- $p := index .profiles .profile -}}
+{{- if get $p "work" }}
 ---
 schema_version: 0
 flavor: base

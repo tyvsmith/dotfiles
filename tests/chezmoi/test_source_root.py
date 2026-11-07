@@ -83,7 +83,7 @@ class SourceRootTest(unittest.TestCase):
                 self.config.write_text('')
                 self.chezmoi('init', profile=profile)
                 # Keep secrets and external repositories out of this local render test.
-                overrides = {'decrypt': False, 'backup': False}
+                overrides = {'profiles': {profile: {'decrypt': False, 'backup': False}}}
                 if profile == 'macos-work':
                     overrides['chezmoi'] = {'os': 'darwin'}
                 targets = json.loads(self.chezmoi('dump', '--exclude', 'externals',

@@ -1,3 +1,4 @@
+{{- $p := index .profiles .profile -}}
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install/update THPM (Theme Hook Plugin Manager)
 # from a pinned source checkout, then enable the integrations listed below.
@@ -9,7 +10,7 @@
 # ~/.local/state/thpm/legacy-backups). To update, bump THPM_COMMIT and
 # THPM_VERSION together. Editing THPM_INTEGRATIONS re-runs this script.
 
-{{ if ne .de "hyprland-omarchy" -}}
+{{ if ne (get $p "de") "hyprland-omarchy" -}}
 # Profile '{{ .profile }}' is not omarchy — nothing to do.
 exit 0
 {{ else -}}
