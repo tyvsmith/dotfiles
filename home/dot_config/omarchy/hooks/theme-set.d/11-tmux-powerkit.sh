@@ -74,6 +74,9 @@ if [[ -f "$shipped" ]]; then
     install -m 644 "$shipped" "$target"
 elif [[ -n "$native_path" ]]; then
     install -m 644 "$native_path" "$target"
+elif [[ -z "${pal[background]:-}" || -z "${pal[color14]:-}" ]]; then
+    # Palette did not resolve; keep the last theme rather than write "#" colors.
+    skipped "tmux-powerkit (omarchy-theme-color returned no palette)"
 else
     accent=$(awk -F'[[:space:]]*=[[:space:]]*' \
         '/^accent[[:space:]]*=/{gsub(/"/,"",$2); print $2; exit}' "$colors_toml")
