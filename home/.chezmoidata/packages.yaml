@@ -452,22 +452,15 @@ packages:
     dnf: false
     appimage: selkies-project/selkies
 
-  hyprmoncfg:
-    pacman: hyprmoncfg-bin
+  wayland-utils:
     tags: [hardware]
-    desc: "GUI monitor configuration for Hyprland"
+    desc: "Standard Wayland output metadata for streaming HDR"
     os: linux
     de: hyprland-omarchy
 
   hyprpm:
     tags: [ui]
     desc: "Hyprland plugin manager (split from the hyprland package in 0.56.2-3)"
-    os: linux
-    de: hyprland-omarchy
-
-  hypr-sticky-hdr:
-    tags: [hardware]
-    desc: "Keep a Hyprland monitor in HDR while an HDR window lives"
     os: linux
     de: hyprland-omarchy
 
@@ -713,11 +706,4 @@ packages:
     desc: "Gaming platform"
     brew_cask: true
     flatpak: com.valvesoftware.Steam
-    rpm_ostree: true
-
-  usbip:
-    tags: [gaming]
-    os: linux
-    desc: "USB/IP device forwarding"
-    brew: false
     rpm_ostree: true

@@ -1,5 +1,5 @@
 -- Static app rules place silently; only explicit manual launches follow.
--- HYPR_WORKSPACE overrides app placement. Startup identity has no timeout.
+-- HYPR_WORKSPACE and HYPR_FULLSCREEN control explicit launches. Startup identity has no timeout.
 local M = {}
 local managed = {}
 
@@ -37,17 +37,19 @@ local function is_startup(pid)
 end
 
 -- Read each new window's process directly; do not retain recycled PID results.
-local function dynamic_destination(pid)
+local function launch_options(pid)
   local blob = read_proc(pid, "environ")
   if not blob then return nil end
 
+  local fullscreen = ("\0" .. blob):find("\0HYPR_FULLSCREEN=1\0", 1, true) ~= nil
   for entry in blob:gmatch("[^%z]+") do
     local target, suffix = entry:match("^HYPR_WORKSPACE=([1-9]%d*)(.*)$")
     if target and #target <= 10 and tonumber(target) <= 2147483647
       and (suffix == "" or suffix == " silent") then
-      return target, suffix ~= " silent"
+      return target, suffix ~= " silent", fullscreen
     end
   end
+  return nil, nil, fullscreen
 end
 
 -- Return true when dynamic placement owns this event, including silent no-ops.
@@ -57,18 +59,21 @@ function M.place_from_env(window)
   if (workspace.id and workspace.id < 0)
     or (workspace.name and workspace.name:match("^special:")) then return true end
 
-  local target, follow = dynamic_destination(window.pid)
-  if not target then return false end
+  local target, follow, fullscreen = launch_options(window.pid)
+  if not target and not fullscreen then return false end
   local selector = "address:" .. window.address
-  if workspace.id ~= tonumber(target) then
+  if target and workspace.id ~= tonumber(target) then
     hl.dispatch(hl.dsp.window.move({
       window = selector, workspace = target, follow = follow,
     }))
-  elseif follow then
+  elseif target and follow then
     local active = hl.get_active_workspace()
     if active and active.id ~= tonumber(target) then
       hl.dispatch(hl.dsp.focus({ window = selector }))
     end
+  end
+  if fullscreen then
+    hl.dispatch(hl.dsp.window.fullscreen({ window = selector, action = "set" }))
   end
   return true
 end

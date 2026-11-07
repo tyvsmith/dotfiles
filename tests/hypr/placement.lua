@@ -13,7 +13,10 @@ hl = {
   get_active_workspace = function() return { id = active } end,
   dispatch = function(action) actions[#actions + 1] = action end,
   dsp = {
-    window = { move = function(spec) return record("move", spec) end },
+    window = {
+      move = function(spec) return record("move", spec) end,
+      fullscreen = function(spec) return record("fullscreen", spec) end,
+    },
     focus = function(spec) return record("focus", spec) end,
   },
 }
@@ -67,6 +70,23 @@ actions = {}
 events["window.open"](nil)
 events["window.open"]({ pid = 123, workspace = { id = 1 } })
 assert(#actions == 0, "missing window identity must never target the active window")
+
+-- Fullscreen is independent of placement, including streams without a workspace marker.
+open("HYPR_WORKSPACE=6\0HYPR_FULLSCREEN=1\0")
+assert(#actions == 2 and actions[1].kind == "move" and actions[2].kind == "fullscreen")
+assert(actions[2].spec.window == "address:0xabc" and actions[2].spec.action == "set")
+open("HYPR_FULLSCREEN=1\0")
+assert(#actions == 1 and actions[1].kind == "fullscreen",
+  "stream fullscreen must not move workspaces")
+open("HYPR_WORKSPACE=6 silent\0HYPR_FULLSCREEN=1\0", { id = 6, name = "6" })
+assert(#actions == 1 and actions[1].kind == "fullscreen",
+  "fullscreen even when already placed")
+open("HYPR_FULLSCREEN=1\0", { id = -99, name = "special:hidden" })
+assert(#actions == 0, "never expose hidden anti-cheat windows")
+for _, env in ipairs({ "HYPR_FULLSCREEN=0\0", "OTHER_HYPR_FULLSCREEN=1\0", "X=HYPR_FULLSCREEN=1\0" }) do
+  open(env)
+  assert(#actions == 0, "fullscreen must require the exact opt-in marker")
+end
 
 -- Dynamic placement takes priority over managed-app focus, including silent launches.
 module.manage("test-app")

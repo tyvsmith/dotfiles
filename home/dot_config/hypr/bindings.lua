@@ -95,10 +95,11 @@ o.bind("SUPER + SHIFT + mouse_up", "Move to previous workspace", hl.dsp.window.m
 -- o.bind("SUPER + SHIFT + S", "Move window to scratchpad",
 --   hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
 
+-- Scale virtual screens without a config reload; physical screens use Omarchy.
+o.rebind("SUPER + SLASH", "Monitor scaling up", "hypr-monitor-scale up")
+o.rebind("SUPER + ALT + SLASH", "Monitor scaling down", "hypr-monitor-scale down")
+
 -- Dock and overview
-o.rebind("SUPER + SLASH", "Monitor scaling up", "hyprmoncfg-helper scale up")
-o.rebind("SUPER + ALT + SLASH", "Monitor scaling down", "hyprmoncfg-helper scale down")
-o.bind("SUPER + CTRL + SLASH", "Monitor settings", "omarchy launch tui hyprmoncfg tui")
 
 -- o.bind("SUPER + D", "Toggle Dock", "hypr-dock")
 o.bind("SUPER + E", "Overview", hl.plugin.scrolloverview.overview("toggle"))

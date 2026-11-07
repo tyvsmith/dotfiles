@@ -92,20 +92,21 @@ class SourceRootTest(unittest.TestCase):
                 self.assertIn('.agents/AGENTS.md', targets)
                 self.assertIn('.claude/CLAUDE.md', targets)
                 self.assertIn('.codex/AGENTS.md', targets)
-                for name in ('.local/bin/hypr-display-session',
-                             '.local/bin/sunshine-usbip',
-                             '.config/sunshine-usbip.conf',
+                if profile == 'arch-desktop':
+                    entry = targets['.config/scopebuddy/gamemode.conf']
+                    self.assertEqual(entry['type'], 'symlink')
+                    self.assertEqual(entry['linkname'], 'scb.conf')
+                for name in ('.local/bin/hypr-monitor-scale',
+                             '.config/punktfunk/hooks.json',
+                             '.config/systemd/user/punktfunk-host.service.d/steam-controller.conf'):
+                    self.assertEqual(name in targets, profile == 'arch-desktop')
+                for name in ('.local/bin/scb-output-luminance',
                              '.config/sunshine/apps.json',
                              '.config/sunshine/sunshine.conf',
                              '.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf',
-                             '.config/systemd/user/hypr-display-session.service',
-                             '.config/systemd/user/hyprmoncfgd.service.d/session.conf',
-                             '.config/hyprmoncfg/profiles/desktop.json',
-                             '.config/hyprmoncfg/profiles/gaming.json',
-                             '.config/hyprmoncfg/streaming.json'):
-                    self.assertEqual(name in targets, profile == 'arch-desktop')
-                self.assertNotIn('.config/hypr/hyprmoncfg-monitors.lua', targets)
-                self.assertNotIn('.config/sunshine/sunshine_state.json', targets)
+                             '.config/sunshine/sunshine_state.json',
+                             '.config/hypr/hyprmoncfg-monitors.lua'):
+                    self.assertNotIn(name, targets)
                 self.assertFalse({'scripts', 'tests', 'README.md', 'home'} & targets.keys())
                 for entry in targets.values():
                     if entry['type'] != 'script':
