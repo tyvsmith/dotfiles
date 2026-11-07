@@ -194,10 +194,15 @@ git add -A && git commit -m "Add some/file"
 git push
 ```
 
-## Validate the source layout
+## Tests
 
-Run `python3 tests/chezmoi/test_source_root.py` with `chezmoi`, `age`, and
-`age-keygen` installed. Checks cover nested worktree isolation, profile rendering,
-shared-library paths, and secret-helper boundaries using a disposable key.
-Rendering excludes secrets, backups, and external checkouts; macOS templates
-are evaluated on the host OS. No install scripts run.
+`tests/run.sh` runs every offline suite: the Python tests under `tests/*/` and
+the Hyprland Lua checks. It needs `python3`, `chezmoi`, `age`, `jq`, and `lua`,
+which CI installs. `tests/display-session/test_scopebuddy.py` is local-only: it
+drives the installed `scb` (plus `rg`, `jq`, and `perl`) and is skipped in CI
+and anywhere `scb` is missing. Suites work in temporary directories and never
+apply to the desktop; `python3 tests/chezmoi/test_source_root.py` alone checks
+worktree isolation, profile rendering, and the secret helpers with a disposable
+age key. `tests/voxtype/run.sh` is separate: it calls the live LLM and skips
+unless `~/.config/voxtype/secrets.env` is present.
+
