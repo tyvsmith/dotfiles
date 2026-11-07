@@ -13,8 +13,16 @@ end
 {{ end -}}
 
 {{ if eq .de "hyprland-omarchy" -}}
-# Omarchy
+# Omarchy. /etc/omarchy.conf is written by omarchy-dev-link; without it, use
+# the package default rather than a stale inherited dev-link value. Only a
+# dev-link checkout needs its bin dir on PATH (production ships /usr/bin/omarchy-*).
 set -gx OMARCHY_PATH /usr/share/omarchy
+if test -r /etc/omarchy.conf
+    set -l conf (string match -r 'OMARCHY_PATH="?([^"]+)"?' </etc/omarchy.conf)
+    test -n "$conf[2]"; and set -gx OMARCHY_PATH $conf[2]
+end
+test "$OMARCHY_PATH" != /usr/share/omarchy; and fish_add_path --path $OMARCHY_PATH/bin
+
 {{ end -}}
 
 # Custom bins (before mise activation, so a mise installed to ~/.local/bin,
@@ -30,5 +38,12 @@ fish_add_path -a --path ~/.local/bin
 # cached copy would replay a stale PATH snapshot into every new shell.
 command -q mise; and mise activate fish | source
 
+{{ if eq .de "hyprland-omarchy" -}}
+# mise's command wrappers must precede real tool dirs inherited from a parent
+# shell, so scripts follow omarchy agent account switches (mirrors omarchy's
+# env-bootstrap). hook-env keeps it ahead of mise-managed tool bins.
+fish_add_path --move --path ~/.local/share/mise/command-wrappers/bin
+
+{{ end -}}
 # Override bins (Should come first on path)
 fish_add_path --move --path ~/.local/share/overrides/bin

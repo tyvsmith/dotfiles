@@ -11,13 +11,15 @@ if status is-interactive
     functions --erase __deferred_abbr_init 
         # --- Core: Compatible syntax (flags mostly work the same) ---
 
-        # Eza for ls
-        abbr --add ls eza
+        # Eza for ls (flags match omarchy's bash aliases)
+        abbr --add ls 'eza -lh --group-directories-first --icons=auto'
+        abbr --add lsa 'eza -lha --group-directories-first --icons=auto'
         abbr --add ll 'eza -l --icons=auto --group-directories-first'
         abbr --add l. 'eza -d .*'
         abbr --add l1 'eza -1'
         abbr --add la 'eza -la --icons=auto --group-directories-first'
-        abbr --add lt 'eza --tree --level=2'
+        abbr --add lt 'eza --tree --level=2 --long --icons --git'
+        abbr --add lta 'eza --tree --level=2 --long --icons --git -a'
 
         # Bat for cat
         abbr --add cat 'bat -p'
@@ -57,12 +59,8 @@ if status is-interactive
         # tmux
         abbr --add t 'tmux attach || tmux new -s Work'
 
-        # fzf file finder + open in editor (kitty gets image preview)
-        if test "$TERM" = xterm-kitty
-            abbr --add ff "fzf --preview 'case \$(file --mime-type -b {}) in image/*) kitty icat --clear --transfer-mode=memory --stdin=no --place=\${FZF_PREVIEW_COLUMNS}x\${FZF_PREVIEW_LINES}@0x0 {} ;; *) bat --style=numbers --color=always {} ;; esac'"
-        else
-            abbr --add ff "fzf --preview 'bat --style=numbers --color=always {}'"
-        end
+        # Rails
+        abbr --add r rails
 
         # Directory navigation
         abbr --add .. 'cd ..'
@@ -90,6 +88,9 @@ if status is-interactive
             # --- Dev tools ---
             # Difftastic for diff
             abbr --add diff difft
+
+            # mise upgrade without the release-age hold
+            abbr --add mup 'MISE_MINIMUM_RELEASE_AGE=0 mise up'
         {{ end -}}
 
         {{ if has "dev-extra" $tags -}}
@@ -113,12 +114,17 @@ if status is-interactive
         {{ end -}}
 
         {{ if has "ai" $tags -}}
-            # --- AI tools ---
-            abbr --add c opencode
-            abbr --add cx 'clear-all; and claude --permission-mode bypassPermissions'
+            # --- AI tools (match omarchy's bash aliases) ---
+            abbr --add c 'opencode --auto'
+            abbr --add cx 'clear-all; and claude --permission-mode auto'
+            abbr --add cy 'codex --approve-for-me'
+            abbr --add h herdr
             abbr --add ic  'tdl c'
             abbr --add ix  'tdl cx'
             abbr --add icx 'tdl c cx'
+            {{ if eq .de "hyprland-omarchy" -}}
+            abbr --add a 'omarchy-agent --inline'
+            {{ end -}}
         {{ end -}}
 
         {{ if .work -}}

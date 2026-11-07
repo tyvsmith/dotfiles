@@ -101,10 +101,11 @@ chezmoi add --encrypt ~/.config/sensitive/file.conf
 ## What's Included
 
 ### Shell
-- **Fish** with [Tide](https://github.com/IlanCosman/tide) prompt (config tracked)
+- **Fish** with [Starship](https://starship.rs) prompt via fish-fast-starship (config in `.config/starship.toml`)
 - **Atuin** for shell history sync
-- **Zoxide** for smart directory jumping
-- **Fisher** plugins: autopair, gitnow, nvm, done, puffer-fish, fzf, sponge, bass, abbreviation-tips
+- **Zoxide** for smart directory jumping (`cd` falls through to a zoxide jump when the target is not a directory)
+- **Fisher** plugins: catppuccin, done, abbreviation-tips, autopair, replay, sponge, puffer-fish, fzf, fish-fast-starship
+- **Omarchy parity**: fish ports of omarchy's bash functions (tmux/herdr dev layouts, rsync watchers, ssh port forwards and auto-reconnect, worktrees, drives) plus `omarchy` tab completion
 
 ### Modern CLI Tools
 | Instead of | Use | Notes |
@@ -195,18 +196,6 @@ chezmoi add --encrypt ~/.config/sensitive/secret.conf
 chezmoi cd
 git add -A && git commit -m "Add some/file"
 git push
-```
-
-## Updating Tide Prompt Config
-
-To change your Tide prompt configuration:
-```bash
-# Run the interactive wizard
-tide configure
-
-# At the end, press 'p' to print the command
-# Copy the output and update:
-chezmoi edit ~/.config/fish/tide_config.fish
 ```
 
 ## Validate the source layout

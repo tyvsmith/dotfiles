@@ -9,8 +9,10 @@
 if status is-interactive
     function __deferred_init --on-event fish_prompt
         functions --erase __deferred_init
-        # fzf.fish — disable history binding (atuin owns Ctrl+R)
-        fzf_configure_bindings --history=
+        # fzf.fish — match omarchy bash's fzf keys: Ctrl+T files, Alt+C cd.
+        # atuin owns Ctrl+R; fzf history search moves to Alt+R.
+        fzf_configure_bindings --history=alt-r --directory=ctrl-t
+        bind alt-c __fzf_cd
 
         # Atuin — shell history search (binds Ctrl+R and Up)
         __cached_source atuin init fish
@@ -20,6 +22,14 @@ if status is-interactive
 
         complete --erase --command __zoxide_z
         complete --command __zoxide_z --no-files --arguments '(__hybrid_zoxide_z_complete)'
+
+        # cd falls through to zoxide when the target is not a directory
+        # (omarchy's `zd`). Keep fish's own cd as __zd_cd so `cd -` and
+        # dirprev/dirnext still work; `z` stays available directly.
+        functions -q __zd_cd; or functions -c cd __zd_cd
+        function cd --wraps cd --description 'cd, or zoxide jump when the target is not a directory'
+            zd $argv
+        end
 
         # Set simple hostname for prompt display
         set -gx HOST (string split -f1 '.' $hostname)
