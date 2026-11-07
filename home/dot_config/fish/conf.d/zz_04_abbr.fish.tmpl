@@ -22,8 +22,8 @@ if status is-interactive
         # Bat for cat
         abbr --add cat 'bat -p'
 
-        # gtrash for rm (safer delete); runtime check since apt/dnf lack it
-        command -q gtrash; and abbr --add rm 'gtrash put'
+        # trash-cli for rm (safer delete)
+        abbr --add rm 'trash-put'
 
         # Duf for df (beautiful disk free)
         abbr --add df duf

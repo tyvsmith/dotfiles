@@ -145,12 +145,9 @@ packages:
     desc: "Git pager with syntax highlighting"
     mise: "aqua:dandavison/delta"
 
-  gtrash:
+  trash-cli:
     tags: [core]
     desc: "Trash CLI (rm replacement, XDG trash spec)"
-    mise: "github:umlx5h/gtrash"
-    apt: false
-    dnf: false
 
   choose:
     tags: [dev-extra]
