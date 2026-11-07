@@ -70,7 +70,7 @@ If no profile is specified, auto-detects from distro (macOS → `macos-work`, Ar
 | `silverblue` | core, core-extra, container, dev, dev-extra, dev-toolchains, experiment, ai, hardware, ui, ui-extra, gaming | brew, rpm_ostree, flatpak, appimage | | yes | | Silverblue/Bazzite immutable |
 
 **Package categories:**
-- **core** (all machines): Shell (fish, atuin, zoxide), modern CLI tools (eza, bat, fd, ripgrep, yazi, gtrash, etc.), git, neovim, tmux, essential utils
+- **core** (all machines): Shell (fish, atuin, zoxide), modern CLI tools (eza, bat, fd, ripgrep, yazi, trash-cli, etc.), git, neovim, tmux, essential utils
 - **core-extra** (machines you sit at): fastfetch, imagemagick, 7zip
 - **container**: docker, docker-compose, podman, distrobox, lazydocker
 - **dev**: mise, uv, difftastic, shellcheck, tree-sitter-cli, usage
@@ -188,6 +188,6 @@ Regression suite for `voxtype-cleanup` — runs the live LLM script against know
 Skips cleanly when `~/.config/voxtype/secrets.env` is missing or any required env var is absent. To test the skip path: `VOXTYPE_LLM_API_KEY="" ./tests/voxtype/run.sh`. Tuning: `VOXTYPE_TEST_RUNS=5 VOXTYPE_TEST_THRESHOLD=3 ./tests/voxtype/run.sh`.
 
 ### Philosophy
-- All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→gtrash put`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.
+- All modern CLI tools are abbreviated over old commands (`ls→eza`, `cat→bat`, `rm→trash-put`, `diff→difft`, `df→duf`, `du→dust`, `ping→gping`, `grep→rg`, `find→fd`, `sed→sd`, `curl→xh`). Since abbreviations expand visibly before running, this forces learning the new syntax.
 - Shorthand abbreviations for longer tool names: `lg→lazygit`, `br→broot`
 - Shell greeting shows random CLI tips to teach modern tool usage

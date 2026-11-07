@@ -80,10 +80,10 @@ function fish_greeting
         "br -s                   show sizes in tree" \
         "br -h                   show hidden files" \
         "br -g                   show git status" \
-        "gtrash put file         safe delete to trash (replaces rm)" \
-        "gtrash find             list trashed files" \
-        "gtrash restore          restore trashed files (TUI)" \
-        "gtrash prune --day 30   empty items older than 30 days" \
+        "trash-put file          safe delete to trash (replaces rm)" \
+        "trash-list              list trashed files" \
+        "trash-restore           restore trashed files" \
+        "trash-empty 30          empty items older than 30 days" \
         "choose 0 2              pick columns 0 and 2 (replaces cut)" \
         "choose -f ':' 0         use : as delimiter" \
         "choose 2:5              select range of columns" \
