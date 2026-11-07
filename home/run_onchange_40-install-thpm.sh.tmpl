@@ -22,8 +22,19 @@ THPM_VERSION="1.0.0"
 # Integrations to keep enabled. Enable is idempotent; anything not listed is
 # left as-is (THPM keeps its own state in ~/.local/state/thpm/state.toml).
 # Skip ones Omarchy themes natively (vscode-local-compat, obsidian-terminal).
+# One that is unavailable here (app or Spicetify backup missing) only warns.
 THPM_INTEGRATIONS=(
+    discord
+    fish
+    fzf
+    gnome-accent-compat
     gtk-css-compat
+    heroic
+    nautilus-palette
+    spotify
+    steam
+    superfile
+    zen
 )
 
 installed=$("$HOME/.local/bin/thpm" --version 2>/dev/null || true)
@@ -41,8 +52,10 @@ if [[ "$installed" != "thpm $THPM_VERSION" ]]; then
     ( cd "$tmp" && ./install.sh </dev/null )
 fi
 
+# --yes answers the confirmation steam and zen require, since they edit files
+# outside THPM's own (steam-adwaita, Zen userChrome).
 for integration in "${THPM_INTEGRATIONS[@]}"; do
-    "$HOME/.local/bin/thpm" --quiet enable "$integration" </dev/null \
+    "$HOME/.local/bin/thpm" --quiet enable --yes "$integration" </dev/null \
         || echo "warning: thpm could not enable $integration (see: thpm doctor $integration)" >&2
 done
 {{ end -}}
