@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install Homebrew formulas
-#
-# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Package selection: .chezmoitemplates/cascade-filter
 # Only includes formula (non-cask) packages assigned to brew by the cascade.
-#
-# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
-# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
 
 {{ $p := index .profiles .profile -}}
 {{ if not (and (hasKey $p "brew") $p.brew) -}}
