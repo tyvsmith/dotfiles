@@ -112,8 +112,6 @@ default:
       - "{{ .chezmoi.homeDir }}/.local/share/Steam/depotcache"
       # --- app caches / indexes (state kept, rebuildables dropped) ---
       - "{{ .chezmoi.homeDir }}/.local/share/voxtype/models"
-      - "{{ .chezmoi.homeDir }}/.local/share/vicinae/favicon-data"
-      - "{{ .chezmoi.homeDir }}/.local/share/vicinae/file-indexer.db*"
       # --- Chromium/Electron caches inside .config (not under ~/.cache) ---
       - "**/Cache"
       - "**/Code Cache"

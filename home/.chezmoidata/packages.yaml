@@ -491,13 +491,6 @@ packages:
     os: linux
     de: hyprland-omarchy
 
-  vicinae:
-    tags: [experiment]
-    desc: "Raycast-style launcher (evaluating)"
-    pacman: vicinae-bin
-    os: linux
-    de: hyprland-omarchy
-
   hyprmod:
     tags: [experiment]
     desc: "Hyprland modding utility"
