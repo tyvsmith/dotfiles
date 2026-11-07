@@ -9,8 +9,10 @@
 if status is-interactive
     function __deferred_init --on-event fish_prompt
         functions --erase __deferred_init
-        # fzf.fish — disable history binding (atuin owns Ctrl+R)
-        fzf_configure_bindings --history=
+        # fzf.fish — match omarchy bash's fzf keys: Ctrl+T files, Alt+C cd.
+        # atuin owns Ctrl+R; fzf history search moves to Alt+R.
+        fzf_configure_bindings --history=alt-r --directory=ctrl-t
+        bind alt-c __fzf_cd
 
         # Atuin — shell history search (binds Ctrl+R and Up)
         __cached_source atuin init fish
