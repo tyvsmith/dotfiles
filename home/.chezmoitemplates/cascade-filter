@@ -2,7 +2,7 @@
   cascade-filter: Outputs a formatted line if the package belongs to the
   specified manager, with the manager-specific package name resolved.
 
-  Cascade order: mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+  Cascade order: mise → brew → brew_cask → pacman → apt → rpm_ostree → flatpak → appimage
   A package goes to the first enabled manager that can handle it.
 
   Native manager fields are tri-state:
@@ -67,7 +67,6 @@
 {{- $avail_brew_cask := and (and (hasKey $p "brew") $p.brew) (eq $os "darwin") (and (hasKey $pkg "brew_cask") $pkg.brew_cask) (or (not (hasKey $pkg "brew")) $pkg.brew) -}}
 {{- $avail_pacman := and (and (hasKey $p "pacman") $p.pacman) (or (not (hasKey $pkg "pacman")) $pkg.pacman) -}}
 {{- $avail_apt := and (and (hasKey $p "apt") $p.apt) (or (not (hasKey $pkg "apt")) $pkg.apt) -}}
-{{- $avail_dnf := and (and (hasKey $p "dnf") $p.dnf) (or (not (hasKey $pkg "dnf")) $pkg.dnf) -}}
 {{- $avail_rpm_ostree := and (and (hasKey $p "rpm_ostree") $p.rpm_ostree) (and (hasKey $pkg "rpm_ostree") $pkg.rpm_ostree) -}}
 {{- $avail_flatpak := and (and (hasKey $p "flatpak") $p.flatpak) (and (hasKey $pkg "flatpak") $pkg.flatpak) -}}
 {{- $avail_appimage := and (and (hasKey $p "appimage") $p.appimage) (and (hasKey $pkg "appimage") $pkg.appimage) -}}
@@ -79,7 +78,6 @@
 {{- else if $avail_brew_cask -}}{{- $winner = "brew_cask" -}}
 {{- else if $avail_pacman -}}{{- $winner = "pacman" -}}
 {{- else if $avail_apt -}}{{- $winner = "apt" -}}
-{{- else if $avail_dnf -}}{{- $winner = "dnf" -}}
 {{- else if $avail_rpm_ostree -}}{{- $winner = "rpm_ostree" -}}
 {{- else if $avail_flatpak -}}{{- $winner = "flatpak" -}}
 {{- else if $avail_appimage -}}{{- $winner = "appimage" -}}
@@ -97,8 +95,6 @@
 {{-     $resolved = index $pkg "pacman" -}}
 {{-   else if and (eq $mgr "apt") (hasKey $pkg "apt") -}}
 {{-     $resolved = index $pkg "apt" -}}
-{{-   else if and (eq $mgr "dnf") (hasKey $pkg "dnf") -}}
-{{-     $resolved = index $pkg "dnf" -}}
 {{-   else if and (eq $mgr "rpm_ostree") (hasKey $pkg "rpm_ostree") -}}
 {{-     if ne (printf "%T" (index $pkg "rpm_ostree")) "bool" -}}
 {{-       $resolved = index $pkg "rpm_ostree" -}}

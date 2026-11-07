@@ -105,3 +105,53 @@ ensure_pkg() {
     fail "Cannot install $pkg: no supported package manager found"
   fi
 }
+
+# Install the candidates a probe command reports available; warn about the rest.
+# Usage: install_probed <probe-cmd> <install-cmd> <unavailable-msg> [hint...]
+# Reads CANDIDATE_PACKAGES (declare -A, pkg_name -> display_name) from the caller:
+# bash cannot pass associative arrays. Commands are split on whitespace and
+# run as "<probe-cmd> <pkg>" and "<install-cmd> <pkg>...".
+install_probed() {
+  local unavailable_msg="$3" pkg_name pkg hint
+  local -a probe install available=() missing=() hints
+  read -ra probe <<<"$1"
+  read -ra install <<<"$2"
+  shift 3
+  hints=("$@")
+
+  for pkg_name in "${!CANDIDATE_PACKAGES[@]}"; do
+    if "${probe[@]}" "$pkg_name" &>/dev/null; then
+      available+=("$pkg_name")
+    else
+      missing+=("${CANDIDATE_PACKAGES[$pkg_name]}")
+    fi
+  done
+  # Sort for deterministic output
+  if [[ ${#available[@]} -gt 0 ]]; then
+    mapfile -t available < <(printf '%s\n' "${available[@]}" | sort)
+  fi
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    mapfile -t missing < <(printf '%s\n' "${missing[@]}" | sort)
+  fi
+
+  log "Installing ${#available[@]} packages..."
+  if [[ ${#available[@]} -gt 0 ]]; then
+    "${install[@]}" "${available[@]}"
+  fi
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    warn "$unavailable_msg"
+    for pkg in "${missing[@]}"; do
+      warn "  - $pkg"
+    done
+    if [[ ${#hints[@]} -gt 0 ]]; then
+      log ""
+      log "To install missing tools, consider:"
+      local i=1
+      for hint in "${hints[@]}"; do
+        log "  $i. $hint"
+        i=$((i + 1))
+      done
+    fi
+  fi
+}

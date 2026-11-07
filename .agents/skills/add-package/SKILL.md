@@ -72,16 +72,16 @@ GitHub source.
 
 Apply these rules in order:
 
-1. **Same canonical name on every native manager** (brew == pacman == apt ==
-   dnf): no overrides needed. Just write the YAML key.
+1. **Same canonical name on every native manager** (brew == pacman == apt):
+   no overrides needed. Just write the YAML key.
 2. **One manager uses a different name**: set just that manager's field to the
    string override. Leave the others absent.
-   Example (from existing repo): `fd` has `apt: fd-find` and `dnf: fd-find`.
+   Example (from existing repo): `fd` has `apt: fd-find`.
 3. **Available on some managers, missing on others, and the cascade would
    pick the wrong one**: set the unavailable manager to `false` to skip it.
    Otherwise let the cascade fall through naturally.
 4. **GUI app, macOS**: if `.agents/skills/add-package/pkg-lookup cask <name>` hits, set `brew_cask: true`.
-   The cascade then makes pacman/apt/dnf the next stops on Linux.
+   The cascade then makes pacman/apt the next stops on Linux.
 5. **GUI app, no native Linux package**:
    - If Flathub has it: set `flatpak: <reverse-dns-app-id>` (from the
      `.agents/skills/add-package/pkg-lookup flatpak` result's `name` field).
@@ -154,8 +154,8 @@ Default to **No** — let them apply on their schedule.
 
 Authoritative source: `home/.chezmoidata/packages.yaml:9-42` (header comment).
 
-- Cascade order: `mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`.
-- Tri-state fields (`brew`, `pacman`, `apt`, `dnf`): **absent** = use YAML key,
+- Cascade order: `mise → brew → brew_cask → pacman → apt → rpm_ostree → flatpak → appimage`.
+- Tri-state fields (`brew`, `pacman`, `apt`): **absent** = use YAML key,
   **string** = override, **false** = exclude from this manager.
 - Modifiers: `brew_cask: true` flips to cask on macOS; `brew_tap: "<tap>"`
   preinstalls a tap.
@@ -173,14 +173,13 @@ ripgrep:
   desc: "Fast recursive grep replacement"
 ```
 
-Name override for two managers:
+Name override for one manager:
 
 ```yaml
 fd:
   tags: [core]
   desc: "Simple, fast and user-friendly alternative to find"
   apt: fd-find
-  dnf: fd-find
 ```
 
 GUI app, brew_cask on macOS, Flathub on Linux:
@@ -215,9 +214,9 @@ appflowy:
 
 ## Edge cases
 
-- **`fd` vs `fd-find`**: classic case where the apt and dnf packages live under
+- **`fd` vs `fd-find`**: classic case where the apt package lives under
   `fd-find` but the binary is still `fd`. Always re-verify with
-  `.agents/skills/add-package/pkg-lookup apt <name>` and `.agents/skills/add-package/pkg-lookup dnf <name>` — do not assume.
+  `.agents/skills/add-package/pkg-lookup apt <name>` — do not assume.
 - **Bare AUR**: if `pacman` lookup misses but `aur` lookup hits, the YAML
   field is still `pacman: <name>` (paru installs both).
 - **AUR `-bin` vs `-git`**: prefer the canonical, then `-bin`, then `-git`.

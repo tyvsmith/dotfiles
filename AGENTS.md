@@ -51,7 +51,7 @@ DOTFILES_PROFILE=arch-desktop chezmoi init
 
 Each profile (defined in `home/.chezmoidata/profiles.yaml`) fully specifies:
 - **`tags`**: comma-delimited category tags (`core`, `core-extra`, `container`, `dev`, `dev-extra`, `dev-toolchains`, `ai`, `experiment`, `hardware`, `ui`, `ui-extra`, `gaming`)
-- **Package managers**: `mise`, `brew`, `pacman`, `apt`, `dnf`, `rpm_ostree`, `flatpak`
+- **Package managers**: `mise`, `brew`, `pacman`, `apt`, `rpm_ostree`, `flatpak`, `appimage`
 - **`devpod`**: Uber devpod — runs the devpod bootstrap and login-shell scripts
 - **`work`**: work machine (system SSH agent, corporate configs)
 - **`decrypt`**: enable age decryption of private configs
@@ -92,11 +92,10 @@ Packages are defined once in `home/.chezmoidata/packages.yaml` and installed via
 - **macOS**: Homebrew formulas + casks
 - **Arch Linux**: paru (handles both official repos and AUR)
 - **Debian/Ubuntu**: apt (native repos only)
-- **Fedora**: dnf
 - **Immutable Fedora (Silverblue/Bazzite)**: rpm-ostree (for OS-integrated packages only)
 - **Linux GUI**: Flatpak (Flathub) or AppImage (GitHub releases)
 
-The YAML key is the default package name for all package managers. Native manager fields (`brew`, `pacman`, `apt`, `dnf`) are **tri-state**:
+The YAML key is the default package name for all package managers. Native manager fields (`brew`, `pacman`, `apt`) are **tri-state**:
 - absent → available, use YAML key as package name
 - string → available, use string as package name (e.g., `pacman: python-llm`)
 - `false` → excluded from this manager (e.g., `brew: false`)
@@ -111,7 +110,7 @@ Opt-in manager fields are present when available:
 - `flatpak:` — Flatpak app ID
 - `appimage:` — GitHub repo (`owner/name`) for AppImage download
 
-Cascade order: `mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `home/.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
+Cascade order: `mise → brew → brew_cask → pacman → apt → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `home/.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
 
 **mise packages (`devpod-slim`):**
 Profiles with `mise: true` install every package that declares a `mise:` backend as a prebuilt release binary, with no Linuxbrew. `home/dot_config/mise/conf.d/20-packages.toml.tmpl` renders them at `"latest"`; `home/.chezmoitemplates/mise-packages.lock` (committed, generated) pins each to an exact version, URL, and sha256 per platform. chezmoi merges those pins into the machine's own `~/.config/mise/mise.lock` (`home/dot_config/mise/modify_mise.lock`): it adds missing tools and takes newer repo pins, keeps versions upgraded locally, and never touches or removes entries it does not manage (toolchains, `mise use -g`). The install script runs `mise install --locked` on the managed tools. Packages without a `mise:` field (git, wget, tree, socat) come from the devpod image.
@@ -159,7 +158,6 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_11-install-packages-cask.sh.tmpl` | Homebrew casks (macOS only) |
 | `run_onchange_12-install-packages-pacman.sh.tmpl` | Arch Linux packages via paru |
 | `run_onchange_13-install-packages-apt.sh.tmpl` | Debian/Ubuntu packages via apt |
-| `run_onchange_14-install-packages-dnf.sh.tmpl` | Fedora packages via dnf |
 | `run_onchange_15-install-packages-rpm-ostree.sh.tmpl` | Immutable Fedora packages via rpm-ostree |
 | `run_onchange_16-install-packages-mise.sh.tmpl` | mise packages at lockfile-pinned versions; installs a pinned mise via mise.run; links `~/.local/bin/fish` |
 | `run_onchange_20-configure-pacman-repos.sh.tmpl` | Splices `~/.config/pacman/custom-repos-{head,tail}.conf` into `/etc/pacman.conf` via the omarchy `pre-refresh-pacman` hook (one sudo); omarchy-only |

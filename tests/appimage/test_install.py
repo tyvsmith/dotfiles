@@ -46,7 +46,7 @@ elif args[:2]==['sync','appimage'] and os.environ.get('FAIL_SYNC'): sys.exit(7)
         overrides = {'profile': 'test', 'profiles': {'test': {'appimage': True}},
                      'tags': 'ui', 'de': '', 'work': False, 'decrypt': False, 'backup': False,
                      'packages': {'selkies': {'enabled': False}, 'sample': {'tags': ['ui'], 'pacman': False,
-                     'brew': False, 'apt': False, 'dnf': False, 'appimage': 'owner/sample'}}}
+                     'brew': False, 'apt': False, 'appimage': 'owner/sample'}}}
         config = self.root / 'chezmoi.toml'
         config.write_text('')
         rendered = subprocess.check_output([
