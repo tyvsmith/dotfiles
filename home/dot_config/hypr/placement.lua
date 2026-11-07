@@ -74,8 +74,6 @@ function M.place_from_env(window)
   end
   if fullscreen then
     hl.dispatch(hl.dsp.window.fullscreen({ window = selector, action = "set" }))
-    -- Games can restore windowed mode when their saved monitor is unavailable.
-    hl.dispatch(hl.dsp.window.set_prop({ window = selector, prop = "sync_fullscreen", value = "0" }))
   end
   return true
 end

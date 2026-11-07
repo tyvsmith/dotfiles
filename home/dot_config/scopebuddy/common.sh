@@ -16,8 +16,6 @@ apply_desktop_defaults() {
 apply_mode() {
     if (( SCB_GAMEMODE )); then
         mode=session
-    elif [[ $mode == default ]]; then
-        mode=native
     fi
     local wrapped_command="game-performance gamemoderun $command"
     source "$SCB_CONFIGDIR/$mode.conf" || exit 1

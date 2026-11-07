@@ -130,7 +130,7 @@ exit "$GAME_EXIT"
                 EXPECTED_SESSION_WAYLAND='',
                 MANGOHUD='1',MANGOHUD_CONFIG='preset=2,fps_limit=17' if session else '',
                 EXPECTED_HDR='unset' if hdr_env is None else hdr_env,
-                EXPECTED_BACKEND=mode or 'native',
+                EXPECTED_BACKEND=mode or 'gamescope',
                 EXPECTED_NATIVE_HDR='1',EXPECTED_MANGOHUD='0' if session else '1',
                 SESSION_TEST='1' if session else '0',
                 NEVER_HDR=str(int(never_hdr)),FAIL_START=str(int(fail_start)),GAME_EXIT=str(exit_code),
@@ -164,7 +164,7 @@ exit "$GAME_EXIT"
         self.assertEqual(events, ['new-game-loaded', 'hdr-on',
             'game 6 preset=2,fps_limit=161', 'hdr-off'])
 
-    def test_missing_appid_uses_native_or_existing_session(self):
+    def test_default_uses_gamescope_or_existing_session(self):
         for session in [None, 'local', 'streaming']:
             for target in ['local', 'hdr']:
                 with self.subTest(session=session, target=target):
@@ -172,7 +172,7 @@ exit "$GAME_EXIT"
                         inherited_env=dict(VKD3D_CONFIG='descriptor_heap'))
                     self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
                     self.assertEqual(sum(e.startswith('game ') for e in events), 1)
-                    self.assertFalse(any(e.startswith('gamescope ') for e in events))
+                    self.assertEqual(sum(e.startswith('gamescope ') for e in events), int(not session))
                     self.assertEqual(events.count('hdr-on'), int(not session and target == 'local'))
                     self.assertEqual(events.count('hdr-off'), int(not session and target == 'local'))
 
@@ -181,7 +181,7 @@ exit "$GAME_EXIT"
             with self.subTest(session=session):
                 result, events = self.run_game(mode='', session=session, app_config='''
 printf 'config-loaded\\n' >> "$EVENT_LOG"
-[[ $mode == default ]] || exit 99
+[[ $mode == gamescope ]] || exit 99
 fps_cap=60
 export VKD3D_CONFIG=descriptor_heap
 export TEST_CHECK_ARGS=1
@@ -189,8 +189,9 @@ command="$command 'argument with spaces' --another-argument"
 ''')
                 self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
                 expected = ['config-loaded', 'game  preset=2,fps_limit=17'] if session else [
-                    'config-loaded', 'hdr-on', 'game 6 preset=2,fps_limit=60', 'hdr-off']
-                self.assertEqual(events, expected)
+                    'config-loaded', 'hdr-on', 'game 6 no_display,fps_limit=60', 'hdr-off']
+                self.assertEqual([e for e in events if not e.startswith('gamescope ')], expected)
+                self.assertEqual(sum(e.startswith('gamescope ') for e in events), int(not session))
 
     def test_mode_assignment_applies_only_after_the_game_config(self):
         result, events = self.run_game(app_config='''
@@ -366,6 +367,7 @@ export EXPECTED_NATIVE_HDR=1
                         self.assertEqual('--adaptive-sync' in launch.split(), not streaming)
                         self.assertNotIn('--hdr-itm-enable', launch)
                         self.assertIn('--hdr-enabled', launch.split())
+                        self.assertIn('--force-windows-fullscreen', launch.split())
                     self.assertEqual(events.count('hdr-on'), int(not streaming and mode != 'session'))
                     self.assertEqual(events.count('hdr-off'), int(not streaming and mode != 'session'))
 

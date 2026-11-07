@@ -32,10 +32,11 @@ Native and nested streaming use Punktfunk's Hyprland compositor path. Session
 streaming uses its Gamescope path. An existing Gamescope resolves per-game mode
 preferences to session reuse. Session mode assumes an existing Gamescope compositor.
 `gamemode.conf` is a relative symlink to `scb.conf`, sharing the same entrypoint.
-`scb.conf` sets `mode=default`, calls `load_game_config` to source the matching
-`APP_ID` file, then calls `apply_mode` once. The final step maps `default` to
-`native`, or selects `session` inside existing Gamescope. Unknown IDs keep the
-default. An explicit Gamescope selection never loads native defaults.
+`scb.conf` sets `mode=gamescope`, calls `load_game_config` to source the matching
+`APP_ID` file, then calls `apply_mode` once. Existing Gamescope selects `session`;
+games can opt into `mode=native`. Unknown IDs keep the Gamescope default.
+New Gamescope instances use `-f --force-windows-fullscreen` to make both the
+compositor and its game windows fullscreen.
 
 Existing Gamescope sessions keep their display environment, HDR, HUD settings,
 resolution and frame pacing. SCB preserves caller-provided environment and hooks;
@@ -188,8 +189,7 @@ built-in ScopeBuddy or Hyprland variable.
 
 ScopeBuddy also exports `HYPR_FULLSCREEN=1` for both paths. The same handler sets
 fullscreen after placement, or on the existing workspace for streams. It runs
-once when each window opens, then disables `sync_fullscreen` for that window so a
-later client request cannot restore windowed geometry from another monitor.
+once when each window opens and leaves fullscreen synchronization unchanged.
 Super+F still toggles compositor fullscreen; the game's display-mode label and
 render resolution remain separate game settings.
 Hidden anti-cheat windows retain their special-workspace exception. Other windows
