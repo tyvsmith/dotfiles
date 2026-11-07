@@ -198,7 +198,7 @@ inheriting the marker, including launchers, receive the same treatment. Add
 
 ## Punktfunk HDR capture
 
-`hyprland.lua` allows 10-bit screencopy with `misc.screencopy_force_8b=false`.
+`monitors.lua` allows 10-bit screencopy with `misc.screencopy_force_8b=false`.
 Punktfunk owns virtual output creation and luminance metadata. Neither monitor
 creation nor game launch supplies a peak-brightness override.
 

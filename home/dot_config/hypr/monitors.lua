@@ -9,6 +9,9 @@ local omarchy_monitor_scale = 1
 
 hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
 
+-- Allow 10-bit stream capture; leave output luminance to Punktfunk.
+hl.config({ misc = { screencopy_force_8b = false } })
+
 -- SDR desktop baseline. ScopeBuddy calls lg_hdr(true/false) around local games.
 local lg = {
   output = "DP-1", mode = "preferred", position = "0x0",

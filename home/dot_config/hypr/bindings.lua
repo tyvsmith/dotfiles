@@ -76,9 +76,6 @@ o.bind("SUPER + SHIFT + ALT + G", "Github", { webapp = "https://github.com", foc
 o.bind("SUPER + SHIFT + E", "Fastmail", { launch = "flatpak run com.fastmail.Fastmail", focus = "^com\\.fastmail\\.Fastmail$" })
 o.bind("SUPER + SHIFT + P", "Shelly", { launch = "shelly-ui", focus = "^com\\.shellyorg\\.shelly$" })
 
--- RC2's screenshot wrapper passes --notify, unsupported by packaged Omasnap 1.21.
-o.rebind("PRINT", "Screenshot", "/usr/bin/omasnap")
-
 -- Dictation toggle (F16 = evdev keycode 186 -> xkb keycode 194)
 o.bind("code:194", "Toggle dictation", "voxtype-smart-toggle")
 -- Free F9 for app shortcuts (v4 binds it for push-to-talk, press and release)
