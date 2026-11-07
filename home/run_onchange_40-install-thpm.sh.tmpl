@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# Chezmoi run_onchange script: Install/update theme-hook-plugin-manager (THPM).
-# THPM delivers the bundled theme-set.d/* hooks (10-tmux, 10-gtk, etc.).
-# THPM's install.sh clones the head of $THPM_BRANCH itself, so the pin selects
-# the installer and the guard below; bump it to the branch head to update.
+# Chezmoi run_onchange script: Install/update THPM (Theme Hook Plugin Manager)
+# from a pinned source checkout, then enable the integrations listed below.
+# THPM syncs the Omarchy theme to apps Omarchy does not theme natively.
+#
+# Not in the AUR yet, so this uses upstream's source installer: a private venv
+# in ~/.local/share/thpm/runtime, linked as ~/.local/bin/thpm. It migrates a
+# legacy theme-hook-plugin-manager install on its own (archived under
+# ~/.local/state/thpm/legacy-backups). To update, bump THPM_COMMIT and
+# THPM_VERSION together. Editing THPM_INTEGRATIONS re-runs this script.
 
 {{ if ne .de "hyprland-omarchy" -}}
 # Profile '{{ .profile }}' is not omarchy — nothing to do.
@@ -10,27 +15,47 @@ exit 0
 {{ else -}}
 set -euo pipefail
 
-THPM_REPO="https://github.com/OldJobobo/theme-hook-plugin-manager.git"
-export THPM_BRANCH="quattro" # install.sh reads it
-THPM_COMMIT="7dac327145f66fbfd4e327bfcd36b1656515a3e2"
-THPM_VERSION_FILE="$HOME/.local/share/thpm/version"
+THPM_REPO="https://github.com/OldJobobo/thpm.git"
+THPM_COMMIT="5b64201744276793107085c6ac2a56277ea2b860" # "Prepare 1.0.0 release"
+THPM_VERSION="1.0.0"
 
-if [[ -f "$THPM_VERSION_FILE" ]] && grep -qF "commit=$THPM_COMMIT" "$THPM_VERSION_FILE"; then
-    exit 0
+# Integrations to keep enabled. Enable is idempotent; anything not listed is
+# left as-is (THPM keeps its own state in ~/.local/state/thpm/state.toml).
+# Skip ones Omarchy themes natively (vscode-local-compat, obsidian-terminal).
+# One that is unavailable here (app or Spicetify backup missing) only warns.
+THPM_INTEGRATIONS=(
+    discord
+    fish
+    fzf
+    gnome-accent-compat
+    gtk-css-compat
+    heroic
+    nautilus-palette
+    spotify
+    steam
+    superfile
+    zen
+)
+
+installed=$("$HOME/.local/bin/thpm" --version 2>/dev/null || true)
+if [[ "$installed" != "thpm $THPM_VERSION" ]]; then
+    echo "Installing THPM $THPM_VERSION @ ${THPM_COMMIT:0:7}"
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    git clone --quiet "$THPM_REPO" "$tmp"
+    git -C "$tmp" -c advice.detachedHead=false checkout --quiet "$THPM_COMMIT"
+    if [[ "$(<"$tmp/VERSION")" != "$THPM_VERSION" ]]; then
+        echo "THPM_COMMIT is $(<"$tmp/VERSION"), expected $THPM_VERSION" >&2
+        exit 1
+    fi
+    # stdin from /dev/null so an unexpected prompt fails instead of hanging.
+    ( cd "$tmp" && ./install.sh </dev/null )
 fi
 
-echo "Installing/updating THPM @ $THPM_COMMIT"
-
-tmp=$(mktemp -d)
-trap 'rm -rf "$tmp"' EXIT
-
-git clone --quiet --branch "$THPM_BRANCH" "$THPM_REPO" "$tmp"
-git -C "$tmp" -c advice.detachedHead=false checkout --quiet "$THPM_COMMIT"
-
-# Feed a fixed number of "n" answers so the installer runs fully
-# non-interactively. THPM's install.sh has at most two reads: the
-# adw-gtk-theme prompt (read -r -p) and omarchy-show-done's "press any
-# key" (read -n 1 inside `gum spin`). `printf` writes a finite stream
-# so we avoid SIGPIPE that `yes` would trigger when set -o pipefail is on.
-( cd "$tmp" && printf 'n\nn\nn\n' | bash ./install.sh )
+# --yes answers the confirmation steam and zen require, since they edit files
+# outside THPM's own (steam-adwaita, Zen userChrome).
+for integration in "${THPM_INTEGRATIONS[@]}"; do
+    "$HOME/.local/bin/thpm" --quiet enable --yes "$integration" </dev/null \
+        || echo "warning: thpm could not enable $integration (see: thpm doctor $integration)" >&2
+done
 {{ end -}}

@@ -161,7 +161,7 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_20-configure-pacman-repos.sh.tmpl` | Splices `~/.config/pacman/custom-repos-{head,tail}.conf` into `/etc/pacman.conf` via the omarchy `pre-refresh-pacman` hook (one sudo); omarchy-only |
 | `run_onchange_30-install-packages-flatpak.sh.tmpl` | Flatpak GUI apps (Linux, tier 4+) |
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
-| `run_onchange_40-install-thpm.sh.tmpl` | Installs THPM (theme-hook-plugin-manager) at a pinned commit; omarchy-only |
+| `run_onchange_40-install-thpm.sh.tmpl` | Installs THPM (Theme Hook Plugin Manager) from a pinned source commit and enables the listed integrations; omarchy-only |
 | `run_onchange_50-configure-hyprpm.sh.tmpl` | Adds hyprpm repos and enables declared plugins; omarchy-only |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_61-configure-tide.sh.tmpl` | Configures Tide prompt |
