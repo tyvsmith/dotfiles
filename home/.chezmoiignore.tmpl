@@ -5,6 +5,9 @@
 # Sample/template files exist as in-repo documentation only, never deployed
 **/*.sample
 
+# Python test suites run from the source dir leave bytecode caches behind
+**/__pycache__
+
 {{ if not (get $p "decrypt") }}
 # Encryption not configured for this profile — skip encrypted files
 **/*.age
@@ -37,8 +40,15 @@
 {{ end }}
 
 {{ if ne .chezmoi.os "darwin" }}
-# macOS-only apps — skip on Linux
-.config/borders/
+# macOS-only configs — the software does not exist on Linux:
+#   skhd    hotkey daemon (+ launch-here.sh, new-ghostty-window.sh)
+#   omniwm  Niri-style tiling window manager
+#   borders JankyBorders window borders
+#   raycast launcher
+.config/skhd
+.config/omniwm
+.config/borders
+.config/raycast
 {{ end }}
 
 {{ if ne (get $p "de") "hyprland-omarchy" }}
