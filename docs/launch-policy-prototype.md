@@ -8,7 +8,9 @@ HYPR_WORKSPACE=6 HYPR_FULLSCREEN=1 HYPR_HDR=1 HYPR_DND=1 scb -- command
 
 - read launch controls through `hypr/launch_options.lua`; keep autostart identity and scope fallback there too
 - apply workspace/fullscreen once through `placement.lua`; preserve later manual changes
-- initialize `hdr.lua` from `monitors.lua`; keep HDR while a local ScopeBuddy launch lives, including on another workspace
+- register HDR outputs in `monitors.lua` and managed apps in `windows.lua` through `launch_policy.lua`
+- start placement, HDR, and DND once through `launch_policy.setup()` at the end of `hyprland.lua`
+- keep HDR while a local ScopeBuddy launch lives, including on another workspace
 - keep the existing pre-launch wait so the game sees HDR before probing display capabilities
 - release only the exiting launch; restore SDR after all local demand ends
 - leave stream HDR to Punktfunk; export `HYPR_HDR=0` for streamed launches
@@ -19,7 +21,7 @@ HYPR_WORKSPACE=6 HYPR_FULLSCREEN=1 HYPR_HDR=1 HYPR_DND=1 scb -- command
 - force `HYPR_DND=0` for streamed launches and exclude `PF-*` outputs
 - enable Omarchy DND while the focused opted-in window is fullscreen or matches its monitor's logical bounds within two pixels
 - disable DND on focus loss, workspace changes, resize to a smaller window, or exit
-- initialize `dnd.lua` from `hyprland.lua`; use focus events and a 250 ms geometry fallback, sending IPC only when the desired state changes
+- use focus events and a 250 ms geometry fallback in `dnd.lua`, sending IPC only when the desired state changes
 - save no prior DND value; this policy owns DND transitions and does not preserve manual DND
 - keep Omarchy's normal DND exceptions, including verification codes
 
@@ -37,6 +39,8 @@ A one-second timer covers DPMS wake, missed cleanup, and actual preset drift.
 The module applies each registered baseline and owns subsequent HDR updates.
 Runtime updates change only `cm`; geometry stays in the existing monitor rule.
 No wildcard or brand-specific logic lives in the tracker.
+
+ScopeBuddy calls `launch_policy.hdr.acquire`, `ready`, and `release`.
 
 The pre-launch command requests HDR on every registered, connected, awake output
 and waits for those outputs to report HDR. Sleeping or disconnected outputs keep

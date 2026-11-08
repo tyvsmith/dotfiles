@@ -1,10 +1,10 @@
 -- Personal rules, registered after Omarchy defaults. Later exceptions win.
-local placement = require("hypr.placement")
+local policy = require("hypr.launch_policy")
 
 -- Keep each destination here; autostart only supplies launch identity.
 local function app(class, workspace, match)
   o.window(match or class:gsub("%.", "\\."), { workspace = workspace .. " silent" })
-  placement.manage(class)
+  policy.manage_window(class)
 end
 
 -- slack

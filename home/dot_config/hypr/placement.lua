@@ -37,7 +37,7 @@ function M.place_from_env(window)
   return true
 end
 
-if hl then
+function M.setup()
   hl.on("window.open", function(w)
     if not w or not w.address or not w.workspace then return end
     if M.place_from_env(w) then return end

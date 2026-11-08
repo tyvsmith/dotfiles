@@ -28,4 +28,4 @@ require("default.hypr.toggles")
 -- Add any other personal Hyprland configuration below.
 -- o.window("qemu", { workspace = "5" })
 require("hypr.windows")
-require("hypr.dnd").setup()
+launch_policy = require("hypr.launch_policy").setup()
