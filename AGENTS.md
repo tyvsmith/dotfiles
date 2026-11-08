@@ -167,10 +167,10 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
 | `run_onchange_40-install-thpm.sh.tmpl` | Installs THPM (Theme Hook Plugin Manager) from a pinned source commit and enables the listed integrations; omarchy-only |
 | `run_onchange_50-configure-hyprpm.sh.tmpl` | Adds hyprpm repos and enables declared plugins; omarchy-only |
-| `run_onchange_59-configure-fish-shell.sh.tmpl` | Registers fish in `/etc/shells` and sets it as the login shell once package managers have installed it |
+| `run_onchange_59-configure-fish-shell.sh.tmpl` | Registers fish in `/etc/shells` and sets it as the login shell once package managers have installed it (`configure_fish_login_shell` in `scripts/lib/common.sh`) |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_70-configure-restic.sh.tmpl` | Registers resticprofile systemd timers (user `default` + root `system`/etc); `backup` profiles only |
-| `run_after_90-devpod-shell.sh.tmpl` | Devpod-only: re-registers fish as the login shell on every apply, since devpods reset `/etc/shells` on restart |
+| `run_after_90-devpod-shell.sh.tmpl` | Devpod-only: re-runs `configure_fish_login_shell` on every apply, since devpods reset `/etc/shells` and the login shell on restart |
 
 ### Backups (restic + resticprofile)
 

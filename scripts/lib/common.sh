@@ -106,6 +106,76 @@ ensure_pkg() {
   fi
 }
 
+# Register fish in /etc/shells and make it the login shell.
+# Two callers: run_onchange_59-configure-fish-shell runs once per content
+# change on every machine, after the package managers have installed fish;
+# run_after_90-devpod-shell is devpod-only and runs on every apply, because a
+# devpod restart resets /etc/shells and the login shell. Quiet when there is
+# nothing to do so the every-apply caller does not spam the log.
+# Privileged steps go through `sudo -n`; without passwordless sudo the manual
+# command is printed and the function returns 0.
+configure_fish_login_shell() {
+  local fish_path="" p user
+  user="$(whoami)"
+
+  for p in /opt/homebrew/bin/fish /usr/local/bin/fish \
+           /home/linuxbrew/.linuxbrew/bin/fish "$HOME/.linuxbrew/bin/fish" \
+           "$HOME/.local/bin/fish" /usr/bin/fish; do
+    if [[ -x "$p" ]]; then
+      fish_path="$p"
+      break
+    fi
+  done
+  if [[ -z "$fish_path" ]]; then
+    fish_path="$(command -v fish 2>/dev/null || true)"
+  fi
+  if [[ -z "$fish_path" || ! -x "$fish_path" ]]; then
+    warn "fish not found — skipping shell setup"
+    return 0
+  fi
+
+  local current_shell
+  if [[ "${OSTYPE:-}" == darwin* ]]; then
+    current_shell="$(dscl . -read "/Users/$user" UserShell | awk '{print $2}')"
+  else
+    current_shell="$(getent passwd "$user" | cut -d: -f7)"
+  fi
+
+  local in_shells=0
+  grep -qxF "$fish_path" /etc/shells 2>/dev/null && in_shells=1
+  if [[ $in_shells -eq 1 && "$current_shell" == "$fish_path" ]]; then
+    return 0
+  fi
+
+  if [[ $in_shells -eq 0 ]]; then
+    if sudo -n true 2>/dev/null; then
+      log "Adding $fish_path to /etc/shells"
+      echo "$fish_path" | sudo tee -a /etc/shells >/dev/null
+    else
+      warn "$fish_path is not in /etc/shells — run manually:"
+      warn "  echo '$fish_path' | sudo tee -a /etc/shells"
+      return 0
+    fi
+  fi
+
+  if [[ "$current_shell" != "$fish_path" ]]; then
+    local -a chsh_cmd
+    if [[ "${OSTYPE:-}" == darwin* ]]; then
+      chsh_cmd=(chsh -s "$fish_path" "$user")
+    else
+      chsh_cmd=(usermod -s "$fish_path" "$user")
+    fi
+    if sudo -n true 2>/dev/null; then
+      log "Setting login shell to $fish_path"
+      sudo "${chsh_cmd[@]}"
+    else
+      warn "Login shell is not $fish_path — run manually:"
+      warn "  sudo ${chsh_cmd[*]}"
+      return 0
+    fi
+  fi
+}
+
 # Install the candidates a probe command reports available; warn about the rest.
 # Usage: install_probed <probe-cmd> <install-cmd> <unavailable-msg> [hint...]
 # Reads CANDIDATE_PACKAGES (declare -A, pkg_name -> display_name) from the caller:
