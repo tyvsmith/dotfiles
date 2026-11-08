@@ -1,3 +1,4 @@
+package.path = "home/dot_config/?.lua;" .. package.path
 -- Run from the repository root: lua tests/hypr/placement.lua
 local path = "home/dot_config/hypr/placement.lua"
 local real_open = io.open
