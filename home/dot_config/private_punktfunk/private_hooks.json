@@ -29,18 +29,6 @@
       "run": "/usr/share/punktfunk/omarchy/hooks/idle-guard off",
       "timeout_s": 30,
       "debounce_ms": 0
-    },
-    {
-      "on": "stream.started",
-      "run": "omarchy-shell notifications setDnd on",
-      "timeout_s": 10,
-      "debounce_ms": 0
-    },
-    {
-      "on": "stream.stopped",
-      "run": "omarchy-shell notifications setDnd off",
-      "timeout_s": 10,
-      "debounce_ms": 0
     }
   ]
 }
