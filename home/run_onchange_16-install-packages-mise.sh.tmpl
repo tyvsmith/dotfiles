@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install mise-managed packages
 #
-# Cascade order: mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Package selection: .chezmoitemplates/cascade-filter
 # Installs every tool in ~/.config/mise/conf.d/20-packages.toml as a prebuilt
 # release binary, at the version and checksum pinned in ~/.config/mise/mise.lock.
 # chezmoi merges the repo's pins (.chezmoitemplates/mise-packages.lock, from
 # scripts/mise-lock) into that lock without dropping local entries.
 #
-# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
-# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
-# mise-packages.lock hash: {{ include ".chezmoitemplates/mise-packages.lock" | sha256sum }}
+# Reruns when what it reads at runtime changes (hashes below):
+#   20-packages.toml (rendered): {{ includeTemplate "dot_config/mise/conf.d/20-packages.toml.tmpl" . | sha256sum }}
+#   mise-packages.lock: {{ include ".chezmoitemplates/mise-packages.lock" | sha256sum }}
+#   modify_mise.lock: {{ include "dot_config/mise/modify_mise.lock" | sha256sum }}
 
 {{ $p := index .profiles .profile -}}
 {{ if not (and (hasKey $p "mise") $p.mise) -}}

@@ -2,7 +2,7 @@
 # Package definitions — single source of truth for all platforms
 # =============================================================================
 #
-# Cascade order: mise → brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Cascade order: mise → brew → brew_cask → pacman → apt → rpm_ostree → flatpak → appimage
 # Each package goes to the first enabled manager that can handle it.
 # Cascade logic lives in .chezmoitemplates/cascade-filter.
 #
@@ -24,7 +24,6 @@
 #   brew:       (absent)          # Homebrew formula name or false
 #   pacman:     (absent)          # Arch/AUR package name or false (paru handles both repos and AUR)
 #   apt:        (absent)          # apt package name or false
-#   dnf:        (absent)          # dnf package name or false
 #
 # Brew modifier fields:
 #   brew_cask:  false             # true = Homebrew cask (macOS only); name from brew: or YAML key
@@ -103,7 +102,6 @@ packages:
     desc: "find replacement"
     mise: "aqua:sharkdp/fd"
     apt: fd-find
-    dnf: fd-find
 
   ripgrep:
     tags: [core]
@@ -351,7 +349,6 @@ packages:
   imagemagick:
     tags: [core-extra]
     desc: "Image manipulation"
-    dnf: ImageMagick
 
   7zip:
     tags: [core-extra]
@@ -365,7 +362,6 @@ packages:
     tags: [dev]
     desc: "Shell script linter"
     mise: "aqua:koalaman/shellcheck"
-    dnf: ShellCheck
 
   tokei:
     tags: [dev-extra]
@@ -406,14 +402,12 @@ packages:
     brew_cask: true
     pacman: omarchy/claude-desktop # pinned: cachyos ships a stale, broken build under the same name
     apt: false
-    dnf: false
 
   herdr:
     tags: [ai]
     desc: "Terminal multiplexer for AI coding agents"
     mise: "aqua:herdrdev/herdr"
     apt: false
-    dnf: false
 
   openai-codex-desktop:
     tags: [ui]
@@ -422,7 +416,6 @@ packages:
     brew_cask: true
     pacman: omarchy/openai-codex-desktop # pinned: cachyos chatgpt-desktop-bin lags and Replaces this
     apt: false
-    dnf: false
 
   # Disabled: omarchy 4 provides these as lazy mise wrappers in ~/.local/bin.
   # opencode:
@@ -464,7 +457,6 @@ packages:
     brew: false
     pacman: false
     apt: false
-    dnf: false
     appimage: selkies-project/selkies
 
   wayland-utils:

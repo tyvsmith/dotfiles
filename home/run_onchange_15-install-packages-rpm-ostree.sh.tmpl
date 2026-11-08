@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install packages via rpm-ostree (immutable Fedora)
-#
-# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Package selection: .chezmoitemplates/cascade-filter
 # Only includes packages with rpm_ostree: true that need OS-level integration
 # on immutable Fedora systems (Silverblue, Bazzite, etc.).
-#
-# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
-# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
 
 {{ $p := index .profiles .profile -}}
 {{ if not (and (hasKey $p "rpm_ostree") $p.rpm_ostree) -}}

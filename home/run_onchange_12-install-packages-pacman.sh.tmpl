@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install packages via pacman/paru (Arch Linux)
-#
-# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
-# Only includes packages not handled by an earlier manager.
-#
-# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
-# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
+# Package selection: .chezmoitemplates/cascade-filter
+# CANDIDATE_PACKAGES is filled here and read by install_probed (common.sh).
+# shellcheck disable=SC2034
 
 {{ $p := index .profiles .profile -}}
 {{ if not (and (hasKey $p "pacman") $p.pacman) -}}
@@ -26,46 +23,11 @@ declare -A CANDIDATE_PACKAGES=()  # pkg_name -> display_name
 {{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "pacman" "fmt" "CANDIDATE_PACKAGES[%s]=\"%s\"") }}
 {{- end }}
 
-# =============================================================================
-# Check availability and split into installable vs missing
-# =============================================================================
-PACMAN_PACKAGES=()
-MISSING_PACKAGES=()
-
-for pkg_name in "${!CANDIDATE_PACKAGES[@]}"; do
-    if paru -Si "$pkg_name" &>/dev/null; then
-        PACMAN_PACKAGES+=("$pkg_name")
-    else
-        MISSING_PACKAGES+=("${CANDIDATE_PACKAGES[$pkg_name]}")
-    fi
-done
-
-# Sort for deterministic output
-IFS=$'\n' PACMAN_PACKAGES=($(sort <<<"${PACMAN_PACKAGES[*]}")); unset IFS
-IFS=$'\n' MISSING_PACKAGES=($(sort <<<"${MISSING_PACKAGES[*]}")); unset IFS
-
-# =============================================================================
-# Install available packages
-# =============================================================================
-log "Installing ${#PACMAN_PACKAGES[@]} packages via paru..."
-if [[ ${#PACMAN_PACKAGES[@]} -gt 0 ]]; then
-    paru -S --needed --noconfirm "${PACMAN_PACKAGES[@]}"
-fi
-
-# =============================================================================
-# Warn about missing packages
-# =============================================================================
-if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
-    warn "The following packages are not available in official repos or AUR:"
-    for pkg in "${MISSING_PACKAGES[@]}"; do
-        warn "  - $pkg"
-    done
-    log ""
-    log "To install missing tools, consider:"
-    log "  1. pipx install <package> (for Python tools)"
-    log "  2. cargo install <package>"
-    log "  3. npm install -g <package>"
-fi
+install_probed "paru -Si" "paru -S --needed --noconfirm" \
+    "The following packages are not available in official repos or AUR:" \
+    "pipx install <package> (for Python tools)" \
+    "cargo install <package>" \
+    "npm install -g <package>"
 
 log ""
 log "Arch package installation complete!"

@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install packages via AppImage
-#
-# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
+# Package selection: .chezmoitemplates/cascade-filter
 # Last resort: only includes packages with an appimage: field that aren't
 # handled by any earlier manager (native or flatpak).
-#
-# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
-# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
 
 {{ $p := index .profiles .profile -}}
 {{ if not (and (hasKey $p "appimage") $p.appimage) -}}

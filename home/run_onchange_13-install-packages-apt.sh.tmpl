@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Install packages via apt (Debian/Ubuntu)
-#
-# Cascade order: brew → brew_cask → pacman → apt → dnf → rpm_ostree → flatpak → appimage
-# Only includes packages not handled by an earlier manager.
+# Package selection: .chezmoitemplates/cascade-filter
+# CANDIDATE_PACKAGES is filled here and read by install_probed (common.sh).
+# shellcheck disable=SC2034
 # Uses runtime apt-cache checks to determine availability.
-#
-# packages.yaml hash: {{ include ".chezmoidata/packages.yaml" | sha256sum }}
-# profiles.yaml hash: {{ include ".chezmoidata/profiles.yaml" | sha256sum }}
 
 {{ $p := index .profiles .profile -}}
 {{ if not (and (hasKey $p "apt") $p.apt) -}}
@@ -25,53 +22,15 @@ declare -A CANDIDATE_PACKAGES=()  # pkg_name -> display_name
 {{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "apt" "fmt" "CANDIDATE_PACKAGES[%s]=\"%s\"") }}
 {{- end }}
 
-# =============================================================================
-# Update package cache
-# =============================================================================
 log "Updating apt cache..."
 sudo apt-get update
 
-# =============================================================================
-# Check availability and split into installable vs missing
-# =============================================================================
-APT_PACKAGES=()
-MISSING_PACKAGES=()
-
-for apt_name in "${!CANDIDATE_PACKAGES[@]}"; do
-    if apt-cache show "$apt_name" &>/dev/null; then
-        APT_PACKAGES+=("$apt_name")
-    else
-        MISSING_PACKAGES+=("${CANDIDATE_PACKAGES[$apt_name]}")
-    fi
-done
-
-# Sort for deterministic output
-IFS=$'\n' APT_PACKAGES=($(sort <<<"${APT_PACKAGES[*]}")); unset IFS
-IFS=$'\n' MISSING_PACKAGES=($(sort <<<"${MISSING_PACKAGES[*]}")); unset IFS
-
-# =============================================================================
-# Install available packages
-# =============================================================================
-log "Installing ${#APT_PACKAGES[@]} packages from apt repositories..."
-if [[ ${#APT_PACKAGES[@]} -gt 0 ]]; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${APT_PACKAGES[@]}"
-fi
-
-# =============================================================================
-# Warn about missing packages
-# =============================================================================
-if [[ ${#MISSING_PACKAGES[@]} -gt 0 ]]; then
-    warn "The following packages are not available in your apt repositories:"
-    for pkg in "${MISSING_PACKAGES[@]}"; do
-        warn "  - $pkg"
-    done
-    log ""
-    log "To install missing tools, consider:"
-    log "  1. Rust toolchain: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
-    log "  2. cargo install <package>"
-    log "  3. Alternative package sources (PPAs, third-party repos)"
-    log "  4. Re-run with --profile debian-brew to use Homebrew on Linux"
-fi
+install_probed "apt-cache show" "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y" \
+    "The following packages are not available in your apt repositories:" \
+    "Rust toolchain: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" \
+    "cargo install <package>" \
+    "Alternative package sources (PPAs, third-party repos)" \
+    "Homebrew on Linux: re-init with a brew-enabled profile (e.g. devpod)"
 
 log ""
 log "apt package installation complete!"
