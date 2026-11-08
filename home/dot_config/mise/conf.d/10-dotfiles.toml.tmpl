@@ -1,4 +1,5 @@
-{{ $tags := splitList ", " .tags -}}
+{{- $p := index .profiles .profile -}}
+{{ $tags := $p.tags -}}
 {{ if has "dev" $tags -}}
 # Chezmoi owns this drop-in: language runtimes and mise settings, nothing else.
 # Omarchy owns ~/.config/mise/config.toml, which its ~/.local/bin lazy wrappers

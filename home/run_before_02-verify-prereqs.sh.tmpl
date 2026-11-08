@@ -1,4 +1,6 @@
-{{- if ne .de "" -}}
+{{- $p := index .profiles .profile -}}
+{{- $de := get $p "de" -}}
+{{- if ne $de "" -}}
 #!/usr/bin/env bash
 # Verify profile prerequisites are met before applying configs.
 # Checks are driven by profile properties (de, etc.).
@@ -8,7 +10,7 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
-{{ if eq .de "hyprland-omarchy" -}}
+{{ if eq $de "hyprland-omarchy" -}}
 # hyprland-omarchy: configs are overlays on omarchy's base.
 [[ -d /usr/share/omarchy ]] || fail "omarchy not found at /usr/share/omarchy
 

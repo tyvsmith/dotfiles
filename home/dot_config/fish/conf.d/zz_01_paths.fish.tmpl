@@ -12,7 +12,7 @@ if test -x $brew_prefix/bin/brew
 end
 {{ end -}}
 
-{{ if eq .de "hyprland-omarchy" -}}
+{{ if eq (get $p "de") "hyprland-omarchy" -}}
 # Omarchy. /etc/omarchy.conf is written by omarchy-dev-link; without it, use
 # the package default rather than a stale inherited dev-link value. Only a
 # dev-link checkout needs its bin dir on PATH (production ships /usr/bin/omarchy-*).
@@ -38,7 +38,7 @@ fish_add_path -a --path ~/.local/bin
 # cached copy would replay a stale PATH snapshot into every new shell.
 command -q mise; and mise activate fish | source
 
-{{ if eq .de "hyprland-omarchy" -}}
+{{ if eq (get $p "de") "hyprland-omarchy" -}}
 # mise's command wrappers must precede real tool dirs inherited from a parent
 # shell, so scripts follow omarchy agent account switches (mirrors omarchy's
 # env-bootstrap). hook-env keeps it ahead of mise-managed tool bins.

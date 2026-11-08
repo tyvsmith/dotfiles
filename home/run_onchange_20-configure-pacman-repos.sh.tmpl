@@ -1,5 +1,6 @@
+{{- $p := index .profiles .profile -}}
 #!/usr/bin/env bash
-{{ if eq .de "hyprland-omarchy" -}}
+{{ if eq (get $p "de") "hyprland-omarchy" -}}
 # Splice the third-party pacman repo snippets into /etc/pacman.conf via the
 # omarchy pre-refresh-pacman hook, so editing a snippet + `chezmoi apply` takes
 # effect now rather than at the next `omarchy refresh pacman`.

@@ -1,4 +1,5 @@
-{{- if get (index .profiles .profile) "devpod" -}}
+{{- $p := index .profiles .profile -}}
+{{- if get $p "devpod" -}}
 #!/usr/bin/env bash
 # Devpods reset /etc/shells on restart, so re-register fish on every apply.
 

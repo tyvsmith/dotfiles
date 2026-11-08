@@ -52,9 +52,10 @@ fi
 platforms="linux-x64,linux-arm64"
 cz=(chezmoi --source "$repo")
 
-# Render as the target profile, not this machine's: override every profile
-# property the cascade filter reads.
-data="$("${cz[@]}" execute-template "{{ \$p := index .profiles \"$profile\" }}{{ if not (get \$p \"mise\") }}{{ fail \"profile $profile does not enable mise\" }}{{ end }}{{ dict \"profile\" \"$profile\" \"tags\" \$p.tags \"work\" (get \$p \"work\" | default false) \"decrypt\" (get \$p \"decrypt\" | default false) \"backup\" (get \$p \"backup\" | default false) \"de\" (get \$p \"de\" | default \"\") | toJson }}")"
+# Render as the target profile, not this machine's. Templates read every other
+# profile property live from profiles.yaml.
+"${cz[@]}" execute-template "{{ if not (get (index .profiles \"$profile\") \"mise\") }}{{ fail \"profile $profile does not enable mise\" }}{{ end }}"
+data="{\"profile\":\"$profile\"}"
 
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT

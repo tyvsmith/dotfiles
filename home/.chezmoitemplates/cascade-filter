@@ -42,15 +42,15 @@
 {{- /* Enabled, tags, OS, DE, work, and decrypt gates */ -}}
 {{- $enabled := not (and (hasKey $pkg "enabled") (not $pkg.enabled)) -}}
 {{- $tags_ok := false -}}
-{{- $profile_tags := splitList ", " .root.tags -}}
+{{- $profile_tags := $p.tags -}}
 {{- range $pkg.tags -}}
 {{-   if has . $profile_tags -}}{{- $tags_ok = true -}}{{- end -}}
 {{- end -}}
 {{- $os_ok := or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $os) -}}
-{{- $de_ok := or (not (hasKey $pkg "de")) (eq (default "" $pkg.de) .root.de) -}}
-{{- $work_ok := or (not (hasKey $pkg "work")) (eq $pkg.work .root.work) -}}
-{{- $decrypt_ok := or (not (hasKey $pkg "decrypt")) (eq $pkg.decrypt .root.decrypt) -}}
-{{- $backup_ok := or (not (hasKey $pkg "backup")) (eq $pkg.backup .root.backup) -}}
+{{- $de_ok := or (not (hasKey $pkg "de")) (eq (default "" $pkg.de) (get $p "de" | default "")) -}}
+{{- $work_ok := or (not (hasKey $pkg "work")) (eq $pkg.work (get $p "work" | default false)) -}}
+{{- $decrypt_ok := or (not (hasKey $pkg "decrypt")) (eq $pkg.decrypt (get $p "decrypt" | default false)) -}}
+{{- $backup_ok := or (not (hasKey $pkg "backup")) (eq $pkg.backup (get $p "backup" | default false)) -}}
 
 {{- /* Opt-in managers: require their field to exist and be truthy */ -}}
 {{- $field_ok := true -}}

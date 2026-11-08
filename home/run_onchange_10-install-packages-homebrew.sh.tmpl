@@ -39,7 +39,7 @@ tap "{{ $pkg.brew_tap }}"
 brew "mas"
 {{- range $key, $pkg := .packages }}
 {{-   $mas_tags_ok := false -}}
-{{-   $mas_profile_tags := splitList ", " $.tags -}}
+{{-   $mas_profile_tags := $p.tags -}}
 {{-   range $pkg.tags -}}
 {{-     if has . $mas_profile_tags -}}{{- $mas_tags_ok = true -}}{{- end -}}
 {{-   end -}}

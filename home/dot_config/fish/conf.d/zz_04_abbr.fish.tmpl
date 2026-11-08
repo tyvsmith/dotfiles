@@ -1,10 +1,11 @@
+{{- $p := index .profiles .profile -}}
 # =============================================================================
 # Modern CLI Tool Abbreviations
 # These EXPAND visibly before running, helping build muscle memory
 # Non-core abbreviations are gated by profile tags at template time
 # =============================================================================
 
-{{- $tags := splitList ", " .tags }}
+{{- $tags := $p.tags }}
 if status is-interactive
     function __deferred_abbr_init --on-event fish_prompt
     #Delete the function after it runs the first time
@@ -122,12 +123,12 @@ if status is-interactive
             abbr --add ic  'tdl c'
             abbr --add ix  'tdl cx'
             abbr --add icx 'tdl c cx'
-            {{ if eq .de "hyprland-omarchy" -}}
+            {{ if eq (get $p "de") "hyprland-omarchy" -}}
             abbr --add a 'omarchy-agent --inline'
             {{ end -}}
         {{ end -}}
 
-        {{ if .work -}}
+        {{ if get $p "work" -}}
             # --- DevPod (work) ---
             abbr --add dv devpod
             abbr -a --position anywhere --command devpod rm delete

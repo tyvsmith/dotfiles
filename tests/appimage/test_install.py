@@ -43,8 +43,7 @@ elif args[:2]==['install','appimage']:
 elif args[:2]==['sync','appimage'] and os.environ.get('FAIL_SYNC'): sys.exit(7)
 ''')
         template = REPO / 'home/run_onchange_31-install-packages-appimage.sh.tmpl'
-        overrides = {'profile': 'test', 'profiles': {'test': {'appimage': True}},
-                     'tags': 'ui', 'de': '', 'work': False, 'decrypt': False, 'backup': False,
+        overrides = {'profile': 'test', 'profiles': {'test': {'appimage': True, 'tags': ['ui']}},
                      'packages': {'selkies': {'enabled': False}, 'sample': {'tags': ['ui'], 'pacman': False,
                      'brew': False, 'apt': False, 'appimage': 'owner/sample'}}}
         config = self.root / 'chezmoi.toml'

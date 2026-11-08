@@ -1,4 +1,5 @@
-{{ if and (eq .chezmoi.os "linux") .backup -}}
+{{- $p := index .profiles .profile -}}
+{{ if and (eq .chezmoi.os "linux") (get $p "backup") -}}
 #!/usr/bin/env bash
 # Register the resticprofile backup/check schedules as systemd --user timers.
 # Gated on the profile's `backup: true` flag — only personal machines run restic;

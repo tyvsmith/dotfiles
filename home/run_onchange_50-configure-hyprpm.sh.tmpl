@@ -1,10 +1,11 @@
+{{- $p := index .profiles .profile -}}
 #!/usr/bin/env bash
 # Chezmoi run_onchange script: Reconcile hyprpm plugin state with the dotfiles
 # declaration. hyprpm itself is installed via packages.yaml (its own pacman
 # package since hyprland 0.56.2-3); this script only adds repos and enables
 # plugins.
 
-{{ if ne .de "hyprland-omarchy" -}}
+{{ if ne (get $p "de") "hyprland-omarchy" -}}
 # Profile '{{ .profile }}' is not omarchy — nothing to do.
 exit 0
 {{ else -}}
