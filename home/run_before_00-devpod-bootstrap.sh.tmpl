@@ -42,13 +42,4 @@ if [ -f "/etc/gitconfig" ]; then
 fi
 
 {{ end -}}
-# Migrate ~/.devpod directory to ~/.config/devpod so chezmoi can replace it with a symlink
-if [ -d "$HOME/.devpod" ] && [ ! -L "$HOME/.devpod" ]; then
-  log "Migrating ~/.devpod to ~/.config/devpod..."
-  mkdir -p "$HOME/.config/devpod"
-  sudo cp -an "$HOME/.devpod/." "$HOME/.config/devpod/"
-  sudo chown -R "$(whoami):$(id -gn)" "$HOME/.config/devpod"
-  sudo rm -rf "$HOME/.devpod"
-fi
-
 {{ end -}}
