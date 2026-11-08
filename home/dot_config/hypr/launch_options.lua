@@ -37,6 +37,7 @@ function M.read(pid)
   local options = {
     fullscreen = ("\0" .. blob):find("\0HYPR_FULLSCREEN=1\0", 1, true) ~= nil,
     hdr = ("\0" .. blob):find("\0HYPR_HDR=1\0", 1, true) ~= nil,
+    dnd = ("\0" .. blob):find("\0HYPR_DND=1\0", 1, true) ~= nil,
   }
   for entry in blob:gmatch("[^%z]+") do
     local target, suffix = entry:match("^HYPR_WORKSPACE=([1-9]%d*)(.*)$")

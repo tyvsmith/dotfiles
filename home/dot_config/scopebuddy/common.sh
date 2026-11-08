@@ -8,8 +8,10 @@ apply_desktop_defaults() {
     export HYPR_FULLSCREEN=${HYPR_FULLSCREEN-1}
     if (( scb_punktfunk_stream )); then
         export HYPR_HDR=0
+        export HYPR_DND=0
     else
         export HYPR_HDR=${HYPR_HDR-1}
+        export HYPR_DND=${HYPR_DND-1}
     fi
     export MANGOHUD=${MANGOHUD:-1}
     export MANGOHUD_CONFIG=${MANGOHUD_CONFIG:-preset=2,fps_limit=$fps_cap}
