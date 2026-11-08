@@ -45,17 +45,17 @@ streaming 0); Gamescope's `-r` gets the rounded refresh.
 
 ## Local HDR lifecycle
 
-- `scb_display_start` runs `hyprctl eval 'lg_hdr(true)'` and waits for `DP-1`
-  to report the `hdr` preset before the game starts. Failure aborts the launch:
-  native mode runs `pre_command && game`, Gamescope mode sets
-  `SCB_PRE_COMMAND="scb_display_start || exit 1"` because ScopeBuddy only warns
-  when a hook fails.
-- `scb_display_stop` restores SDR only if this launch enabled HDR. Streamed
-  launches never touch the LG; Punktfunk owns its outputs and HDR metadata.
-- `lg_hdr` lives in `hypr/monitors.lua` and only changes an active `DP-1`. Run
-  one local SCB game at a time: the first exit restores SDR. `SIGKILL` of SCB
-  or a compositor crash skips cleanup; `hyprctl eval 'lg_hdr(false)'` or a
-  config reload restores the SDR baseline.
+- `hypr/monitors.lua` registers `DP-1` with `hypr/hdr.lua`; unregistered outputs
+  are untouched
+- `scb_display_start` registers ScopeBuddy's PID through `launch_hdr.acquire`
+  and waits for registered, awake outputs to enter HDR before starting the game
+- `scb_display_stop` releases only that launch; other local launches retain HDR
+- PID/start-time records in Hyprland's runtime directory survive reloads;
+  dead owners are pruned and the final exit restores the SDR baseline
+- window/monitor events and a one-second timer reconcile HDR after reload,
+  reconnect, wake, or preset drift without waking sleeping outputs
+- streamed launches do not acquire local HDR; `HYPR_HDR=0` opts out locally
+- see `launch-policy-prototype.md` for verification and remaining limitations
 
 ## Punktfunk detection
 
@@ -71,7 +71,8 @@ streaming 0); Gamescope's `-r` gets the rounded refresh.
 
 ## Window placement
 
-Desktop modes export `HYPR_WORKSPACE=6` (local only) and `HYPR_FULLSCREEN=1`.
+Desktop modes export `HYPR_WORKSPACE=6` (local only), `HYPR_FULLSCREEN=1`,
+and `HYPR_HDR=1` for local launches (`0` for streams).
 `hypr/placement.lua` reads them from each new window's environment and moves
 and fullscreens it once. These are personal markers, not ScopeBuddy or Hyprland
 variables; `export HYPR_FULLSCREEN=0` in a game file opts out.

@@ -6,6 +6,11 @@ apply_desktop_defaults() {
         unset HYPR_WORKSPACE
     fi
     export HYPR_FULLSCREEN=${HYPR_FULLSCREEN-1}
+    if (( scb_punktfunk_stream )); then
+        export HYPR_HDR=0
+    else
+        export HYPR_HDR=${HYPR_HDR-1}
+    fi
     export MANGOHUD=${MANGOHUD:-1}
     export MANGOHUD_CONFIG=${MANGOHUD_CONFIG:-preset=2,fps_limit=$fps_cap}
     # SCB warns on ordinary pre-hook failures; failed HDR preparation must abort.
@@ -36,7 +41,7 @@ load_game_config() {
 
 # Source once in ScopeBuddy's shell so the exit hook shares cleanup ownership.
 # init snapshots the game-facing display; getters never query the system again.
-# start prepares that target before launch; stop restores only HDR enabled by this launch.
+# start registers local HDR demand before launch; stop releases only this launch.
 
 display_init() {
     local status monitors mode relay
@@ -64,7 +69,7 @@ display_init() {
         mode=$(_scb_xrandr_mode) || return 0
     elif [[ -n $_scb_local_hyprland ]]; then
         monitors=$(timeout 2 hyprctl -j monitors) || return 1
-        # A connected tablet alone does not redirect games away from the LG.
+        # A focused stream selects streaming preferences; otherwise use the local display.
         if jq -e 'any(.[]; .focused == true and .disabled != true and (.name | startswith("PF-")))' <<< "$monitors" >/dev/null &&
             status=$(timeout 2 punktfunk-host ctl status --json 2>/dev/null) &&
             jq -e '.data.active_sessions > 0' <<< "$status" >/dev/null; then
@@ -73,12 +78,13 @@ display_init() {
         mode=$(jq -er --argjson stream "$scb_punktfunk_stream" '
             [.[] | select(.disabled != true) |
                 select(if $stream == 1 then .focused == true and (.name | startswith("PF-"))
-                       else .name == "DP-1" end)] |
+                       else (.name | startswith("PF-") | not) end)] |
+            if $stream == 0 and length > 1 then map(select(.focused == true)) else . end |
             if length == 1 then .[0] else empty end |
             select([.width, .height, .refreshRate] | all(type == "number" and . > 0)) |
             [.width, .height, .refreshRate] | @tsv
         ' <<< "$monitors") || {
-            printf 'ScopeBuddy: cannot resolve the active game display (LG DP-1 or focused stream).\n' >&2
+            printf 'ScopeBuddy: cannot resolve the active game display (local output or focused stream).\n' >&2
             return 1
         }
     else
@@ -121,32 +127,34 @@ _scb_xrandr_mode() {
 }
 
 scb_display_start() {
-    # Punktfunk owns streamed outputs; only prepare the local LG.
+    # Punktfunk owns streamed outputs; only local launches request HDR.
     (( scb_punktfunk_stream )) && return 0
     [[ -n $_scb_local_hyprland ]] || return 0
-    _scb_set_local_hdr true || return 1
+    [[ ${HYPR_HDR:-0} == 1 ]] || return 0
+    # Mark cleanup ownership first, including a partially failed acquire.
     _scb_local_hdr_enabled=1
+    _scb_hdr_launch acquire || return 1
     # Monitor rules commit after the eval reply. Wait before the game probes HDR.
     local attempt
     for attempt in {1..20}; do
-        if timeout 1 hyprctl -j monitors | jq -e 'any(.[]; .name == "DP-1" and .colorManagementPreset == "hdr")' >/dev/null; then
+        if [[ $(timeout 1 hyprctl eval 'assert(launch_hdr.ready(), "HDR outputs are not ready")') == ok ]]; then
             return 0
         fi
         sleep 0.05
     done
-    printf 'ScopeBuddy: LG did not enter HDR; aborting launch.\n' >&2
+    printf 'ScopeBuddy: Registered outputs did not enter HDR; aborting launch.\n' >&2
     return 1
 }
 
 scb_display_stop() {
-    if (( _scb_local_hdr_enabled )); then _scb_set_local_hdr false; fi
+    if (( _scb_local_hdr_enabled )); then _scb_hdr_launch release; fi
 }
 
-_scb_set_local_hdr() {
+_scb_hdr_launch() {
     local reply
-    reply=$(timeout 3 hyprctl eval "lg_hdr($1)") || return 1
+    reply=$(timeout 3 hyprctl eval "launch_hdr.$1($$)") || return 1
     if [[ $reply != ok ]]; then
-        printf 'ScopeBuddy: LG HDR command rejected: %s\n' "$reply" >&2
+        printf 'ScopeBuddy: HDR launch command rejected: %s\n' "$reply" >&2
         return 1
     fi
 }

@@ -1,3 +1,4 @@
+package.path = "home/dot_config/?.lua;" .. package.path
 -- Launch with HYPR_WORKSPACE=6 to exercise the real /proc reader.
 local file = assert(io.open("/proc/self/stat", "r"))
 local pid = tonumber(file:read("a"):match("^(%d+)"))

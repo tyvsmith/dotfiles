@@ -8,49 +8,7 @@ function M.manage(class)
   managed[class] = true
 end
 
-local function read_proc(pid, name)
-  if type(pid) ~= "number" or pid <= 0 or pid % 1 ~= 0 then return nil end
-  local file = io.open("/proc/" .. string.format("%.0f", pid) .. "/" .. name, "rb")
-  if not file then return nil end
-  local content = file:read("a")
-  file:close()
-  return content
-end
-
--- Chromium can rewrite environ. Its startup scope remains identifiable.
--- Flatpak can change scopes; check surviving launcher ancestors as well.
-local function is_startup(pid)
-  local readable = false
-  for depth = 1, 32 do
-    local env = read_proc(pid, "environ")
-    if depth == 1 then readable = env ~= nil end
-    if env and ("\0" .. env):find("\0HYPR_AUTOSTART=1\0", 1, true) then return true end
-    local group = read_proc(pid, "cgroup")
-    if group and group:match("/app%-hypr%-autostart%-%d+%.scope[/\n]") then return true end
-    local status = read_proc(pid, "status")
-    local parent = status and tonumber(status:match("\nPPid:%s*(%d+)"))
-    if not parent or parent <= 1 or parent == pid then break end
-    pid = parent
-  end
-  if readable then return false end
-  return nil -- Unknown identity must not steal focus.
-end
-
--- Read each new window's process directly; do not retain recycled PID results.
-local function launch_options(pid)
-  local blob = read_proc(pid, "environ")
-  if not blob then return nil end
-
-  local fullscreen = ("\0" .. blob):find("\0HYPR_FULLSCREEN=1\0", 1, true) ~= nil
-  for entry in blob:gmatch("[^%z]+") do
-    local target, suffix = entry:match("^HYPR_WORKSPACE=([1-9]%d*)(.*)$")
-    if target and #target <= 10 and tonumber(target) <= 2147483647
-      and (suffix == "" or suffix == " silent") then
-      return target, suffix ~= " silent", fullscreen
-    end
-  end
-  return nil, nil, fullscreen
-end
+local launch = require("hypr.launch_options")
 
 -- Return true when dynamic placement owns this event, including silent no-ops.
 function M.place_from_env(window)
@@ -59,7 +17,8 @@ function M.place_from_env(window)
   if (workspace.id and workspace.id < 0)
     or (workspace.name and workspace.name:match("^special:")) then return true end
 
-  local target, follow, fullscreen = launch_options(window.pid)
+  local options = launch.read(window.pid) or {}
+  local target, follow, fullscreen = options.workspace, options.follow, options.fullscreen
   if not target and not fullscreen then return false end
   local selector = "address:" .. window.address
   if target and workspace.id ~= tonumber(target) then
@@ -85,7 +44,7 @@ if hl then
     if not managed[w.class] or w.floating then return end
     local active = hl.get_active_workspace()
     if not active or w.workspace.id == active.id then return end
-    if is_startup(w.pid) ~= false then return end
+    if launch.is_startup(w.pid) ~= false then return end
     hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
   end)
 end
