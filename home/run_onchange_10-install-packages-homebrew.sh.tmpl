@@ -24,28 +24,25 @@ require_cmd brew
 # =============================================================================
 export HOMEBREW_NO_AUTO_UPDATE=1
 
+{{ $formulas := includeTemplate "cascade-filter" (dict "root" $ "manager" "brew") | fromJson }}
+{{- $casks := includeTemplate "cascade-filter" (dict "root" $ "manager" "brew_cask") | fromJson }}
+{{- /* Taps come from what actually lands on Homebrew here (formulas) or in
+       the cask script that runs next; a tap nothing needs is never added. */}}
+{{- $taps := list }}
+{{- range concat $formulas $casks }}
+{{-   if hasKey .pkg "brew_tap" }}{{ $taps = append $taps .pkg.brew_tap }}{{ end }}
+{{- end -}}
 BREWFILE_CONTENT=$(cat <<'BREWFILE'
-{{- range $key, $pkg := .packages }}
-{{-   if hasKey $pkg "brew_tap" }}
-{{-     if or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $.chezmoi.os) }}
-tap "{{ $pkg.brew_tap }}"
-{{-     end }}
-{{-   end }}
+{{- range uniq $taps }}
+tap "{{ . }}"
 {{- end }}
-{{- range $key, $pkg := .packages }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "brew" "fmt" "brew \"%s\"  # %s") }}
+{{- range $formulas }}
+brew "{{ .name }}"  # {{ .display }}
 {{- end }}
 {{ if eq .chezmoi.os "darwin" -}}
 brew "mas"
-{{- range $key, $pkg := .packages }}
-{{-   $mas_tags_ok := false -}}
-{{-   $mas_profile_tags := $p.tags -}}
-{{-   range $pkg.tags -}}
-{{-     if has . $mas_profile_tags -}}{{- $mas_tags_ok = true -}}{{- end -}}
-{{-   end -}}
-{{-   if and $mas_tags_ok (hasKey $pkg "mas") }}
-mas "{{ $pkg.desc }}", id: {{ $pkg.mas }}
-{{-   end }}
+{{- range includeTemplate "cascade-filter" (dict "root" $ "manager" "mas") | fromJson }}
+mas "{{ .pkg.desc }}", id: {{ .name }}
 {{- end }}
 {{ end -}}
 BREWFILE

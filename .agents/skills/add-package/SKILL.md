@@ -154,7 +154,7 @@ Default to **No** — let them apply on their schedule.
 
 Authoritative source: `home/.chezmoidata/packages.yaml:9-42` (header comment).
 
-- Cascade order: `mise → brew → brew_cask → pacman → apt → rpm_ostree → flatpak → appimage`.
+- Cascade order: `mise → brew → brew_cask → mas → pacman → apt → rpm_ostree → flatpak → appimage`.
 - Tri-state fields (`brew`, `pacman`, `apt`): **absent** = use YAML key,
   **string** = override, **false** = exclude from this manager.
 - Modifiers: `brew_cask: true` flips to cask on macOS; `brew_tap: "<tap>"`

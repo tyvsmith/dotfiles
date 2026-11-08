@@ -25,8 +25,8 @@ require_cmd curl
 require_cmd jq
 
 declare -A APPIMAGE_CANDIDATES=()  # display_name -> github_repo
-{{- range $key, $pkg := .packages }}
-{{-   template "cascade-filter" (dict "root" $ "pkg" $pkg "key" $key "manager" "appimage" "fmt" "APPIMAGE_CANDIDATES[%[2]s]=\"%[1]s\"") }}
+{{- range includeTemplate "cascade-filter" (dict "root" $ "manager" "appimage") | fromJson }}
+APPIMAGE_CANDIDATES[{{ .display }}]="{{ .name }}"
 {{- end }}
 
 if [[ ${#APPIMAGE_CANDIDATES[@]} -eq 0 ]]; then
