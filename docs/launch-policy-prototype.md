@@ -1,17 +1,27 @@
 # Launch policy prototype
 
-Applied locally for evaluation. Keep the three explicit launch controls:
+Applied locally for evaluation. Keep explicit launch controls:
 
 ```sh
-HYPR_WORKSPACE=6 HYPR_FULLSCREEN=1 HYPR_HDR=1 scb -- command
+HYPR_WORKSPACE=6 HYPR_FULLSCREEN=1 HYPR_HDR=1 HYPR_DND=1 scb -- command
 ```
 
-- read all three through `hypr/launch_options.lua`; keep autostart identity and scope fallback there too
+- read launch controls through `hypr/launch_options.lua`; keep autostart identity and scope fallback there too
 - apply workspace/fullscreen once through `placement.lua`; preserve later manual changes
 - initialize `hdr.lua` from `monitors.lua`; keep HDR while a local ScopeBuddy launch lives, including on another workspace
 - keep the existing pre-launch wait so the game sees HDR before probing display capabilities
 - release only the exiting launch; restore SDR after all local demand ends
 - leave stream HDR to Punktfunk; export `HYPR_HDR=0` for streamed launches
+
+## Focus-sensitive DND
+
+- default local ScopeBuddy launches to `HYPR_DND=1`; use `HYPR_DND=0` to opt out
+- force `HYPR_DND=0` for streamed launches and exclude `PF-*` outputs
+- enable Omarchy DND while the focused opted-in window is fullscreen or matches its monitor's logical bounds within two pixels
+- disable DND on focus loss, workspace changes, resize to a smaller window, or exit
+- initialize `dnd.lua` from `hyprland.lua`; use focus events and a 250 ms geometry fallback, sending IPC only when the desired state changes
+- save no prior DND value; this policy owns DND transitions and does not preserve manual DND
+- keep Omarchy's normal DND exceptions, including verification codes
 
 ## Lifetime
 
