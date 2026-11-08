@@ -38,7 +38,8 @@ relative to `home/`; shared shell libraries remain in `scripts/lib/`.
 - `dot_` prefix → becomes `.` (e.g., `dot_config` → `.config`)
 - `private_` prefix → file permissions set to 0600
 - `.tmpl` suffix → Go template, rendered with machine-specific data
-- `run_once_` prefix → executed once on `chezmoi apply`
+- `run_before_` / `run_after_` prefix → script runs before/after files are applied, on every `chezmoi apply`
+- `run_onchange_` prefix → script runs when its rendered contents change (embed a `sha256sum` of a data file to re-trigger on data edits)
 
 ### Profile-Driven Configuration
 
@@ -149,8 +150,11 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 
 | Script | Description |
 |---|---|
+| `run_before_00-devpod-bootstrap.sh.tmpl` | Devpod-only: sets up the Linuxbrew directory layout (brew devpods) and restores the `~/.linuxbrew` snapshot before package installs |
 | `run_before_01-decrypt.sh.tmpl` | Ensures the age key exists (env/1Password/manual) before chezmoi decrypts; restic secrets are self-caching templates (`op-cached-secret` partial) |
+| `run_before_02-verify-prereqs.sh.tmpl` | Verifies profile prerequisites before configs apply (e.g. omarchy present when `de: hyprland-omarchy`) |
 | `run_onchange_00-setup-directories.sh` | Creates required dirs (~/.ssh/sockets, etc.) |
+| `run_onchange_01-setup-gitconfig.sh.tmpl` | Injects an `[include]` of the XDG git config into `~/.gitconfig` so system/devpod defaults survive |
 | `run_onchange_10-install-packages-homebrew.sh.tmpl` | Homebrew formulas (+ Homebrew install on Linux) |
 | `run_onchange_11-install-packages-cask.sh.tmpl` | Homebrew casks (macOS only) |
 | `run_onchange_12-install-packages-pacman.sh.tmpl` | Arch Linux packages via paru |
@@ -163,8 +167,10 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
 | `run_onchange_40-install-thpm.sh.tmpl` | Installs THPM (Theme Hook Plugin Manager) from a pinned source commit and enables the listed integrations; omarchy-only |
 | `run_onchange_50-configure-hyprpm.sh.tmpl` | Adds hyprpm repos and enables declared plugins; omarchy-only |
+| `run_onchange_59-configure-fish-shell.sh.tmpl` | Registers fish in `/etc/shells` and sets it as the login shell once package managers have installed it |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_70-configure-restic.sh.tmpl` | Registers resticprofile systemd timers (user `default` + root `system`/etc); `backup` profiles only |
+| `run_after_90-devpod-shell.sh.tmpl` | Devpod-only: re-registers fish as the login shell on every apply, since devpods reset `/etc/shells` on restart |
 
 ### Backups (restic + resticprofile)
 

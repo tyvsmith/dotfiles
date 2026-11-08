@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 REPO = Path(__file__).resolve().parents[2]
-PROFILES = ('arch-desktop', 'debian-server', 'devpod', 'macos-work', 'silverblue')
+PROFILES = ('arch-desktop', 'debian-server', 'devpod', 'devpod-slim', 'macos-work', 'silverblue')
 
 
 class SourceRootTest(unittest.TestCase):
