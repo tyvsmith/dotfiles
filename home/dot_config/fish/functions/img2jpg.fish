@@ -1,35 +1,9 @@
-function img2jpg --description 'Convert images to high-quality JPG: img2jpg [small|medium|large|<width>] FILE...'
-    # Presets are max widths; images narrower than the preset are left as is.
+function img2jpg --description 'Convert an image to JPG: img2jpg FILE [max-width] [magick args...]'
+    set -l img $argv[1]
     set -l resize
-    set -l suffix converted
-    switch "$argv[1]"
-        case small
-            set resize 1080
-        case medium
-            set resize 2160
-        case large
-            set resize 3160
-        case '*'
-            if string match -qr '^[0-9]+$' -- "$argv[1]"
-                set resize $argv[1]
-            end
+    if string match -qr '^[0-9]+$' -- "$argv[2]"
+        set resize -resize "$argv[2]x>"
+        set -e argv[2]
     end
-    if set -q resize[1]
-        set suffix $argv[1]
-        set -e argv[1]
-    end
-
-    if not set -q argv[1]
-        echo 'usage: img2jpg [small|medium|large|<width>] FILE...' >&2
-        return 2
-    end
-
-    set -l opts -quality 85 -strip
-    if set -q resize[1]
-        set -p opts -resize "$resize"'x>'
-    end
-
-    for img in $argv
-        magick $img $opts (string replace -r '\.[^.]+$' '' $img)-$suffix.jpg
-    end
+    magick $img $argv[2..] $resize -quality 85 -strip (string replace -r '\.[^.]+$' '' $img)-converted.jpg
 end
