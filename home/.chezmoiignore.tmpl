@@ -17,12 +17,21 @@
 .config/resticprofile/**
 {{ end }}
 
-{{ if ne .profile "devpod" }}
-# Devpod-only tooling
+{{- $p := index .profiles .profile }}
+{{ if not (get $p "work") }}
+# Work-only: devpod CLI config and the ~/.devpod symlink to it. Gated on work,
+# not devpod, to match personal.devpod.yaml.tmpl: the work Mac runs the CLI.
+.devpod
+.config/devpod
+.config/devpod/**
+{{ end }}
+
+{{ if not (and (get $p "devpod") (get $p "brew")) }}
+# Linuxbrew snapshot restore — only brew-based devpods (devpod-slim uses mise)
 .local/bin/devpod-linuxbrew-fetch
 {{ end }}
 
-{{ if not (get (index .profiles .profile) "mise") }}
+{{ if not (get $p "mise") }}
 # mise package lockfile — only profiles that install packages via mise
 .config/mise/mise.lock
 {{ end }}
@@ -82,7 +91,7 @@
 .config/zellij/**
 {{ end }}
 
-{{ if not (get (index .profiles .profile) "pacman") }}
+{{ if not (get $p "pacman") }}
 # paru is Arch-only
 .local/share/bash-completion/completions/paru.bash
 {{ end }}
