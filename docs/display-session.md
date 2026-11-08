@@ -1,8 +1,7 @@
 # Display session model
 
 How a game launched with `scb -- %command%` picks its display, compositor, and
-HDR state. The mechanics are commented in `home/dot_config/scopebuddy/`;
-`tests/display-session/test_scopebuddy.py` runs every row below against stubs.
+HDR state. The mechanics are commented in `home/dot_config/scopebuddy/`.
 
 ## Launch matrix
 

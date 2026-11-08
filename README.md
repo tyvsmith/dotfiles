@@ -198,11 +198,9 @@ git push
 
 `tests/run.sh` runs every offline suite: the Python tests under `tests/*/` and
 the Hyprland Lua checks. It needs `python3`, `chezmoi`, `age`, `jq`, and `lua`,
-which CI installs. `tests/display-session/test_scopebuddy.py` is local-only: it
-drives the installed `scb` (plus `rg`, `jq`, and `perl`) and is skipped in CI
-and anywhere `scb` is missing. Suites work in temporary directories and never
-apply to the desktop; `python3 tests/chezmoi/test_source_root.py` alone checks
-worktree isolation, profile rendering, and the secret helpers with a disposable
-age key. `tests/voxtype/run.sh` is separate: it calls the live LLM and skips
-unless `~/.config/voxtype/secrets.env` is present.
+which CI installs. Suites work in temporary directories and never apply to the
+desktop; `python3 tests/chezmoi/test_source_root.py` alone checks worktree
+isolation, profile rendering, and the secret helpers with a disposable age key.
+`tests/voxtype/run.sh` is separate: it calls the live LLM and skips unless
+`~/.config/voxtype/secrets.env` is present.
 
