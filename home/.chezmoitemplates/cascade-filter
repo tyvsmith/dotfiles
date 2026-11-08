@@ -1,108 +1,94 @@
 {{- /*
-  cascade-filter: Outputs a formatted line if the package belongs to the
-  specified manager, with the manager-specific package name resolved.
+  cascade-filter: the packages that land on one manager for the current profile.
 
-  Cascade order: mise → brew → brew_cask → pacman → apt → rpm_ostree → flatpak → appimage
-  A package goes to the first enabled manager that can handle it.
+  Usage:
+    {{ range includeTemplate "cascade-filter" (dict "root" $ "manager" "pacman") | fromJson }}
+      {{ .name }}     manager-specific package name (mise spec, cask, flatpak id,
+                      appimage repo, mas id)
+      {{ .key }}      YAML key
+      {{ .display }}  name: override or YAML key
+      {{ .pkg }}      the full package entry (brew_tap, mise_opts, desc, ...)
+    {{ end }}
 
-  Native manager fields are tri-state:
-    absent  = available, use YAML key as package name
-    string  = available, use string as package name override
-    false   = excluded from this manager
+  The result round-trips through JSON, so YAML integers in .pkg arrive as
+  float64 (mas: 937984704 prints as 9.37984704e+08). Read manager names via
+  .name, which is already a string, and pass any numeric .pkg field through
+  toString or int before printing it.
 
-  brew_cask is a boolean modifier on brew (default false):
-    absent/false = brew formula (or not a brew package)
-    true         = brew cask (macOS only); name comes from brew: or YAML key
+  Order: mise → brew → brew_cask → mas → pacman → apt → rpm_ostree → flatpak → appimage
+  A package goes to the first manager that the profile enables and the package
+  allows. Profile keys gate each manager; brew_cask and mas ride on the profile's
+  brew flag and are macOS-only.
 
-  mise/rpm_ostree/flatpak/appimage are opt-in: require their field to be present.
+  Package gates (all must pass before the cascade runs):
+    enabled    absent/true = include, false = skip
+    tags       at least one tag shared with the profile
+    os         absent = any, else must equal .chezmoi.os
+    de         absent = any, else must equal the profile's de
+    work/decrypt/backup
+               absent = any, true/false = only profiles where the flag matches
 
-  de field is a string match:
-    absent  = no restriction (installs on all profiles)
-    string  = only on profiles where de matches (e.g., hyprland-omarchy)
-
-  work/decrypt/backup fields are tri-state:
-    absent  = no restriction (installs on all profiles)
-    true    = only on profiles where work/decrypt/backup is true
-    false   = only on profiles where work/decrypt/backup is false
-
-  Parameters (via dict):
-    .root      - root template context ($)
-    .pkg       - package data from .packages range
-    .key       - YAML key (canonical package name)
-    .manager   - which manager this script handles
-    .fmt       - printf format string; receives (resolved_name, display_name)
+  Native managers (brew, pacman, apt) are tri-state:
+    absent  = available, use the display name
+    string  = available, use the string
+    false   = excluded
+  brew_cask is a boolean modifier on brew: true = cask (name from brew: or display).
+  Opt-in managers (mise, mas, rpm_ostree, flatpak, appimage) need their field
+  present and truthy; a string is the name, true means the display name.
 */ -}}
-{{- $pkg := .pkg -}}
-{{- $key := .key -}}
-{{- $mgr := .manager -}}
-{{- $p := index .root.profiles .root.profile -}}
-{{- $os := .root.chezmoi.os -}}
-{{- $display := default $key (index $pkg "name") -}}
-
-{{- /* Enabled, tags, OS, DE, work, and decrypt gates */ -}}
-{{- $enabled := not (and (hasKey $pkg "enabled") (not $pkg.enabled)) -}}
-{{- $tags_ok := false -}}
-{{- $profile_tags := $p.tags -}}
-{{- range $pkg.tags -}}
-{{-   if has . $profile_tags -}}{{- $tags_ok = true -}}{{- end -}}
-{{- end -}}
-{{- $os_ok := or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $os) -}}
-{{- $de_ok := or (not (hasKey $pkg "de")) (eq (default "" $pkg.de) (get $p "de" | default "")) -}}
-{{- $work_ok := or (not (hasKey $pkg "work")) (eq $pkg.work (get $p "work" | default false)) -}}
-{{- $decrypt_ok := or (not (hasKey $pkg "decrypt")) (eq $pkg.decrypt (get $p "decrypt" | default false)) -}}
-{{- $backup_ok := or (not (hasKey $pkg "backup")) (eq $pkg.backup (get $p "backup" | default false)) -}}
-
-{{- /* Opt-in managers: require their field to exist and be truthy */ -}}
-{{- $field_ok := true -}}
-{{- if eq $mgr "mise" -}}{{- $field_ok = and (hasKey $pkg "mise") $pkg.mise -}}{{- end -}}
-{{- if eq $mgr "brew_cask" -}}{{- $field_ok = and (hasKey $pkg "brew_cask") $pkg.brew_cask -}}{{- end -}}
-{{- if eq $mgr "rpm_ostree" -}}{{- $field_ok = and (hasKey $pkg "rpm_ostree") $pkg.rpm_ostree -}}{{- end -}}
-{{- if eq $mgr "flatpak" -}}{{- $field_ok = and (hasKey $pkg "flatpak") $pkg.flatpak -}}{{- end -}}
-{{- if eq $mgr "appimage" -}}{{- $field_ok = and (hasKey $pkg "appimage") $pkg.appimage -}}{{- end -}}
-
-{{- /* Tri-state availability: profile enables manager AND field is not false
-     absent = available (default name), string = available (override), false = excluded */ -}}
-{{- $avail_mise := and (and (hasKey $p "mise") $p.mise) (and (hasKey $pkg "mise") $pkg.mise) -}}
-{{- $avail_brew := and (and (hasKey $p "brew") $p.brew) (or (not (hasKey $pkg "brew")) $pkg.brew) (not (and (hasKey $pkg "brew_cask") $pkg.brew_cask)) -}}
-{{- $avail_brew_cask := and (and (hasKey $p "brew") $p.brew) (eq $os "darwin") (and (hasKey $pkg "brew_cask") $pkg.brew_cask) (or (not (hasKey $pkg "brew")) $pkg.brew) -}}
-{{- $avail_pacman := and (and (hasKey $p "pacman") $p.pacman) (or (not (hasKey $pkg "pacman")) $pkg.pacman) -}}
-{{- $avail_apt := and (and (hasKey $p "apt") $p.apt) (or (not (hasKey $pkg "apt")) $pkg.apt) -}}
-{{- $avail_rpm_ostree := and (and (hasKey $p "rpm_ostree") $p.rpm_ostree) (and (hasKey $pkg "rpm_ostree") $pkg.rpm_ostree) -}}
-{{- $avail_flatpak := and (and (hasKey $p "flatpak") $p.flatpak) (and (hasKey $pkg "flatpak") $pkg.flatpak) -}}
-{{- $avail_appimage := and (and (hasKey $p "appimage") $p.appimage) (and (hasKey $pkg "appimage") $pkg.appimage) -}}
-
-{{- /* First enabled manager wins */ -}}
-{{- $winner := "none" -}}
-{{- if $avail_mise -}}{{- $winner = "mise" -}}
-{{- else if $avail_brew -}}{{- $winner = "brew" -}}
-{{- else if $avail_brew_cask -}}{{- $winner = "brew_cask" -}}
-{{- else if $avail_pacman -}}{{- $winner = "pacman" -}}
-{{- else if $avail_apt -}}{{- $winner = "apt" -}}
-{{- else if $avail_rpm_ostree -}}{{- $winner = "rpm_ostree" -}}
-{{- else if $avail_flatpak -}}{{- $winner = "flatpak" -}}
-{{- else if $avail_appimage -}}{{- $winner = "appimage" -}}
-{{- end -}}
-
-{{- if and $enabled $tags_ok $os_ok $de_ok $work_ok $decrypt_ok $backup_ok $field_ok (eq $winner $mgr) -}}
-{{-   $resolved := $display -}}
-{{-   if eq $mgr "mise" -}}
-{{-     $resolved = index $pkg "mise" -}}
-{{-   else if and (eq $mgr "brew") (hasKey $pkg "brew") -}}
-{{-     $resolved = index $pkg "brew" -}}
-{{-   else if and (eq $mgr "brew_cask") (hasKey $pkg "brew") -}}
-{{-     $resolved = index $pkg "brew" -}}
-{{-   else if and (eq $mgr "pacman") (hasKey $pkg "pacman") -}}
-{{-     $resolved = index $pkg "pacman" -}}
-{{-   else if and (eq $mgr "apt") (hasKey $pkg "apt") -}}
-{{-     $resolved = index $pkg "apt" -}}
-{{-   else if and (eq $mgr "rpm_ostree") (hasKey $pkg "rpm_ostree") -}}
-{{-     if ne (printf "%T" (index $pkg "rpm_ostree")) "bool" -}}
-{{-       $resolved = index $pkg "rpm_ostree" -}}
+{{- $root := .root -}}
+{{- $want := .manager -}}
+{{- $p := index $root.profiles $root.profile -}}
+{{- $os := $root.chezmoi.os -}}
+{{- $de := get $p "de" | default "" -}}
+{{- $work := get $p "work" | default false -}}
+{{- $decrypt := get $p "decrypt" | default false -}}
+{{- $backup := get $p "backup" | default false -}}
+{{- $brew_on := get $p "brew" | default false -}}
+{{- $order := list "mise" "brew" "brew_cask" "mas" "pacman" "apt" "rpm_ostree" "flatpak" "appimage" -}}
+{{- $out := list -}}
+{{- range $key, $pkg := $root.packages -}}
+{{-   $display := default $key (index $pkg "name") -}}
+{{-   $ok := not (and (hasKey $pkg "enabled") (not $pkg.enabled)) -}}
+{{-   $tags_ok := false -}}
+{{-   range $pkg.tags -}}{{- if has . $p.tags -}}{{- $tags_ok = true -}}{{- end -}}{{- end -}}
+{{-   $ok = and $ok $tags_ok -}}
+{{-   $ok = and $ok (or (not (hasKey $pkg "os")) (eq (default "" $pkg.os) $os)) -}}
+{{-   $ok = and $ok (or (not (hasKey $pkg "de")) (eq (default "" $pkg.de) $de)) -}}
+{{-   $ok = and $ok (or (not (hasKey $pkg "work")) (eq $pkg.work $work)) -}}
+{{-   $ok = and $ok (or (not (hasKey $pkg "decrypt")) (eq $pkg.decrypt $decrypt)) -}}
+{{-   $ok = and $ok (or (not (hasKey $pkg "backup")) (eq $pkg.backup $backup)) -}}
+{{-   if $ok -}}
+{{-     $winner := "" -}}
+{{-     $name := $display -}}
+{{-     range $m := $order -}}
+{{-       if eq $winner "" -}}
+{{-         $field := get $pkg $m -}}
+{{-         $has := hasKey $pkg $m -}}
+{{-         $cask := and (hasKey $pkg "brew_cask") $pkg.brew_cask -}}
+{{-         $avail := false -}}
+{{-         if eq $m "brew" -}}
+{{-           $avail = and $brew_on (or (not $has) $field) (not $cask) -}}
+{{-         else if eq $m "brew_cask" -}}
+{{-           $field = get $pkg "brew" -}}
+{{-           $has = hasKey $pkg "brew" -}}
+{{-           $avail = and $brew_on (eq $os "darwin") $cask (or (not $has) $field) -}}
+{{-         else if eq $m "mas" -}}
+{{-           $avail = and $brew_on (eq $os "darwin") $has $field -}}
+{{-         else if or (eq $m "pacman") (eq $m "apt") -}}
+{{-           $avail = and (get $p $m | default false) (or (not $has) $field) -}}
+{{-         else -}}
+{{-           $avail = and (get $p $m | default false) $has $field -}}
+{{-         end -}}
+{{-         if $avail -}}
+{{-           $winner = $m -}}
+{{-           if and $has (ne (printf "%T" $field) "bool") -}}{{- $name = toString $field -}}{{- end -}}
+{{-         end -}}
+{{-       end -}}
 {{-     end -}}
-{{-   else if eq $mgr "flatpak" -}}
-{{-     $resolved = index $pkg "flatpak" -}}
-{{-   else if eq $mgr "appimage" -}}
-{{-     $resolved = index $pkg "appimage" -}}
-{{-   end }}
-{{ printf .fmt $resolved $display }}
+{{-     if eq $winner $want -}}
+{{-       $out = append $out (dict "name" $name "key" $key "display" $display "pkg" $pkg) -}}
+{{-     end -}}
+{{-   end -}}
 {{- end -}}
+{{- $out | toJson -}}

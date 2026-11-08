@@ -112,7 +112,7 @@ Opt-in manager fields are present when available:
 - `flatpak:` — Flatpak app ID
 - `appimage:` — GitHub repo (`owner/name`) for AppImage download
 
-Cascade order: `mise → brew → brew_cask → pacman → apt → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it, determined at template time by `home/.chezmoitemplates/cascade-filter`. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
+Cascade order: `mise → brew → brew_cask → mas → pacman → apt → rpm_ostree → flatpak → appimage`. Each package goes to the first enabled manager that can handle it. `home/.chezmoitemplates/cascade-filter` owns that rule: called as `includeTemplate "cascade-filter" (dict "root" $ "manager" "pacman") | fromJson`, it returns the packages that land on one manager as `[{name, key, display, pkg}]`, and every install script is one `range` over that list. Homebrew taps come from the formulas and casks that actually land on brew. Each manager has its own `run_onchange_*` script with a profile guard that renders to `exit 0` when the manager is not enabled.
 
 **mise packages (`devpod-slim`):**
 Profiles with `mise: true` install every package that declares a `mise:` backend as a prebuilt release binary, with no Linuxbrew. `home/dot_config/mise/conf.d/20-packages.toml.tmpl` renders them at `"latest"`; `home/.chezmoitemplates/mise-packages.lock` (committed, generated) pins each to an exact version, URL, and sha256 per platform. chezmoi merges those pins into the machine's own `~/.config/mise/mise.lock` (`home/dot_config/mise/modify_mise.lock`): it adds missing tools and takes newer repo pins, keeps versions upgraded locally, and never touches or removes entries it does not manage (toolchains, `mise use -g`). The install script runs `mise install --locked` on the managed tools. Packages without a `mise:` field (git, wget, tree, socat) come from the devpod image.
@@ -129,7 +129,7 @@ The apt install script uses runtime `apt-cache` checks to determine package avai
 ### Key Files
 - `home/.chezmoidata/packages.yaml` - Single source of truth for all package definitions across platforms
 - `home/.chezmoidata/profiles.yaml` - Machine profile definitions (tags, pkg managers, work, decrypt)
-- `home/.chezmoitemplates/cascade-filter` - Shared cascade logic for package manager selection
+- `home/.chezmoitemplates/cascade-filter` - Package manager selection: returns one manager's package list as JSON
 - `home/dot_config/fish/fish_plugins.tmpl` - Fisher plugin manifest (OS-specific)
 - `home/dot_config/git/config.tmpl` - Git config with delta pager, useful aliases
 
