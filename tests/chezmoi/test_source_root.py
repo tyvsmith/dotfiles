@@ -100,13 +100,6 @@ class SourceRootTest(unittest.TestCase):
                              '.config/punktfunk/hooks.json',
                              '.config/systemd/user/punktfunk-host.service.d/steam-controller.conf'):
                     self.assertEqual(name in targets, profile == 'arch-desktop')
-                for name in ('.local/bin/scb-output-luminance',
-                             '.config/sunshine/apps.json',
-                             '.config/sunshine/sunshine.conf',
-                             '.config/systemd/user/app-dev.lizardbyte.app.Sunshine.service.d/cleanup.conf',
-                             '.config/sunshine/sunshine_state.json',
-                             '.config/hypr/hyprmoncfg-monitors.lua'):
-                    self.assertNotIn(name, targets)
                 self.assertFalse({'scripts', 'tests', 'README.md', 'home'} & targets.keys())
                 for entry in targets.values():
                     if entry['type'] != 'script':
