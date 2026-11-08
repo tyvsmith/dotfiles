@@ -154,7 +154,6 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_before_00-devpod-bootstrap.sh.tmpl` | Devpod-only: sets up the Linuxbrew directory layout (brew devpods) and restores the `~/.linuxbrew` snapshot before package installs |
 | `run_before_01-decrypt.sh.tmpl` | Ensures the age key exists (env/1Password/manual) before chezmoi decrypts; restic secrets are self-caching templates (`op-cached-secret` partial) |
 | `run_before_02-verify-prereqs.sh.tmpl` | Verifies profile prerequisites before configs apply (e.g. omarchy present when `de: hyprland-omarchy`) |
-| `run_onchange_00-setup-directories.sh` | Creates required dirs (~/.ssh/sockets, etc.) |
 | `run_onchange_01-setup-gitconfig.sh` | Injects an `[include]` of the XDG git config into `~/.gitconfig` so system/devpod defaults survive |
 | `run_onchange_10-install-packages-homebrew.sh.tmpl` | Homebrew formulas (+ Homebrew install on Linux) |
 | `run_onchange_11-install-packages-cask.sh.tmpl` | Homebrew casks (macOS only) |
