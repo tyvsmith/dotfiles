@@ -139,7 +139,7 @@ scb_display_start() {
     # Monitor rules commit after the eval reply. Wait before the game probes HDR.
     local attempt
     for attempt in {1..20}; do
-        if [[ $(timeout 1 hyprctl eval 'assert(launch_hdr.ready(), "HDR outputs are not ready")') == ok ]]; then
+        if [[ $(timeout 1 hyprctl eval 'assert(launch_policy.hdr.ready(), "HDR outputs are not ready")') == ok ]]; then
             return 0
         fi
         sleep 0.05
@@ -154,7 +154,7 @@ scb_display_stop() {
 
 _scb_hdr_launch() {
     local reply
-    reply=$(timeout 3 hyprctl eval "launch_hdr.$1($$)") || return 1
+    reply=$(timeout 3 hyprctl eval "launch_policy.hdr.$1($$)") || return 1
     if [[ $reply != ok ]]; then
         printf 'ScopeBuddy: HDR launch command rejected: %s\n' "$reply" >&2
         return 1

@@ -45,9 +45,9 @@ streaming 0); Gamescope's `-r` gets the rounded refresh.
 
 ## Local HDR lifecycle
 
-- `hypr/monitors.lua` registers `DP-1` with `hypr/hdr.lua`; unregistered outputs
+- `hypr/monitors.lua` registers `DP-1` through `hypr/launch_policy.lua`; unregistered outputs
   are untouched
-- `scb_display_start` registers ScopeBuddy's PID through `launch_hdr.acquire`
+- `scb_display_start` registers ScopeBuddy's PID through `launch_policy.hdr.acquire`
   and waits for registered, awake outputs to enter HDR before starting the game
 - `scb_display_stop` releases only that launch; other local launches retain HDR
 - PID/start-time records in Hyprland's runtime directory survive reloads;

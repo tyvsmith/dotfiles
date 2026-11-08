@@ -16,9 +16,12 @@ hl = {
 }
 local dnd = require("hypr.dnd")
 dnd.setup()
+local function assert_state(value)
+  assert(commands[#commands] == "omarchy-shell notifications setDnd " .. value)
+end
 local function expect(value)
   poll()
-  assert(commands[#commands] == "omarchy-shell notifications setDnd " .. value)
+  assert_state(value)
 end
 expect("off")
 active = game
@@ -28,9 +31,11 @@ poll()
 assert(#commands == count, "do not spawn commands for unchanged state")
 active = nil
 events["window.active"]()
-expect("off")
+assert_state("off")
 active = game
+game.size = { x = 800, y = 600 } -- fullscreen state wins before geometry settles
 expect("on")
+game.size = { x = 1280, y = 720 }
 monitor.active_workspace.id = 7
 expect("off")
 monitor.active_workspace.id = 6
@@ -42,6 +47,13 @@ expect("off")
 monitor.name = "DP-1"
 game.fullscreen = 0
 expect("on") -- borderless at logical monitor bounds
+game.size.y = 600
+expect("off")
+game.size.y = 720
+game.at.y = 10
+expect("off")
+game.at.y = 0
+expect("on")
 game.size.x = 1000
 expect("off")
 game.fullscreen = 1

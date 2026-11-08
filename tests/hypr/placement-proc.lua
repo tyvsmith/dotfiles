@@ -12,7 +12,7 @@ hl = {
   dispatch = function(spec) moved = spec end,
   dsp = { window = { move = function(spec) return spec end } },
 }
-dofile("home/dot_config/hypr/placement.lua")
+dofile("home/dot_config/hypr/placement.lua").setup()
 assert(not moved, "loading must not move a window")
 callback({ pid = pid, address = "0xabc", workspace = { id = 1, name = "1" } })
 assert(moved and moved.workspace == "6" and moved.window == "address:0xabc")
