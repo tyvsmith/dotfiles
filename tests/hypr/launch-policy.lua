@@ -34,7 +34,7 @@ dofile = function(path)
 end
 dofile("home/dot_config/hypr/hyprland.lua")
 dofile = load_file
-assert(launch_policy == policy and launch_hdr == hdr, "publish new and existing launcher interfaces")
+assert(launch_policy == policy, "publish the launcher interface")
 policy.setup()
 assert(starts.hdr == 1 and starts.dnd == 1, "initialize each tracker once")
 assert(policy.hdr == hdr, "expose HDR readiness and ownership through the policy")

@@ -40,8 +40,7 @@ The module applies each registered baseline and owns subsequent HDR updates.
 Runtime updates change only `cm`; geometry stays in the existing monitor rule.
 No wildcard or brand-specific logic lives in the tracker.
 
-ScopeBuddy calls `launch_policy.hdr.acquire`, `ready`, and `release`. The
-`launch_hdr` alias remains for exit hooks in launchers running before the refactor.
+ScopeBuddy calls `launch_policy.hdr.acquire`, `ready`, and `release`.
 
 The pre-launch command requests HDR on every registered, connected, awake output
 and waits for those outputs to report HDR. Sleeping or disconnected outputs keep

@@ -29,5 +29,3 @@ require("default.hypr.toggles")
 -- o.window("qemu", { workspace = "5" })
 require("hypr.windows")
 launch_policy = require("hypr.launch_policy").setup()
--- Launchers already running before this reload still use the old release hook.
-launch_hdr = launch_policy.hdr
