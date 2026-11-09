@@ -16,7 +16,8 @@ source "${CHEZMOI_SOURCE_DIR:-$(chezmoi source-path)}/../scripts/lib/common.sh"
 
 log "Using profile '{{ .profile }}' — installing packages via pacman/paru"
 
-ensure_pkg paru paru-bin
+command -v paru >/dev/null 2>&1 \
+    || fail "paru is required: omarchy ships it; on plain Arch install paru-bin from the AUR first"
 
 declare -A CANDIDATE_PACKAGES=()  # pkg_name -> display_name
 {{- range includeTemplate "cascade-filter" (dict "root" $ "manager" "pacman") | fromJson }}

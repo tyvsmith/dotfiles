@@ -72,25 +72,6 @@ ensure_brew_in_path() {
   fi
 }
 
-# Install an Arch package when its command is missing: paru when present
-# (AUR + official), else pacman (official repos only).
-# Usage: ensure_pkg <command_name> [package_name]
-# If package_name is omitted, command_name is used as the package name.
-ensure_pkg() {
-  local cmd="$1"
-  local pkg="${2:-$1}"
-  command -v "$cmd" &>/dev/null && return 0
-
-  log "Installing $pkg..."
-  if command -v paru &>/dev/null; then
-    paru -S --needed --noconfirm "$pkg"
-  elif command -v pacman &>/dev/null; then
-    sudo pacman -S --needed --noconfirm "$pkg"
-  else
-    fail "Cannot install $pkg: neither paru nor pacman found"
-  fi
-}
-
 # Register fish in /etc/shells and make it the login shell.
 # Two callers: run_onchange_59-configure-fish-shell runs once per content
 # change on every machine, after the package managers have installed fish;
