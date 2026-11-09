@@ -101,7 +101,7 @@ chezmoi add --encrypt ~/.config/sensitive/file.conf
 - **Fish** with [Starship](https://starship.rs) prompt via fish-fast-starship (config in `.config/starship.toml`)
 - **Atuin** for shell history sync
 - **Zoxide** for smart directory jumping (`cd` falls through to a zoxide jump when the target is not a directory)
-- **Fisher** plugins: catppuccin, done, abbreviation-tips, autopair, replay, sponge, puffer-fish, fzf, fish-fast-starship
+- **Fisher** plugins: done, abbreviation-tips, autopair, replay, sponge, puffer-fish, fzf, fish-fast-starship
 - **Omarchy parity**: fish ports of omarchy's bash functions (tmux/herdr dev layouts, rsync watchers, ssh port forwards and auto-reconnect, worktrees, drives) plus `omarchy` tab completion
 
 ### Modern CLI Tools
