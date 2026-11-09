@@ -154,8 +154,7 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_before_00-devpod-bootstrap.sh.tmpl` | Devpod-only: sets up the Linuxbrew directory layout (brew devpods) and restores the `~/.linuxbrew` snapshot before package installs |
 | `run_before_01-decrypt.sh.tmpl` | Ensures the age key exists (env/1Password/manual) before chezmoi decrypts; restic secrets are self-caching templates (`op-cached-secret` partial) |
 | `run_before_02-verify-prereqs.sh.tmpl` | Verifies profile prerequisites before configs apply (e.g. omarchy present when `de: hyprland-omarchy`) |
-| `run_onchange_00-setup-directories.sh` | Creates required dirs (~/.ssh/sockets, etc.) |
-| `run_onchange_01-setup-gitconfig.sh.tmpl` | Injects an `[include]` of the XDG git config into `~/.gitconfig` so system/devpod defaults survive |
+| `run_onchange_01-setup-gitconfig.sh` | Injects an `[include]` of the XDG git config into `~/.gitconfig` so system/devpod defaults survive |
 | `run_onchange_10-install-packages-homebrew.sh.tmpl` | Homebrew formulas (+ Homebrew install on Linux) |
 | `run_onchange_11-install-packages-cask.sh.tmpl` | Homebrew casks (macOS only) |
 | `run_onchange_12-install-packages-pacman.sh.tmpl` | Arch Linux packages via paru |
@@ -167,10 +166,10 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
 | `run_onchange_40-install-thpm.sh.tmpl` | Installs THPM (Theme Hook Plugin Manager) from a pinned source commit and enables the listed integrations; omarchy-only |
 | `run_onchange_50-configure-hyprpm.sh.tmpl` | Adds hyprpm repos and enables declared plugins; omarchy-only |
-| `run_onchange_59-configure-fish-shell.sh.tmpl` | Registers fish in `/etc/shells` and sets it as the login shell once package managers have installed it |
+| `run_onchange_59-configure-fish-shell.sh.tmpl` | Registers fish in `/etc/shells` and sets it as the login shell once package managers have installed it (`configure_fish_login_shell` in `scripts/lib/common.sh`) |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_70-configure-restic.sh.tmpl` | Registers resticprofile systemd timers (user `default` + root `system`/etc); `backup` profiles only |
-| `run_after_90-devpod-shell.sh.tmpl` | Devpod-only: re-registers fish as the login shell on every apply, since devpods reset `/etc/shells` on restart |
+| `run_after_90-devpod-shell.sh.tmpl` | Devpod-only: re-runs `configure_fish_login_shell` on every apply, since devpods reset `/etc/shells` and the login shell on restart |
 
 ### Backups (restic + resticprofile)
 

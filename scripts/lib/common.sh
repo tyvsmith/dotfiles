@@ -72,37 +72,73 @@ ensure_brew_in_path() {
   fi
 }
 
-# Install a package using whatever package manager is available.
-# Usage: ensure_pkg <command_name> [package_name]
-# If package_name is omitted, command_name is used as the package name.
-ensure_pkg() {
-  local cmd="$1"
-  local pkg="${2:-$1}"
-  command -v "$cmd" &>/dev/null && return 0
+# Register fish in /etc/shells and make it the login shell.
+# Two callers: run_onchange_59-configure-fish-shell runs once per content
+# change on every machine, after the package managers have installed fish;
+# run_after_90-devpod-shell is devpod-only and runs on every apply, because a
+# devpod restart resets /etc/shells and the login shell. Quiet when there is
+# nothing to do so the every-apply caller does not spam the log.
+# Privileged steps go through `sudo -n`; without passwordless sudo the manual
+# command is printed and the function returns 0.
+configure_fish_login_shell() {
+  local fish_path="" p user
+  user="$(whoami)"
 
-  log "Installing $pkg..."
-  if command -v paru &>/dev/null; then
-    paru -S --needed --noconfirm "$pkg"
-  elif command -v yay &>/dev/null; then
-    yay -S --needed --noconfirm "$pkg"
-  elif command -v pacman &>/dev/null; then
-    # Try official repos first, fall back to building from AUR
-    if ! sudo pacman -S --needed --noconfirm "$pkg" 2>/dev/null; then
-      log "$pkg not in official repos, building from AUR..."
-      sudo pacman -S --needed --noconfirm base-devel git
-      local aur_tmp="$(mktemp -d)"
-      git clone "https://aur.archlinux.org/${pkg}.git" "$aur_tmp/$pkg"
-      (cd "$aur_tmp/$pkg" && makepkg -si --noconfirm)
-      rm -rf "$aur_tmp"
+  for p in /opt/homebrew/bin/fish /usr/local/bin/fish \
+           /home/linuxbrew/.linuxbrew/bin/fish "$HOME/.linuxbrew/bin/fish" \
+           "$HOME/.local/bin/fish" /usr/bin/fish; do
+    if [[ -x "$p" ]]; then
+      fish_path="$p"
+      break
     fi
-  elif ensure_brew_in_path && command -v brew &>/dev/null; then
-    brew install "$pkg"
-  elif command -v apt-get &>/dev/null; then
-    sudo apt-get install -y "$pkg"
-  elif command -v dnf &>/dev/null; then
-    sudo dnf install -y "$pkg"
+  done
+  if [[ -z "$fish_path" ]]; then
+    fish_path="$(command -v fish 2>/dev/null || true)"
+  fi
+  if [[ -z "$fish_path" || ! -x "$fish_path" ]]; then
+    warn "fish not found — skipping shell setup"
+    return 0
+  fi
+
+  local current_shell
+  if [[ "${OSTYPE:-}" == darwin* ]]; then
+    current_shell="$(dscl . -read "/Users/$user" UserShell | awk '{print $2}')"
   else
-    fail "Cannot install $pkg: no supported package manager found"
+    current_shell="$(getent passwd "$user" | cut -d: -f7)"
+  fi
+
+  local in_shells=0
+  grep -qxF "$fish_path" /etc/shells 2>/dev/null && in_shells=1
+  if [[ $in_shells -eq 1 && "$current_shell" == "$fish_path" ]]; then
+    return 0
+  fi
+
+  if [[ $in_shells -eq 0 ]]; then
+    if sudo -n true 2>/dev/null; then
+      log "Adding $fish_path to /etc/shells"
+      echo "$fish_path" | sudo tee -a /etc/shells >/dev/null
+    else
+      warn "$fish_path is not in /etc/shells — run manually:"
+      warn "  echo '$fish_path' | sudo tee -a /etc/shells"
+      return 0
+    fi
+  fi
+
+  if [[ "$current_shell" != "$fish_path" ]]; then
+    local -a chsh_cmd
+    if [[ "${OSTYPE:-}" == darwin* ]]; then
+      chsh_cmd=(chsh -s "$fish_path" "$user")
+    else
+      chsh_cmd=(usermod -s "$fish_path" "$user")
+    fi
+    if sudo -n true 2>/dev/null; then
+      log "Setting login shell to $fish_path"
+      sudo "${chsh_cmd[@]}"
+    else
+      warn "Login shell is not $fish_path — run manually:"
+      warn "  sudo ${chsh_cmd[*]}"
+      return 0
+    fi
   fi
 }
 

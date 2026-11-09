@@ -3,8 +3,6 @@
 # Git only reads ~/.gitconfig OR ~/.config/git/config (not both).
 # By injecting an [include], Chef/devpod/system defaults in ~/.gitconfig
 # are preserved and our settings override via last-value-wins.
-#
-# config.tmpl hash: {{ include "dot_config/git/config.tmpl" | sha256sum }}
 
 set -euo pipefail
 
