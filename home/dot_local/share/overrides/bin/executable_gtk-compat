@@ -1,0 +1,17 @@
+#!/bin/bash
+# Invoke through an app-named symlink; bypass PATH when launching upstream.
+app=${0##*/}
+if [[ $app == gtk-compat || ! -x /usr/bin/$app ]]; then
+    printf 'gtk-compat: expected a symlink named after an executable in /usr/bin\n' >&2
+    exit 64
+fi
+
+# Use the scoped theme only while THPM supplies its palette.
+if [[ -r "$HOME/.config/gtk-4.0/thpm-theme.css" && -z ${GTK_THEME:-} ]]; then
+    GTK_THEME=OmarchyCompat
+    if [[ $(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null) == "'prefer-dark'" ]]; then
+        GTK_THEME+=:dark
+    fi
+    export GTK_THEME
+fi
+exec "/usr/bin/$app" "$@"

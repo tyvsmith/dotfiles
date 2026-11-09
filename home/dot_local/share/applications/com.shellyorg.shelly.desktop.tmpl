@@ -1,0 +1,4 @@
+{{- $upstream := "/usr/share/applications/com.shellyorg.shelly.desktop" -}}
+{{- if stat $upstream -}}
+{{- regexReplaceAll `(?m)^Exec=/usr/bin/shelly-ui( |$)` (include $upstream) "Exec=shelly-ui${1}" -}}
+{{- end -}}

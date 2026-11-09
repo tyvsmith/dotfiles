@@ -1,0 +1,148 @@
+/* THPM palette, scoped with enough specificity to override GTK base rules. */
+window.background, window.background .background {
+  color: @window_fg_color;
+  background-color: @window_bg_color;
+}
+
+window.background headerbar, window.background headerbar:backdrop, window.background .toolbar {
+  color: @headerbar_fg_color;
+  background-color: @headerbar_bg_color;
+  background-image: none;
+  border-color: @headerbar_border_color;
+}
+
+window.background .navigation-sidebar, window.background .sidebar {
+  color: @sidebar_fg_color;
+  background-color: @sidebar_bg_color;
+}
+
+window.background .view, window.background list, window.background listview, window.background columnview, window.background textview text {
+  color: @view_fg_color;
+  background-color: @view_bg_color;
+}
+
+window.background row, window.background .view row { background-color: transparent; }
+
+window.background row:hover { background-color: alpha(@window_fg_color, 0.07); }
+
+window.background gridview > child:selected, window.background row:selected, window.background row:selected:hover, window.background .view:selected, window.background .navigation-sidebar row:selected {
+  color: @theme_selected_fg_color;
+  background-color: @theme_selected_bg_color;
+}
+
+window.background button:not(.suggested-action):not(.destructive-action), window.background entry, window.background searchentry {
+  color: @window_fg_color;
+  background-color: @card_bg_color;
+  background-image: none;
+  border-color: @borders;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+window.background button:not(.suggested-action):not(.destructive-action):hover {
+  background-color: mix(@card_bg_color, @window_fg_color, 0.09);
+}
+
+window.background button.flat:not(.suggested-action):not(.destructive-action) {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+window.background button.flat:not(.suggested-action):not(.destructive-action):hover {
+  background-color: alpha(@window_fg_color, 0.07);
+}
+
+window.background button:not(.suggested-action):not(.destructive-action):checked, window.background button:not(.suggested-action):not(.destructive-action):active {
+  color: @theme_selected_fg_color;
+  background-color: @theme_selected_bg_color;
+  border-color: @accent_color;
+}
+/* Use the opposite surface color for legible text on filled accents. */
+window.background button.suggested-action, window.background check:checked, window.background radio:checked, window.background switch:checked {
+  color: @window_bg_color;
+  background-color: @accent_bg_color;
+  background-image: none;
+  border-color: @accent_bg_color;
+  text-shadow: none;
+}
+
+window.background button.suggested-action:hover {
+  background-color: mix(@accent_bg_color, @window_fg_color, 0.12);
+}
+/* Leave destructive actions' native warning colors intact. */
+window.background button:disabled, window.background button:disabled:hover, window.background button:not(.suggested-action):not(.destructive-action):disabled, window.background entry:disabled {
+  color: @insensitive_fg_color;
+  background-color: @insensitive_bg_color;
+  border-color: @borders;
+  background-image: none;
+  text-shadow: none;
+}
+
+window.background button.flat:disabled, window.background button.flat:disabled:hover, window.background button.flat:not(.suggested-action):not(.destructive-action):disabled {
+  color: @insensitive_fg_color;
+  background-color: transparent;
+  border-color: transparent;
+}
+
+window.background separator, window.background paned > separator { background-color: @borders; }
+
+window.background frame, window.background scrolledwindow, window.background .frame { border-color: @borders; }
+
+window.background popover > contents, window.background tooltip {
+  color: @popover_fg_color;
+  background-color: @popover_bg_color;
+  border-color: @borders;
+}
+
+window.background *:focus-visible { outline-color: @accent_color; }
+
+window.background entry:focus-within { border-color: @accent_color; }
+
+window.background scrollbar { background-color: @view_bg_color; }
+
+window.background scrollbar slider { background-color: alpha(@window_fg_color, 0.25); }
+
+window.background scrollbar slider:hover { background-color: alpha(@window_fg_color, 0.4); }
+
+window.background progressbar trough, window.background scale trough { background-color: @card_bg_color; }
+
+window.background progressbar progress, window.background scale highlight {
+  background-color: @accent_bg_color;
+  border-color: @accent_bg_color;
+}
+/* Notebook pages and indicators used by plain GTK4 applications. */
+window.background notebook, window.background notebook > stack {
+  color: @window_fg_color;
+  background-color: @window_bg_color;
+}
+
+window.background notebook > header {
+  color: @headerbar_fg_color;
+  background-color: @headerbar_bg_color;
+  border-color: @borders;
+}
+
+window.background notebook > header > tabs > tab {
+  color: @window_fg_color;
+  outline-color: @accent_color;
+}
+
+window.background notebook > header.top > tabs > tab:hover { box-shadow: inset 0 -4px @borders; }
+
+window.background notebook > header.bottom > tabs > tab:hover { box-shadow: inset 0 4px @borders; }
+
+window.background notebook > header.left > tabs > tab:hover { box-shadow: inset -4px 0 @borders; }
+
+window.background notebook > header.right > tabs > tab:hover { box-shadow: inset 4px 0 @borders; }
+
+window.background notebook > header.top > tabs > tab:checked { box-shadow: inset 0 -4px @accent_color; }
+
+window.background notebook > header.bottom > tabs > tab:checked { box-shadow: inset 0 4px @accent_color; }
+
+window.background notebook > header.left > tabs > tab:checked { box-shadow: inset -4px 0 @accent_color; }
+
+window.background notebook > header.right > tabs > tab:checked { box-shadow: inset 4px 0 @accent_color; }
+
+window.background notebook > header > tabs > tab:disabled { color: @insensitive_fg_color; }
+
+window.background notebook:focus:focus-visible > header > tabs > tab:checked { outline-color: @accent_color; }
