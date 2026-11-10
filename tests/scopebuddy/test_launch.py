@@ -11,7 +11,9 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "home/dot_config/scopebuddy"
 KEYS = ["MANGOHUD", "MANGOHUD_CONFIG", "MANGOHUD_FPS_LIMIT",
-        "MANGOHUD_CONFIGFILE", "NVPRESENT_ENABLE_SMOOTH_MOTION", "HYPR_HDR", "HYPR_WORKSPACE"]
+        "MANGOHUD_CONFIGFILE", "NVPRESENT_ENABLE_SMOOTH_MOTION", "HYPR_HDR", "HYPR_WORKSPACE",
+        "PROTON_DLSS_UPGRADE", "PROTON_LOG_DIR", "PROTON_ENABLE_WAYLAND", "DXVK_HDR",
+        "VKD3D_CONFIG", "TRIAL_VALUE", "TRIAL_EMPTY"]
 RECORDER = """#!/usr/bin/env python3
 import json, os, sys
 print(json.dumps(dict(argv=sys.argv[1:], env={k: os.environ.get(k) for k in %r})), flush=True)
@@ -96,6 +98,42 @@ fi
         self.assertEqual(child["env"]["MANGOHUD_CONFIG"], "read_cfg,position=top-right,fps_limit=161")
         self.assertIsNone(child["env"]["MANGOHUD_FPS_LIMIT"])
 
+    def test_game_environment_is_quoted_and_later_values_win(self):
+        value = "spaces 'quotes' \"double\" ; $HOME $(touch bad) `touch bad`\nsecond line"
+        config = ("game_env TRIAL_VALUE first\n" +
+                  "game_env TRIAL_VALUE " + shlex.quote(value) + "\n" +
+                  "game_env TRIAL_EMPTY ''\n")
+        parent, child = self.launch(config, {"TRIAL_VALUE": "inherited"})
+        self.assertIsNone(parent["TRIAL_VALUE"])
+        self.assertIsNone(self.compositor["env"]["TRIAL_VALUE"])
+        self.assertEqual(child["env"]["TRIAL_VALUE"], value)
+        self.assertEqual(child["env"]["TRIAL_EMPTY"], "")
+
+    def test_game_defaults_preserve_inherited_and_explicit_overrides(self):
+        _, child = self.launch("game_env NVPRESENT_ENABLE_SMOOTH_MOTION 1\n", {"NVPRESENT_ENABLE_SMOOTH_MOTION": "0"})
+        self.assertEqual(child["env"]["NVPRESENT_ENABLE_SMOOTH_MOTION"], "1")
+        parent, child = self.launch("mode=native\ngame_env DXVK_HDR 0\n", {"PROTON_ENABLE_WAYLAND": "0"})
+        self.assertEqual(child["env"]["DXVK_HDR"], "0")
+        self.assertEqual(child["env"]["PROTON_ENABLE_WAYLAND"], "0")
+        self.assertIsNone(parent["PROTON_ENABLE_WAYLAND"])
+
+    def test_proton_and_driver_settings_do_not_reach_compositor(self):
+        parent, child = self.launch("game_env VKD3D_CONFIG descriptor_heap\n")
+        for key in ("PROTON_DLSS_UPGRADE", "PROTON_LOG_DIR", "VKD3D_CONFIG"):
+            self.assertIsNone(parent[key])
+            self.assertIsNone(self.compositor["env"][key])
+            self.assertIsNotNone(child["env"][key])
+
+    def test_game_environment_rejects_invalid_names_and_arity(self):
+        for config in ("game_env 'BAD=NAME' value", "game_env ONE", "game_env ONE two three"):
+            with self.subTest(config=config):
+                self.launch(config + " && exit 99\nstatus=$?\n[[ $status == 1 ]] || exit 99\n")
+
+    def test_game_only_mangohud_opt_out_is_respected_by_policy(self):
+        _, child = self.launch("mode=native\ngame_env MANGOHUD 0\n")
+        self.assertEqual(child["env"]["MANGOHUD"], "0")
+        self.assertIn("fps_limiter=game", self.stderr)
+
     def test_stream_nested_targets_client_rate(self):
         self.display(stream=True)
         parent, _ = self.launch()
@@ -165,6 +203,11 @@ fi
         self.assertEqual(parent["MODE"], "session")
         self.assertEqual(parent["MANGOHUD_CONFIG"], "read_cfg,fps_limit=0")
         self.assertEqual(child["env"]["HYPR_HDR"], "0")
+
+    def test_existing_session_overrides_queued_game_hud(self):
+        _, child = self.launch("game_env MANGOHUD 1\ngame_env MANGOHUD_CONFIG fps_limit=30\n",
+                               {"XDG_CURRENT_DESKTOP": "gamescope"})
+        self.assertEqual(child["env"]["MANGOHUD"], "0")
 
 
 if __name__ == "__main__":

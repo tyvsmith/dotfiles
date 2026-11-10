@@ -1,3 +1,35 @@
+# Register game-launch settings without exporting them to the compositor/hooks.
+declare -A _scb_game_env=()
+game_env() {
+    if (( $# != 2 )) || [[ ! $1 =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        printf 'ScopeBuddy: game_env requires NAME VALUE with a valid environment name.\n' >&2
+        return 1
+    fi
+    _scb_game_env["$1"]=$2
+    export -n "${1?}"
+}
+
+# An explicit game setting wins, then an inherited value, then this default.
+game_env_default() {
+    if (( $# != 2 )) || [[ ! $1 =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        printf 'ScopeBuddy: game_env_default requires NAME VALUE.\n' >&2
+        return 1
+    fi
+    [[ ${_scb_game_env[$1]+set} ]] && return 0
+    game_env "$1" "${!1-$2}"
+}
+
+configure_launch() {
+    display_init || return 1
+    context=$(get_display_context)
+    width=$(get_display_width)
+    height=$(get_display_height)
+    refresh=$(get_display_fps)
+    source "$SCB_CONFIGDIR/$context.conf" || return 1
+    load_game_config || return 1
+    apply_mode
+}
+
 # Shared by native and nested Gamescope; existing sessions keep their own settings.
 apply_desktop_defaults() {
     if [[ -n $workspace ]]; then
@@ -22,12 +54,80 @@ apply_mode() {
     if (( SCB_GAMEMODE )); then
         mode=session
     fi
-    # Enable interpolation only in the game, never in its compositor or HUD.
-    local wrapped_command
-    printf -v wrapped_command 'env NVPRESENT_ENABLE_SMOOTH_MOTION=%q game-performance gamemoderun %s' \
-        "${NVPRESENT_ENABLE_SMOOTH_MOTION-1}" "$command"
-    unset NVPRESENT_ENABLE_SMOOTH_MOTION
-    source "$SCB_CONFIGDIR/$mode.conf" || exit 1
+    configure_fps || return 1
+    source "$SCB_CONFIGDIR/$mode.conf" || return 1
+
+    # SCB evaluates command as shell text; quote each assignment as one argv item.
+    local name assignment prefix="env"
+    for name in "${!_scb_game_env[@]}"; do
+        printf -v assignment '%q' "$name=${_scb_game_env[$name]}"
+        prefix+=" $assignment"
+    done
+    command="$prefix game-performance gamemoderun $command"
+    # Upstream skips the pre-hook without Gamescope; native mode still owns HDR.
+    if [[ $mode == native ]]; then command="pre_command && $command"; fi
+}
+
+# Resolve the cap, game HUD environment, and nested compositor rate/limit args.
+configure_fps() {
+    fps_cap=${fps_cap-$(get_display_fps_cap "$fps_margin")}
+    if [[ ! $fps_cap =~ ^(0|[1-9][0-9]*)$ ]] && { (( ! SCB_GAMEMODE )) || [[ -n $fps_cap ]]; }; then
+        printf 'ScopeBuddy: fps_cap must be a nonnegative integer.\n' >&2
+        return 1
+    fi
+    if [[ $mode == session ]]; then
+        # A queued assignment must not override SCB's outer-session HUD guard.
+        game_env MANGOHUD 0
+        return 0
+    fi
+
+    local injection=${_scb_game_env[MANGOHUD]-${MANGOHUD-1}} hud_limit=0
+    local appearance=${MANGOHUD_CONFIG-}
+    if [[ $mode == native ]]; then
+        fps_limiter=${fps_limiter:-mangohud}
+    else
+        fps_limiter=${fps_limiter:-gamescope}
+    fi
+    case $mode:$fps_limiter in
+        native:mangohud|gamescope:mangohud)
+            hud_limit=$fps_cap
+            if [[ $injection == 0 && $fps_cap != 0 ]]; then
+                printf 'ScopeBuddy: MANGOHUD=0 disables the FPS limiter; set an in-game limit and fps_limiter=game.\n' >&2
+                [[ $mode == gamescope ]] && return 1
+            fi
+            ;;
+        native:game|gamescope:game|gamescope:gamescope) ;;
+        *) printf 'ScopeBuddy: unsupported %s fps_limiter: %s\n' "$mode" "$fps_limiter" >&2; return 1 ;;
+    esac
+    unset MANGOHUD_FPS_LIMIT '_scb_game_env[MANGOHUD_FPS_LIMIT]'
+
+    if [[ $mode == native ]]; then
+        appearance=${_scb_game_env[MANGOHUD_CONFIG]-$appearance}
+        game_env MANGOHUD "$injection"
+        game_env MANGOHUD_CONFIG "read_cfg,${appearance:+$appearance,}fps_limit=$hud_limit"
+        return 0
+    fi
+
+    if [[ $fps_limiter == mangohud && $injection != 0 ]]; then
+        # Mangoapp owns all HUD interaction; this layer only enforces the cap.
+        game_env MANGOHUD 1
+        game_env MANGOHUD_CONFIG "no_display,fps_limit=$hud_limit,toggle_hud=,toggle_preset=,toggle_fps_limit=,toggle_logging=,reload_cfg="
+    else
+        game_env MANGOHUD 0
+        game_env MANGOHUD_CONFIG "read_cfg,${appearance:+$appearance,}fps_limit=0"
+    fi
+    export MANGOHUD=0
+    export MANGOHUD_CONFIG="read_cfg,${appearance:+$appearance,}fps_limit=0"
+    # Steam mode otherwise substitutes a temporary no_display config.
+    export MANGOHUD_CONFIGFILE=${MANGOHUD_CONFIGFILE:-${XDG_CONFIG_HOME:-$HOME/.config}/MangoHud/MangoHud.conf}
+
+    LC_NUMERIC=C printf -v gamescope_refresh '%.0f' "$refresh"
+    gamescope_limit_args=""
+    if [[ $fps_limiter == gamescope && $fps_cap != 0 ]]; then
+        # Matching virtual refresh avoids fixed-refresh divisor rounding.
+        gamescope_refresh=$fps_cap
+        gamescope_limit_args=" --framerate-limit $fps_cap"
+    fi
 }
 
 load_game_config() {

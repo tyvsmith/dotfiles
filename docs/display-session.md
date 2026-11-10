@@ -46,6 +46,10 @@ its limiter is selected; the physical display mode stays unchanged.
 
 ## HUD and FPS limits
 
+`scb.conf` declares defaults; `common.sh` loads context/game overrides, derives
+and validates the cap, selects the limiter, and builds the launch command.
+Mode files retain compositor arguments and native-rendering defaults.
+
 | Mode | HUD | Default limiter |
 | --- | --- | --- |
 | `gamescope` | Mangoapp | Gamescope at `fps_cap` |
@@ -99,6 +103,46 @@ separate disposable HUD config because it can
 References: [Gamescope options](https://github.com/ValveSoftware/gamescope/blob/3.17.0/src/main.cpp),
 [MangoHud configuration](https://github.com/flightlessmango/MangoHud/blob/v0.8.4/README.md),
 [Punktfunk binary selection](https://git.unom.io/unom/punktfunk/src/tag/v0.46.0/crates/host/pf-vdisplay/src/vdisplay/linux/gamescope/discovery.rs).
+
+### Set game-only environment variables
+
+Use these in `scb.conf` or a context/game profile:
+
+```bash
+game_env PROTON_DLSS_UPGRADE 1
+game_env PROTON_LOG_DIR "$HOME/.cache/proton-logs"
+game_env_default NVPRESENT_ENABLE_SMOOTH_MOTION 1
+game_env VKD3D_CONFIG descriptor_heap
+```
+
+- `game_env NAME VALUE` sets or replaces a game-only assignment; later calls win
+- `game_env_default NAME VALUE` keeps a registered value, otherwise uses an
+  inherited shell value, otherwise uses the supplied default; explicit `0`
+  and empty strings are preserved
+- Registration removes the name's export attribute. `common.sh` quotes each
+  assignment into one `env` argument after Gamescope's `--`, or before the
+  direct command in native/session mode
+- The environment covers the game launch chain, including performance wrappers,
+  GOverlay, Steam's launch wrapper, Proton, and Wine. It does not retroactively
+  change the already-running Steam client
+- Plain `export NAME=value` reaches all later children of ScopeBuddy, including
+  pre/post hooks, Gamescope, Mangoapp, and the game. Use it for settings that
+  must reach the compositor; use the API for runtime settings that belong only
+  to the game
+
+| Settings | Scope | Reason |
+| --- | --- | --- |
+| `PROTON_*`, `VKD3D_*`, `DXVK_*`, `__NGX_*`, `WAYLANDDRV_*` | game-only | configure Proton, Wine, or the game's graphics translation |
+| `NVPRESENT_ENABLE_SMOOTH_MOTION` | game-only | prevent compositor interpolation |
+| `HYPR_WORKSPACE`, `HYPR_FULLSCREEN`, `HYPR_HDR`, `HYPR_DND` | exported launch markers | Hyprland observes Gamescope's process for nested windows and the game for direct windows |
+| `MANGOHUD*` | mode-owned | Mangoapp needs compositor configuration; native/hidden MangoHud needs game configuration |
+
+The active game-profile exports and dormant NGX/DLSS examples use this API.
+For MangoHud compatibility opt-outs use `game_env MANGOHUD 0`; use `fps_cap`
+and `fps_limiter` for pacing instead of overriding mode-owned HUD limit fields.
+Use exported `MANGOHUD_CONFIG` and `MANGOHUD_CONFIGFILE` for compositor HUD
+appearance. Nested/session policy owns game injection and can override queued
+HUD settings; an existing session always disables the game's MangoHud layer.
 
 ### Try a branch without replacing the live ScopeBuddy config
 
