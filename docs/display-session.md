@@ -86,9 +86,11 @@ Mode files retain compositor arguments and native-rendering defaults.
   Deliberate presses worked in the local test; holding the chord too
   long can retrigger it. This is independent of duplicate HUD injection.
 
-Smooth Motion retains its enabled default and explicit `0` opt-out, but only
-the game receives `NVPRESENT_ENABLE_SMOOTH_MOTION`. The compositor and Mangoapp
-do not. For games with their own frame generation, test one method at a time.
+Smooth Motion is opt-in; `scb.conf` retains a commented example. Enable it
+with `game_env_default NVPRESENT_ENABLE_SMOOTH_MOTION 1` in a game profile
+so only the game receives it. In the tested 2x path, `fps_cap=80` targets
+about 160 presented FPS. For games with their own frame generation, test one
+method at a time.
 Do not infer base rendering FPS from a generated-frame or stream counter, or
 automatically halve the limit without checking that title's presentation path.
 
@@ -162,7 +164,8 @@ NVPRESENT_ENABLE_SMOOTH_MOTION=0 SCB_CONF=hud-trial.conf scb -- %command%
 
 - Check one press of Right Shift+F12 hides the HUD and one brings it back
 - Check rendered/presented FPS and frametimes with VSync off, then on
-- Remove the Smooth Motion override and repeat; compare the counter stages
+- To compare Smooth Motion, enable the commented game-only setting, remove
+  the launch-time opt-out, and repeat; compare the counter stages
 - For a direct trial, temporarily add `mode=native` to the branch's game
   profile; restore it afterward. Also test a `PF-*` nested launch
 - Keep the default hidden limiter for the baseline; test `fps_limiter=gamescope`

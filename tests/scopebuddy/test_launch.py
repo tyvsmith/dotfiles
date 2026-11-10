@@ -87,7 +87,7 @@ fi
         self.assertEqual(self.compositor["env"]["MANGOHUD"], "0")
         self.assertIsNone(self.compositor["env"]["NVPRESENT_ENABLE_SMOOTH_MOTION"])
         self.assertEqual(child["env"]["MANGOHUD"], "1")
-        self.assertEqual(child["env"]["NVPRESENT_ENABLE_SMOOTH_MOTION"], "1")
+        self.assertIsNone(child["env"]["NVPRESENT_ENABLE_SMOOTH_MOTION"])
         self.assertEqual(child["argv"][0], "argument with spaces")
         self.assertEqual(child["argv"][1], "literal;$HOME")
 
