@@ -81,12 +81,12 @@ fi
         parent, child = self.launch()
         self.assertEqual(parent["MANGOHUD"], "0")
         self.assertIsNone(parent["NVPRESENT_ENABLE_SMOOTH_MOTION"])
-        self.assertIn("-r 161", parent["ARGS"])
-        self.assertIn("--framerate-limit 161", parent["ARGS"])
+        self.assertIn("-r 165", parent["ARGS"])
+        self.assertNotIn("--framerate-limit", parent["ARGS"])
         self.assertEqual(parent["ARGS"].count("--mangoapp"), 1)
         self.assertEqual(self.compositor["env"]["MANGOHUD"], "0")
         self.assertIsNone(self.compositor["env"]["NVPRESENT_ENABLE_SMOOTH_MOTION"])
-        self.assertEqual(child["env"]["MANGOHUD"], "0")
+        self.assertEqual(child["env"]["MANGOHUD"], "1")
         self.assertEqual(child["env"]["NVPRESENT_ENABLE_SMOOTH_MOTION"], "1")
         self.assertEqual(child["argv"][0], "argument with spaces")
         self.assertEqual(child["argv"][1], "literal;$HOME")
@@ -136,9 +136,10 @@ fi
 
     def test_stream_nested_targets_client_rate(self):
         self.display(stream=True)
-        parent, _ = self.launch()
+        parent, child = self.launch()
         self.assertEqual(parent["CAP"], "120")
-        self.assertIn("--framerate-limit 120", parent["ARGS"])
+        self.assertNotIn("--framerate-limit", parent["ARGS"])
+        self.assertIn("fps_limit=120", child["env"]["MANGOHUD_CONFIG"])
         self.assertEqual(parent["HYPR_HDR"], "0")
 
     def test_overrides_precede_default_cap(self):
@@ -157,8 +158,8 @@ fi
         self.assertEqual(parent["CAP"], "90")
         self.assertEqual(child["env"]["NVPRESENT_ENABLE_SMOOTH_MOTION"], "0")
 
-    def test_hidden_fallback_has_no_interactive_controls(self):
-        parent, child = self.launch("fps_limiter=mangohud\n")
+    def test_default_hidden_limiter_has_no_interactive_controls(self):
+        parent, child = self.launch()
         self.assertIn("-r 165", parent["ARGS"])
         self.assertNotIn("--framerate-limit", parent["ARGS"])
         self.assertEqual(child["env"]["MANGOHUD"], "1")
@@ -167,6 +168,12 @@ fi
         self.assertIn("fps_limit=161", options)
         for key in ("toggle_hud", "toggle_preset", "toggle_fps_limit", "toggle_logging", "reload_cfg"):
             self.assertIn(key + "=", options)
+
+    def test_gamescope_limiter_requires_explicit_selection(self):
+        parent, child = self.launch("fps_limiter=gamescope\n")
+        self.assertIn("-r 161", parent["ARGS"])
+        self.assertIn("--framerate-limit 161", parent["ARGS"])
+        self.assertEqual(child["env"]["MANGOHUD"], "0")
 
     def test_native_injection_opt_out_reports_missing_limiter(self):
         _, child = self.launch("mode=native\nexport MANGOHUD=0\n")

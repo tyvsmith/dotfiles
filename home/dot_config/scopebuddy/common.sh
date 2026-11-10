@@ -83,11 +83,8 @@ configure_fps() {
 
     local injection=${_scb_game_env[MANGOHUD]-${MANGOHUD-1}} hud_limit=0
     local appearance=${MANGOHUD_CONFIG-}
-    if [[ $mode == native ]]; then
-        fps_limiter=${fps_limiter:-mangohud}
-    else
-        fps_limiter=${fps_limiter:-gamescope}
-    fi
+    # Stock Gamescope can discard its CLI cap during refresh-policy updates.
+    fps_limiter=${fps_limiter:-mangohud}
     case $mode:$fps_limiter in
         native:mangohud|gamescope:mangohud)
             hud_limit=$fps_cap

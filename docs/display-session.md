@@ -52,7 +52,7 @@ Mode files retain compositor arguments and native-rendering defaults.
 
 | Mode | HUD | Default limiter |
 | --- | --- | --- |
-| `gamescope` | Mangoapp | Gamescope at `fps_cap` |
+| `gamescope` | Mangoapp | hidden MangoHud at `fps_cap` |
 | `native` | MangoHud | MangoHud at `fps_cap` |
 | `session` | outer Gamescope's Mangoapp | outer session |
 
@@ -62,27 +62,29 @@ Mode files retain compositor arguments and native-rendering defaults.
   overrides are retained; `MANGOHUD_FPS_LIMIT` is cleared in desktop modes.
   Gamescope receives an explicit `MANGOHUD_CONFIGFILE` so Steam mode cannot
   substitute its temporary hidden-HUD config; an explicit custom path wins.
-- Mangoapp cannot limit the game. Its `fps_limit` is always zero; ordinary
-  MangoHud injection is disabled under Gamescope by default.
-- Nested Gamescope uses `-r <cap> --framerate-limit <cap>` for a positive cap.
-  Matching the virtual refresh avoids fixed-refresh divisor rounding, where
-  `-r 165 --framerate-limit 161` can run at 165. The game sees 161 Hz for a
-  165 Hz local display with the default margin. Verify actual pacing before
-  relying on this with a new backend or frame-generation setup.
-- `fps_cap=0` keeps the display's rounded virtual refresh and omits the explicit
-  Gamescope limiter. VSync or a game's own limit can still constrain FPS.
+- Mangoapp cannot limit the game. Its `fps_limit` is always zero. Nested
+  launches use a hidden MangoHud layer for the cap, with HUD, preset, limiter,
+  logging, and reload hotkeys disabled. Mangoapp remains the interactive HUD.
+- `fps_limiter=gamescope` opts into `-r <cap> --framerate-limit <cap>`.
+  Use it only with a build/backend whose cap you have verified. The installed
+  Gamescope 3.17.0 exceeded 161 FPS in Hellraiser with Smooth Motion disabled;
+  upstream's refresh-policy update can discard the CLI cap. Punktfunk patches
+  that path and retains its own outer-session pacing.
+- The default hidden limiter retains the display's rounded virtual refresh.
+  `fps_cap=0` disables its cap; VSync or a game's own limit can still constrain FPS.
 - A nonempty `SCB_GAMESCOPE_ARGS` is a complete override: it owns Mangoapp,
   virtual refresh, and Gamescope limiter arguments. ScopeBuddy does not amend it.
 - `fps_limiter=game` delegates limiting to the game's settings. It disables
   ScopeBuddy's limiter but keeps the mode's HUD. Set the game's cap yourself.
-- `fps_limiter=mangohud` in Gamescope mode is the fallback for titles that
-  need their original virtual refresh or fail compositor pacing tests. It
-  retains the display refresh and adds a hidden in-game limiter, with HUD,
-  preset, limiter, logging, and reload hotkeys disabled. Mangoapp remains
-  interactive. This requires `MANGOHUD` not to be explicitly disabled.
-- `MANGOHUD=0` remains an injection compatibility opt-out. In native mode it
-  also disables the default limiter and prints a warning; use an in-game cap
-  and `fps_limiter=game`. Under Gamescope it does not hide Mangoapp.
+- `fps_limiter=mangohud` explicitly selects the default. It requires game
+  injection; for incompatible titles set `game_env MANGOHUD 0` and
+  `fps_limiter=game`, then configure the cap in the game. Disabling injection
+  without selecting another limiter warns in native mode and rejects nested
+  launches. Under Gamescope, the opt-out does not hide Mangoapp.
+- Mangoapp 0.8.4 sleeps 500 ms while hidden, so brief toggle presses can be
+  missed ([upstream loop](https://github.com/flightlessmango/MangoHud/blob/v0.8.4/src/app/main.cpp)).
+  Deliberate presses worked in the local test; holding the chord too
+  long can retrigger it. This is independent of duplicate HUD injection.
 
 Smooth Motion retains its enabled default and explicit `0` opt-out, but only
 the game receives `NVPRESENT_ENABLE_SMOOTH_MOTION`. The compositor and Mangoapp
@@ -163,8 +165,8 @@ NVPRESENT_ENABLE_SMOOTH_MOTION=0 SCB_CONF=hud-trial.conf scb -- %command%
 - Remove the Smooth Motion override and repeat; compare the counter stages
 - For a direct trial, temporarily add `mode=native` to the branch's game
   profile; restore it afterward. Also test a `PF-*` nested launch
-- If compositor pacing fails, prefix the trial launch option with
-  `fps_limiter=mangohud` and repeat
+- Keep the default hidden limiter for the baseline; test `fps_limiter=gamescope`
+  separately only when evaluating a fixed compositor build
 
 Restore `scb -- %command%` to roll back the trial, then delete
 `~/.config/scopebuddy/hud-trial.conf`. Running games keep their launch environment.
