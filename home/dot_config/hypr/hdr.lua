@@ -50,7 +50,7 @@ function M.setup(monitors)
     for _, window in ipairs(hl.get_windows()) do
       local monitor, workspace = window.monitor, window.workspace
       if window.mapped and not window.hidden and eligible(monitor)
-        and workspace and workspace.id > 0 then
+        and workspace and workspace.id and workspace.id > 0 then
         local options = launch.read(window.pid)
         if options and options.hdr then return true end
       end

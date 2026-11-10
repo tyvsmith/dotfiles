@@ -64,7 +64,10 @@ assert(monitor.cm == "hdr", "restore actual state after wake")
 starts[20] = "201"
 tick()
 assert(monitor.cm == "srgb", "PID reuse must not retain stale ownership")
-windows = { { pid = 30, mapped = true, monitor = monitor, workspace = { id = 6 } } }
+windows = { { pid = 30, mapped = true, monitor = monitor, workspace = {} } }
+events["window.open"]()
+assert(monitor.cm == "srgb", "window without a workspace ID must not crash or enable HDR")
+windows[1].workspace.id = 6
 events["window.open"]()
 assert(monitor.cm == "hdr", "unwrapped marked local window opts in")
 windows[1].monitor = { name = "PF-1" }
