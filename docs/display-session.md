@@ -186,7 +186,7 @@ negotiated rate. ScopeBuddy's `session` mode must not create another compositor
 or cap. To roll back, remove the new override and restart the service.
 Keep any pre-existing override backed up instead of overwriting it.
 Applying the branch's ScopeBuddy config later is a separate
-`chezmoi apply --include=files ~/.config/scopebuddy` step.
+`chezmoi apply --include=files --recursive ~/.config/scopebuddy` step.
 
 If you applied an earlier revision of this branch, remove its
 `~/.config/systemd/user/punktfunk-host.service.d/hud.conf` and
