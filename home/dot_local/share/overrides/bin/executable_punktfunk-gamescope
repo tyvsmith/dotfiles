@@ -13,10 +13,6 @@ for arg in "$@"; do
     esac
 done
 
-# ScopeBuddy opts the game into interpolation; never interpolate the compositor.
-if [[ ${NVPRESENT_ENABLE_SMOOTH_MOTION-} != 0 ]]; then
-    unset NVPRESENT_ENABLE_SMOOTH_MOTION
-fi
 unset MANGOHUD_FPS_LIMIT
 export MANGOHUD=0
 # Steam mode otherwise substitutes a temporary no_display config.

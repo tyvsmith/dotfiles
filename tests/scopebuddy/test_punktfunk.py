@@ -20,8 +20,7 @@ class PunktfunkTest(unittest.TestCase):
 import json, os, sys
 print(json.dumps(dict(argv=sys.argv[1:], mango=os.getenv("MANGOHUD"),
     config=os.getenv("MANGOHUD_CONFIG"), limit=os.getenv("MANGOHUD_FPS_LIMIT"),
-    configfile=os.getenv("MANGOHUD_CONFIGFILE"),
-    smooth=os.getenv("NVPRESENT_ENABLE_SMOOTH_MOTION"))))
+    configfile=os.getenv("MANGOHUD_CONFIGFILE"))))
 sys.exit(int(os.getenv("BACKEND_EXIT", "0")))
 ''')
         self.backend.chmod(0o755)
@@ -37,7 +36,7 @@ sys.exit(int(os.getenv("BACKEND_EXIT", "0")))
         (self.bin / "mangoapp").symlink_to("/bin/true")
         self.env = {"PATH": f"{overrides}:{self.bin}:/usr/bin:/bin", "HOME": str(self.bin), "MANGOHUD": "1",
                     "MANGOHUD_CONFIG": "position=top-right,fps_limit=30",
-                    "MANGOHUD_FPS_LIMIT": "20", "NVPRESENT_ENABLE_SMOOTH_MOTION": "1"}
+                    "MANGOHUD_FPS_LIMIT": "20"}
 
     def run_wrapper(self, args, extra_env=None):
         self.assertTrue(WRAPPER.exists(), "Punktfunk HUD integration is missing")
@@ -54,13 +53,8 @@ sys.exit(int(os.getenv("BACKEND_EXIT", "0")))
         self.assertEqual(launch["mango"], "0")
         self.assertTrue(launch["config"].startswith("read_cfg,"))
         self.assertTrue(launch["config"].endswith("fps_limit=0"))
-        self.assertIsNone(launch["smooth"])
         self.assertIsNone(launch["limit"])
         self.assertEqual(launch["configfile"], str(self.bin / ".config/MangoHud/MangoHud.conf"))
-
-    def test_smooth_motion_opt_out_reaches_steam(self):
-        _, launch = self.run_wrapper(["--", "steam"], {"NVPRESENT_ENABLE_SMOOTH_MOTION": "0"})
-        self.assertEqual(launch["smooth"], "0")
 
     def test_hud_file_respects_xdg_and_explicit_override(self):
         _, launch = self.run_wrapper(["--steam", "--", "steam"], {"XDG_CONFIG_HOME": "/tmp/xdg"})
@@ -86,7 +80,6 @@ sys.exit(int(os.getenv("BACKEND_EXIT", "0")))
                 self.assertEqual(result.returncode, 7)
                 self.assertEqual(launch["argv"], [option])
                 self.assertEqual(launch["mango"], "1")
-                self.assertEqual(launch["smooth"], "1")
                 self.assertEqual(launch["config"], self.env["MANGOHUD_CONFIG"])
 
 
