@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# PUNKTFUNK_GAMESCOPE_BIN adapter; retain the patched capture implementation.
+set -euo pipefail
+backend=$(command -v punktfunk-gamescope) || {
+    printf 'punktfunk-gamescope-hud: punktfunk-gamescope is required.\n' >&2
+    exit 127
+}
+
+has_mangoapp=0
+for arg in "$@"; do
+    case $arg in
+        --) break ;;
+        --help|--version) exec "$backend" "$@" ;;
+        --mangoapp) has_mangoapp=1 ;;
+    esac
+done
+
+# ScopeBuddy opts the game into interpolation; never interpolate the compositor.
+if [[ ${NVPRESENT_ENABLE_SMOOTH_MOTION-} != 0 ]]; then
+    unset NVPRESENT_ENABLE_SMOOTH_MOTION
+fi
+unset MANGOHUD_FPS_LIMIT
+export MANGOHUD=0
+# Steam mode otherwise substitutes a temporary no_display config.
+export MANGOHUD_CONFIGFILE=${MANGOHUD_CONFIGFILE:-${XDG_CONFIG_HOME:-$HOME/.config}/MangoHud/MangoHud.conf}
+export MANGOHUD_CONFIG="read_cfg,${MANGOHUD_CONFIG:+$MANGOHUD_CONFIG,}fps_limit=0"
+if (( ! has_mangoapp )); then
+    set -- --mangoapp "$@"
+fi
+exec "$backend" "$@"

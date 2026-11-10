@@ -13,8 +13,6 @@ apply_desktop_defaults() {
         export HYPR_HDR=${HYPR_HDR-1}
         export HYPR_DND=${HYPR_DND-1}
     fi
-    export MANGOHUD=${MANGOHUD:-1}
-    export MANGOHUD_CONFIG=${MANGOHUD_CONFIG:-preset=2,fps_limit=$fps_cap}
     # SCB warns on ordinary pre-hook failures; failed HDR preparation must abort.
     SCB_PRE_COMMAND=${SCB_PRE_COMMAND-"scb_display_start || exit 1"}
     SCB_POST_COMMAND=${SCB_POST_COMMAND-scb_display_stop}
@@ -24,7 +22,11 @@ apply_mode() {
     if (( SCB_GAMEMODE )); then
         mode=session
     fi
-    local wrapped_command="game-performance gamemoderun $command"
+    # Enable interpolation only in the game, never in its compositor or HUD.
+    local wrapped_command
+    printf -v wrapped_command 'env NVPRESENT_ENABLE_SMOOTH_MOTION=%q game-performance gamemoderun %s' \
+        "${NVPRESENT_ENABLE_SMOOTH_MOTION-1}" "$command"
+    unset NVPRESENT_ENABLE_SMOOTH_MOTION
     source "$SCB_CONFIGDIR/$mode.conf" || exit 1
 }
 
@@ -106,8 +108,8 @@ get_display_height() { printf '%s\n' "$_scb_display_height"; }
 # Advertised refresh, not measured rendering or encoding throughput.
 get_display_fps() { printf '%s\n' "$_scb_display_fps"; }
 get_display_fps_cap() {
-    [[ -n $_scb_display_fps ]] || return 0
-    awk -v hz="$_scb_display_fps" -v margin="${1:-0}" 'BEGIN {
+    [[ -n $refresh ]] || return 0
+    awk -v hz="$refresh" -v margin="${1:-0}" 'BEGIN {
         cap = int(hz + 0.5) - margin; print (cap > 0 ? cap : 1)
     }'
 }

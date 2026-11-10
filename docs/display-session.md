@@ -24,9 +24,9 @@ compositor ownership (`mode`) are decided independently at launch time:
 - Session mode reuses Steam's compositor and installs no display hooks. HDR,
   HUD, resolution, and pacing stay with the outer session; Punktfunk sets
   `DXVK_HDR=1` for HDR streams and session mode never forces HDR on an SDR one.
-- `fps_cap` is derived before the game file loads, so a game that changes
-  `refresh` or `fps_margin` must set `fps_cap` itself. Unsetting a mode-owned
-  flag requests its default; use `0` to disable it.
+- `fps_cap` defaults to rounded `refresh` minus `fps_margin` after the game
+  file loads. A game can override any of these; `fps_cap=0` disables the
+  external cap. Unsetting a mode-owned flag requests its default.
 
 ## Display snapshot
 
@@ -41,7 +41,107 @@ compositor ownership (`mode`) are decided independently at launch time:
 
 Pixel dimensions ignore desktop scale and refresh keeps its fraction.
 `get_display_fps_cap` rounds it and subtracts the profile margin (local 4,
-streaming 0); Gamescope's `-r` gets the rounded refresh.
+streaming 0). Nested Gamescope advertises the cap as its virtual refresh when
+its limiter is selected; the physical display mode stays unchanged.
+
+## HUD and FPS limits
+
+| Mode | HUD | Default limiter |
+| --- | --- | --- |
+| `gamescope` | Mangoapp | Gamescope at `fps_cap` |
+| `native` | MangoHud | MangoHud at `fps_cap` |
+| `session` | outer Gamescope's Mangoapp | outer session |
+
+- Edit appearance and hotkeys through GOverlay's `MangoHud.conf`. Both HUDs
+  load it with `read_cfg`; launch configuration supplies the cap last.
+  Leave the file's `fps_limit=0`. Existing `MANGOHUD_CONFIG` appearance
+  overrides are retained; `MANGOHUD_FPS_LIMIT` is cleared in desktop modes.
+  Gamescope receives an explicit `MANGOHUD_CONFIGFILE` so Steam mode cannot
+  substitute its temporary hidden-HUD config; an explicit custom path wins.
+- Mangoapp cannot limit the game. Its `fps_limit` is always zero; ordinary
+  MangoHud injection is disabled under Gamescope by default.
+- Nested Gamescope uses `-r <cap> --framerate-limit <cap>` for a positive cap.
+  Matching the virtual refresh avoids fixed-refresh divisor rounding, where
+  `-r 165 --framerate-limit 161` can run at 165. The game sees 161 Hz for a
+  165 Hz local display with the default margin. Verify actual pacing before
+  relying on this with a new backend or frame-generation setup.
+- `fps_cap=0` keeps the display's rounded virtual refresh and omits the explicit
+  Gamescope limiter. VSync or a game's own limit can still constrain FPS.
+- A nonempty `SCB_GAMESCOPE_ARGS` is a complete override: it owns Mangoapp,
+  virtual refresh, and Gamescope limiter arguments. ScopeBuddy does not amend it.
+- `fps_limiter=game` delegates limiting to the game's settings. It disables
+  ScopeBuddy's limiter but keeps the mode's HUD. Set the game's cap yourself.
+- `fps_limiter=mangohud` in Gamescope mode is the fallback for titles that
+  need their original virtual refresh or fail compositor pacing tests. It
+  retains the display refresh and adds a hidden in-game limiter, with HUD,
+  preset, limiter, logging, and reload hotkeys disabled. Mangoapp remains
+  interactive. This requires `MANGOHUD` not to be explicitly disabled.
+- `MANGOHUD=0` remains an injection compatibility opt-out. In native mode it
+  also disables the default limiter and prints a warning; use an in-game cap
+  and `fps_limiter=game`. Under Gamescope it does not hide Mangoapp.
+
+Smooth Motion retains its enabled default and explicit `0` opt-out, but only
+the game receives `NVPRESENT_ENABLE_SMOOTH_MOTION`. The compositor and Mangoapp
+do not. For games with their own frame generation, test one method at a time.
+Do not infer base rendering FPS from a generated-frame or stream counter, or
+automatically halve the limit without checking that title's presentation path.
+
+Punktfunk uses `punktfunk-gamescope-hud` through the user-service
+`PUNKTFUNK_GAMESCOPE_BIN` override. The adapter requires the patched
+`punktfunk-gamescope` binary, passes capability probes through, and adds one
+Mangoapp without changing Punktfunk's pacing or capture arguments. Reload the
+user units and restart `punktfunk-host` with no active stream after applying
+the drop-in. Other outer Gamescope launchers must add their own `--mangoapp`.
+The adapter targets desktop Steam/`-gamepadui`; Steam `-steamos3` needs a
+separate disposable HUD config because it can
+[overwrite the configured file](https://github.com/ValveSoftware/gamescope/issues/1800).
+
+References: [Gamescope options](https://github.com/ValveSoftware/gamescope/blob/3.17.0/src/main.cpp),
+[MangoHud configuration](https://github.com/flightlessmango/MangoHud/blob/v0.8.4/README.md),
+[Punktfunk binary selection](https://git.unom.io/unom/punktfunk/src/tag/v0.46.0/crates/host/pf-vdisplay/src/vdisplay/linux/gamescope/discovery.rs).
+
+### Try a branch without replacing the live ScopeBuddy config
+
+From the repository root, create a temporary launch entry (Fish or Bash):
+
+```sh
+printf '%s\n' "SCB_CONFIGDIR='$PWD/home/dot_config/scopebuddy'" 'source "$SCB_CONFIGDIR/scb.conf"' > ~/.config/scopebuddy/hud-trial.conf
+```
+
+Use this Steam launch option for the first test:
+
+```text
+NVPRESENT_ENABLE_SMOOTH_MOTION=0 SCB_CONF=hud-trial.conf scb -- %command%
+```
+
+- Check one press of Right Shift+F12 hides the HUD and one brings it back
+- Check rendered/presented FPS and frametimes with VSync off, then on
+- Remove the Smooth Motion override and repeat; compare the counter stages
+- For a direct trial, temporarily add `mode=native` to the branch's game
+  profile; restore it afterward. Also test a `PF-*` nested launch
+- If compositor pacing fails, prefix the trial launch option with
+  `fps_limiter=mangohud` and repeat
+
+Restore `scb -- %command%` to roll back the trial, then delete
+`~/.config/scopebuddy/hud-trial.conf`. Running games keep their launch environment.
+
+The outer Punktfunk integration requires installing the wrapper and service
+drop-in. Review the targeted diff first, then apply only those files:
+
+```sh
+chezmoi --source "$PWD" diff ~/.local/bin/punktfunk-gamescope-hud ~/.config/systemd/user/punktfunk-host.service.d/hud.conf
+chezmoi --source "$PWD" apply --include=files ~/.local/bin/punktfunk-gamescope-hud ~/.config/systemd/user/punktfunk-host.service.d/hud.conf
+systemctl --user daemon-reload
+systemctl --user restart punktfunk-host
+```
+
+Run the restart only after disconnecting streams. In streamed Steam, verify
+one HUD is visible in the client capture and that client delivery stays at the
+negotiated rate. ScopeBuddy's `session` mode must not create another compositor
+or cap. To roll back the new integration, remove those two new files and reload
+and restart the service again. Keep any pre-existing files backed up instead
+of overwriting them. Applying the branch's ScopeBuddy config later is a separate
+`chezmoi apply --include=files ~/.config/scopebuddy` step.
 
 ## Local HDR lifecycle
 
