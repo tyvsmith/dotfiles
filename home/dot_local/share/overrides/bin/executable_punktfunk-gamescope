@@ -1,10 +1,8 @@
 #!/usr/bin/env bash
-# PUNKTFUNK_GAMESCOPE_BIN adapter; retain the patched capture implementation.
+# Add the outer HUD while retaining Punktfunk's patched capture implementation.
 set -euo pipefail
-backend=$(command -v punktfunk-gamescope) || {
-    printf 'punktfunk-gamescope-hud: punktfunk-gamescope is required.\n' >&2
-    exit 127
-}
+# Bypass this PATH override when launching the packaged binary.
+backend=/usr/bin/punktfunk-gamescope
 
 has_mangoapp=0
 for arg in "$@"; do

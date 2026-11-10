@@ -7,7 +7,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[2]
-WRAPPER = ROOT / "home/dot_local/bin/executable_punktfunk-gamescope-hud"
+WRAPPER = ROOT / "home/dot_local/share/overrides/bin/executable_punktfunk-gamescope"
 
 
 class PunktfunkTest(unittest.TestCase):
@@ -25,15 +25,24 @@ print(json.dumps(dict(argv=sys.argv[1:], mango=os.getenv("MANGOHUD"),
 sys.exit(int(os.getenv("BACKEND_EXIT", "0")))
 ''')
         self.backend.chmod(0o755)
+        overrides = self.bin / "overrides"
+        overrides.mkdir()
+        self.wrapper = overrides / "punktfunk-gamescope"
+        source = WRAPPER.read_text()
+        self.assertIn("backend=/usr/bin/punktfunk-gamescope", source)
+        # Redirect only the absolute backend in the fixture; production bypasses PATH.
+        self.wrapper.write_text(source.replace("backend=/usr/bin/punktfunk-gamescope",
+                                              f"backend={self.backend}"))
+        self.wrapper.chmod(0o755)
         (self.bin / "mangoapp").symlink_to("/bin/true")
-        self.env = {"PATH": f"{self.bin}:/usr/bin:/bin", "HOME": str(self.bin), "MANGOHUD": "1",
+        self.env = {"PATH": f"{overrides}:{self.bin}:/usr/bin:/bin", "HOME": str(self.bin), "MANGOHUD": "1",
                     "MANGOHUD_CONFIG": "position=top-right,fps_limit=30",
                     "MANGOHUD_FPS_LIMIT": "20", "NVPRESENT_ENABLE_SMOOTH_MOTION": "1"}
 
     def run_wrapper(self, args, extra_env=None):
         self.assertTrue(WRAPPER.exists(), "Punktfunk HUD integration is missing")
-        result = subprocess.run(["bash", str(WRAPPER), *args],
-                                env=self.env | (extra_env or {}), text=True, capture_output=True)
+        result = subprocess.run(["punktfunk-gamescope", *args],
+                                env=self.env | (extra_env or {}), text=True, capture_output=True, timeout=5)
         return result, json.loads(result.stdout)
 
     def test_launch_adds_single_hud_without_changing_pacing(self):

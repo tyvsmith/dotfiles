@@ -90,12 +90,12 @@ do not. For games with their own frame generation, test one method at a time.
 Do not infer base rendering FPS from a generated-frame or stream counter, or
 automatically halve the limit without checking that title's presentation path.
 
-Punktfunk uses `punktfunk-gamescope-hud` through the user-service
-`PUNKTFUNK_GAMESCOPE_BIN` override. The adapter requires the patched
-`punktfunk-gamescope` binary, passes capability probes through, and adds one
-Mangoapp without changing Punktfunk's pacing or capture arguments. Reload the
-user units and restart `punktfunk-host` with no active stream after applying
-the drop-in. Other outer Gamescope launchers must add their own `--mangoapp`.
+Punktfunk finds `~/.local/share/overrides/bin/punktfunk-gamescope` through
+its service PATH. The wrapper calls `/usr/bin/punktfunk-gamescope` directly,
+passes capability probes through, and adds one Mangoapp without changing
+Punktfunk's pacing or capture arguments. The overrides directory must precede
+`/usr/bin` in the user-service PATH, as it does in this desktop session.
+Other outer Gamescope launchers must add their own `--mangoapp`.
 The adapter targets desktop Steam/`-gamepadui`; Steam `-steamos3` needs a
 separate disposable HUD config because it can
 [overwrite the configured file](https://github.com/ValveSoftware/gamescope/issues/1800).
@@ -169,23 +169,29 @@ NVPRESENT_ENABLE_SMOOTH_MOTION=0 SCB_CONF=hud-trial.conf scb -- %command%
 Restore `scb -- %command%` to roll back the trial, then delete
 `~/.config/scopebuddy/hud-trial.conf`. Running games keep their launch environment.
 
-The outer Punktfunk integration requires installing the wrapper and service
-drop-in. Review the targeted diff first, then apply only those files:
+The outer Punktfunk integration requires installing the PATH override.
+Review the targeted diff first, then apply only that file:
 
 ```sh
-chezmoi --source "$PWD" diff ~/.local/bin/punktfunk-gamescope-hud ~/.config/systemd/user/punktfunk-host.service.d/hud.conf
-chezmoi --source "$PWD" apply --include=files ~/.local/bin/punktfunk-gamescope-hud ~/.config/systemd/user/punktfunk-host.service.d/hud.conf
-systemctl --user daemon-reload
+chezmoi --source "$PWD" diff ~/.local/share/overrides/bin/punktfunk-gamescope
+chezmoi --source "$PWD" apply --include=files ~/.local/share/overrides/bin/punktfunk-gamescope
+systemctl --user show-environment | rg '^PATH='
 systemctl --user restart punktfunk-host
 ```
 
+Confirm the overrides directory precedes `/usr/bin` in the service PATH.
 Run the restart only after disconnecting streams. In streamed Steam, verify
 one HUD is visible in the client capture and that client delivery stays at the
 negotiated rate. ScopeBuddy's `session` mode must not create another compositor
-or cap. To roll back the new integration, remove those two new files and reload
-and restart the service again. Keep any pre-existing files backed up instead
-of overwriting them. Applying the branch's ScopeBuddy config later is a separate
+or cap. To roll back, remove the new override and restart the service.
+Keep any pre-existing override backed up instead of overwriting it.
+Applying the branch's ScopeBuddy config later is a separate
 `chezmoi apply --include=files ~/.config/scopebuddy` step.
+
+If you applied an earlier revision of this branch, remove its
+`~/.config/systemd/user/punktfunk-host.service.d/hud.conf` and
+`~/.local/bin/punktfunk-gamescope-hud`, then run `systemctl --user daemon-reload`
+before restarting. That old binary override takes precedence over PATH.
 
 ## Local HDR lifecycle
 
