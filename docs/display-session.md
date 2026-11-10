@@ -49,6 +49,10 @@ its limiter is selected; the physical display mode stays unchanged.
 `scb.conf` declares defaults; `common.sh` loads context/game overrides, derives
 and validates the cap, selects the limiter, and builds the launch command.
 Mode files retain compositor arguments and native-rendering defaults.
+Sourcing `common.sh` only defines functions. ScopeBuddy initializes its game
+environment explicitly; both launchers call `configure_mangoapp` for the
+compositor HUD policy. Punktfunk loads the helper from
+`${XDG_CONFIG_HOME:-$HOME/.config}/scopebuddy/common.sh`.
 
 | Mode | HUD | Default limiter |
 | --- | --- | --- |

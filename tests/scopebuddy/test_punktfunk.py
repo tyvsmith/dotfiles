@@ -1,5 +1,6 @@
 """Punktfunk's adapter must preserve probes, patched binary selection and argv."""
 import json
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -15,6 +16,9 @@ class PunktfunkTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.bin = Path(self.tmp.name)
+        self.common = self.bin / ".config/scopebuddy/common.sh"
+        self.common.parent.mkdir(parents=True)
+        shutil.copy2(ROOT / "home/dot_config/scopebuddy/common.sh", self.common)
         self.backend = self.bin / "punktfunk-gamescope"
         self.backend.write_text('''#!/usr/bin/python3
 import json, os, sys
@@ -57,10 +61,26 @@ sys.exit(int(os.getenv("BACKEND_EXIT", "0")))
         self.assertEqual(launch["configfile"], str(self.bin / ".config/MangoHud/MangoHud.conf"))
 
     def test_hud_file_respects_xdg_and_explicit_override(self):
-        _, launch = self.run_wrapper(["--steam", "--", "steam"], {"XDG_CONFIG_HOME": "/tmp/xdg"})
-        self.assertEqual(launch["configfile"], "/tmp/xdg/MangoHud/MangoHud.conf")
+        xdg = self.bin / "xdg"
+        (xdg / "scopebuddy").mkdir(parents=True)
+        shutil.copy2(self.common, xdg / "scopebuddy/common.sh")
+        _, launch = self.run_wrapper(["--steam", "--", "steam"], {"XDG_CONFIG_HOME": str(xdg)})
+        self.assertEqual(launch["configfile"], str(xdg / "MangoHud/MangoHud.conf"))
         _, launch = self.run_wrapper(["--steam", "--", "steam"], {"MANGOHUD_CONFIGFILE": "/tmp/custom hud.conf"})
         self.assertEqual(launch["configfile"], "/tmp/custom hud.conf")
+
+    def test_common_source_is_passive_and_owns_compositor_policy(self):
+        result = subprocess.run(["bash", "-eu", "-c", '\n'.join([
+            'source "$HOME/.config/scopebuddy/common.sh"',
+            'if declare -p _scb_game_env 2>/dev/null; then exit 99; fi',
+            '[[ $MANGOHUD == 1 ]]',
+            '[[ $MANGOHUD_FPS_LIMIT == 20 ]]',
+            'configure_mangoapp',
+            '[[ $MANGOHUD == 0 ]]',
+            '[[ ! ${MANGOHUD_FPS_LIMIT+x} ]]',
+            '[[ $MANGOHUD_CONFIG == "read_cfg,position=top-right,fps_limit=30,no_display,toggle_hud=Shift_R+F12,fps_limit=0" ]]',
+        ])], env=self.env, text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_existing_mangoapp_is_not_duplicated(self):
         args = ["--mangoapp", "--", "steam"]
@@ -74,6 +94,7 @@ sys.exit(int(os.getenv("BACKEND_EXIT", "0")))
         self.assertEqual(launch["mango"], "0")
 
     def test_probes_preserve_arguments_environment_and_status(self):
+        self.common.unlink()  # Capability probes must not need launch configuration.
         for option in ("--version", "--help"):
             with self.subTest(option=option):
                 result, launch = self.run_wrapper([option], {"BACKEND_EXIT": "7"})

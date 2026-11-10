@@ -1,5 +1,7 @@
 # Register game-launch settings without exporting them to the compositor/hooks.
-declare -A _scb_game_env=()
+init_game_env() {
+    declare -gA _scb_game_env=()
+}
 game_env() {
     if (( $# != 2 )) || [[ ! $1 =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
         printf 'ScopeBuddy: game_env requires NAME VALUE with a valid environment name.\n' >&2
@@ -17,6 +19,15 @@ game_env_default() {
     fi
     [[ ${_scb_game_env[$1]+set} ]] && return 0
     game_env "$1" "${!1-$2}"
+}
+
+# Compositor HUD policy shared by desktop ScopeBuddy and outer Punktfunk sessions.
+configure_mangoapp() {
+    unset MANGOHUD_FPS_LIMIT
+    export MANGOHUD=0
+    export MANGOHUD_CONFIG="read_cfg,${MANGOHUD_CONFIG:+$MANGOHUD_CONFIG,}no_display,toggle_hud=Shift_R+F12,fps_limit=0"
+    # Steam mode otherwise substitutes a temporary no_display config.
+    export MANGOHUD_CONFIGFILE=${MANGOHUD_CONFIGFILE:-${XDG_CONFIG_HOME:-$HOME/.config}/MangoHud/MangoHud.conf}
 }
 
 configure_launch() {
@@ -113,10 +124,7 @@ configure_fps() {
         game_env MANGOHUD 0
         game_env MANGOHUD_CONFIG "read_cfg,${appearance:+$appearance,}fps_limit=0"
     fi
-    export MANGOHUD=0
-    export MANGOHUD_CONFIG="read_cfg,${appearance:+$appearance,}no_display,toggle_hud=Shift_R+F12,fps_limit=0"
-    # Steam mode otherwise substitutes a temporary no_display config.
-    export MANGOHUD_CONFIGFILE=${MANGOHUD_CONFIGFILE:-${XDG_CONFIG_HOME:-$HOME/.config}/MangoHud/MangoHud.conf}
+    configure_mangoapp
 
     LC_NUMERIC=C printf -v gamescope_refresh '%.0f' "$refresh"
     gamescope_limit_args=""
