@@ -56,7 +56,9 @@ Mode files retain compositor arguments and native-rendering defaults.
 | `native` | MangoHud | MangoHud at `fps_cap` |
 | `session` | outer Gamescope's Mangoapp | outer session |
 
-- Edit appearance and hotkeys through GOverlay's `MangoHud.conf`. Both HUDs
+- Start Mangoapp hidden in nested and Punktfunk Gamescope sessions; toggle it
+  with Right Shift+F12. Launch policy owns this shortcut and initial visibility.
+- Edit appearance through GOverlay's `MangoHud.conf`. Both HUDs
   load it with `read_cfg`; launch configuration supplies the cap last.
   Leave the file's `fps_limit=0`. Existing `MANGOHUD_CONFIG` appearance
   overrides are retained; `MANGOHUD_FPS_LIMIT` is cleared in desktop modes.
@@ -162,7 +164,7 @@ Use this Steam launch option for the first test:
 NVPRESENT_ENABLE_SMOOTH_MOTION=0 SCB_CONF=hud-trial.conf scb -- %command%
 ```
 
-- Check one press of Right Shift+F12 hides the HUD and one brings it back
+- Check the HUD starts hidden, Right Shift+F12 reveals it, and another press hides it
 - Check rendered/presented FPS and frametimes with VSync off, then on
 - To compare Smooth Motion, enable the commented game-only setting, remove
   the launch-time opt-out, and repeat; compare the counter stages
@@ -186,7 +188,7 @@ systemctl --user restart punktfunk-host
 
 Confirm the overrides directory precedes `/usr/bin` in the service PATH.
 Run the restart only after disconnecting streams. In streamed Steam, verify
-one HUD is visible in the client capture and that client delivery stays at the
+Right Shift+F12 reveals one HUD in the client capture and client delivery stays at the
 negotiated rate. ScopeBuddy's `session` mode must not create another compositor
 or cap. To roll back, remove the new override and restart the service.
 Keep any pre-existing override backed up instead of overwriting it.

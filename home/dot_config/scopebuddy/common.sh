@@ -114,7 +114,7 @@ configure_fps() {
         game_env MANGOHUD_CONFIG "read_cfg,${appearance:+$appearance,}fps_limit=0"
     fi
     export MANGOHUD=0
-    export MANGOHUD_CONFIG="read_cfg,${appearance:+$appearance,}fps_limit=0"
+    export MANGOHUD_CONFIG="read_cfg,${appearance:+$appearance,}no_display,toggle_hud=Shift_R+F12,fps_limit=0"
     # Steam mode otherwise substitutes a temporary no_display config.
     export MANGOHUD_CONFIGFILE=${MANGOHUD_CONFIGFILE:-${XDG_CONFIG_HOME:-$HOME/.config}/MangoHud/MangoHud.conf}
 

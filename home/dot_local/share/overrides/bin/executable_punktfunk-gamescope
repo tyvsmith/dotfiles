@@ -17,7 +17,7 @@ unset MANGOHUD_FPS_LIMIT
 export MANGOHUD=0
 # Steam mode otherwise substitutes a temporary no_display config.
 export MANGOHUD_CONFIGFILE=${MANGOHUD_CONFIGFILE:-${XDG_CONFIG_HOME:-$HOME/.config}/MangoHud/MangoHud.conf}
-export MANGOHUD_CONFIG="read_cfg,${MANGOHUD_CONFIG:+$MANGOHUD_CONFIG,}fps_limit=0"
+export MANGOHUD_CONFIG="read_cfg,${MANGOHUD_CONFIG:+$MANGOHUD_CONFIG,}no_display,toggle_hud=Shift_R+F12,fps_limit=0"
 if (( ! has_mangoapp )); then
     set -- --mangoapp "$@"
 fi
