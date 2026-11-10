@@ -57,7 +57,7 @@ assert(#actions == 0, "unreadable process must be ignored")
 open("HYPR_WORKSPACE=7\0")
 assert(actions[1].spec.workspace == "7", "do not cache missing markers or recycled PIDs")
 open("HYPR_WORKSPACE=6\0", { id = -99, name = "special:hidden" })
-assert(#actions == 0, "preserve the GameGuard special workspace rule")
+assert(#actions == 0, "preserve explicitly assigned special workspaces")
 open("HYPR_WORKSPACE=6\0", { id = 6, name = "6" })
 assert(#actions == 1 and actions[1].kind == "focus", "follow even if a static rule already placed it")
 active = 6
