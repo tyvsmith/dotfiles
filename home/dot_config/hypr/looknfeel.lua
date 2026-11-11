@@ -18,8 +18,13 @@ hl.animation({ leaf = "workspaces", enabled = true, speed = 6, bezier = "mybezie
 
 -- hyprfocus (hyprpm plugin) focus animation.
 hl.curve("md3_accel", { type = "bezier", points = { { 0.03, 0 }, { 0.8, 0.15 } } })
-hl.animation({ leaf = "hyprfocusIn", enabled = true, speed = 1.7, bezier = "md3_accel" })
-hl.animation({ leaf = "hyprfocusOut", enabled = true, speed = 1.7, bezier = "md3_accel" })
+-- hyprpm loads after the first config pass; plugin loading triggers another pass.
+for _, plugin in ipairs(hl.get_loaded_plugins()) do
+  if plugin.name == "hyprfocus" then
+    hl.animation({ leaf = "hyprfocusIn", enabled = true, speed = 1.7, bezier = "md3_accel" })
+    hl.animation({ leaf = "hyprfocusOut", enabled = true, speed = 1.7, bezier = "md3_accel" })
+  end
+end
 
 -- hyprpm plugin settings. `plugin` is missing from the lua-ls stubs, so the
 -- warning is spurious; it works (verified with hyprctl getoption).
