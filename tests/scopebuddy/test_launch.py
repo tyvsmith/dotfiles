@@ -146,6 +146,12 @@ fi
         parent, _ = self.launch("refresh=144\nfps_margin=3\n")
         self.assertEqual(parent["CAP"], "141")
 
+    def test_profile_lookup_does_not_require_ripgrep(self):
+        self.write_bin("rg", "#!/bin/sh\nexit 127\n")
+        parent, _ = self.launch("mode=native\nrefresh=144\nfps_margin=3\n")
+        self.assertEqual(parent["MODE"], "native")
+        self.assertEqual(parent["CAP"], "141")
+
     def test_zero_cap_disables_external_limiter(self):
         parent, _ = self.launch("fps_cap=0\n")
         self.assertIn("-r 165", parent["ARGS"])

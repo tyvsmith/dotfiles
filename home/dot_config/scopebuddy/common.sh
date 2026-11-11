@@ -141,7 +141,7 @@ load_game_config() {
     # Read IDs without executing other games' settings; load the first match once.
     for game_config in "$SCB_CONFIGDIR"/games/*.conf; do
         [[ -f $game_config ]] || continue
-        if rg -qFx -- "APP_ID=$SCB_APPID" "$game_config"; then
+        if grep -qFx -- "APP_ID=$SCB_APPID" "$game_config"; then
             source "$game_config" || exit 1
             break
         fi
