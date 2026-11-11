@@ -58,9 +58,7 @@ local expected = {
   { 'streamcontroller on workspace 10', 'com\\.core447\\.StreamController', { workspace = '10 silent' } },
   { 'lan mouse on workspace 10', 'de\\.feschber\\.LanMouse', { workspace = '10 silent' } },
   { 'battle.net tiles', { class = '^steam_app_battlenet$', title = '^Battle\\.net$' }, { tile = true } },
-  { 'GameGuard dialog is parked on special:hidden',
-    { class = '^steam_app_553850$', initial_title = '^$' },
-    { no_focus = true, no_initial_focus = true, workspace = 'special:hidden silent' } },
+
 }
 for _, e in ipairs(expected) do
   assert(find_rule(e[2], e[3]), 'missing window rule: ' .. e[1])

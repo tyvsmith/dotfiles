@@ -1,3 +1,46 @@
+# Register game-launch settings without exporting them to the compositor/hooks.
+init_game_env() {
+    declare -gA _scb_game_env=()
+}
+game_env() {
+    if (( $# != 2 )) || [[ ! $1 =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        printf 'ScopeBuddy: game_env requires NAME VALUE with a valid environment name.\n' >&2
+        return 1
+    fi
+    _scb_game_env["$1"]=$2
+    export -n "${1?}"
+}
+
+# An explicit game setting wins, then an inherited value, then this default.
+game_env_default() {
+    if (( $# != 2 )) || [[ ! $1 =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+        printf 'ScopeBuddy: game_env_default requires NAME VALUE.\n' >&2
+        return 1
+    fi
+    [[ ${_scb_game_env[$1]+set} ]] && return 0
+    game_env "$1" "${!1-$2}"
+}
+
+# Compositor HUD policy shared by desktop ScopeBuddy and outer Punktfunk sessions.
+configure_mangoapp() {
+    unset MANGOHUD_FPS_LIMIT
+    export MANGOHUD=0
+    export MANGOHUD_CONFIG="read_cfg,${MANGOHUD_CONFIG:+$MANGOHUD_CONFIG,}no_display,toggle_hud=Shift_R+F12,fps_limit=0"
+    # Steam mode otherwise substitutes a temporary no_display config.
+    export MANGOHUD_CONFIGFILE=${MANGOHUD_CONFIGFILE:-${XDG_CONFIG_HOME:-$HOME/.config}/MangoHud/MangoHud.conf}
+}
+
+configure_launch() {
+    display_init || return 1
+    context=$(get_display_context)
+    width=$(get_display_width)
+    height=$(get_display_height)
+    refresh=$(get_display_fps)
+    source "$SCB_CONFIGDIR/$context.conf" || return 1
+    load_game_config || return 1
+    apply_mode
+}
+
 # Shared by native and nested Gamescope; existing sessions keep their own settings.
 apply_desktop_defaults() {
     if [[ -n $workspace ]]; then
@@ -13,8 +56,6 @@ apply_desktop_defaults() {
         export HYPR_HDR=${HYPR_HDR-1}
         export HYPR_DND=${HYPR_DND-1}
     fi
-    export MANGOHUD=${MANGOHUD:-1}
-    export MANGOHUD_CONFIG=${MANGOHUD_CONFIG:-preset=2,fps_limit=$fps_cap}
     # SCB warns on ordinary pre-hook failures; failed HDR preparation must abort.
     SCB_PRE_COMMAND=${SCB_PRE_COMMAND-"scb_display_start || exit 1"}
     SCB_POST_COMMAND=${SCB_POST_COMMAND-scb_display_stop}
@@ -24,8 +65,74 @@ apply_mode() {
     if (( SCB_GAMEMODE )); then
         mode=session
     fi
-    local wrapped_command="game-performance gamemoderun $command"
-    source "$SCB_CONFIGDIR/$mode.conf" || exit 1
+    configure_fps || return 1
+    source "$SCB_CONFIGDIR/$mode.conf" || return 1
+
+    # SCB evaluates command as shell text; quote each assignment as one argv item.
+    local name assignment prefix="env"
+    for name in "${!_scb_game_env[@]}"; do
+        printf -v assignment '%q' "$name=${_scb_game_env[$name]}"
+        prefix+=" $assignment"
+    done
+    command="$prefix game-performance gamemoderun $command"
+    # Upstream skips the pre-hook without Gamescope; native mode still owns HDR.
+    if [[ $mode == native ]]; then command="pre_command && $command"; fi
+}
+
+# Resolve the cap, game HUD environment, and nested compositor rate/limit args.
+configure_fps() {
+    fps_cap=${fps_cap-$(get_display_fps_cap "$fps_margin")}
+    if [[ ! $fps_cap =~ ^(0|[1-9][0-9]*)$ ]] && { (( ! SCB_GAMEMODE )) || [[ -n $fps_cap ]]; }; then
+        printf 'ScopeBuddy: fps_cap must be a nonnegative integer.\n' >&2
+        return 1
+    fi
+    if [[ $mode == session ]]; then
+        # A queued assignment must not override SCB's outer-session HUD guard.
+        game_env MANGOHUD 0
+        return 0
+    fi
+
+    local injection=${_scb_game_env[MANGOHUD]-${MANGOHUD-1}} hud_limit=0
+    local appearance=${MANGOHUD_CONFIG-}
+    # Stock Gamescope can discard its CLI cap during refresh-policy updates.
+    fps_limiter=${fps_limiter:-mangohud}
+    case $mode:$fps_limiter in
+        native:mangohud|gamescope:mangohud)
+            hud_limit=$fps_cap
+            if [[ $injection == 0 && $fps_cap != 0 ]]; then
+                printf 'ScopeBuddy: MANGOHUD=0 disables the FPS limiter; set an in-game limit and fps_limiter=game.\n' >&2
+                [[ $mode == gamescope ]] && return 1
+            fi
+            ;;
+        native:game|gamescope:game|gamescope:gamescope) ;;
+        *) printf 'ScopeBuddy: unsupported %s fps_limiter: %s\n' "$mode" "$fps_limiter" >&2; return 1 ;;
+    esac
+    unset MANGOHUD_FPS_LIMIT '_scb_game_env[MANGOHUD_FPS_LIMIT]'
+
+    if [[ $mode == native ]]; then
+        appearance=${_scb_game_env[MANGOHUD_CONFIG]-$appearance}
+        game_env MANGOHUD "$injection"
+        game_env MANGOHUD_CONFIG "read_cfg,${appearance:+$appearance,}fps_limit=$hud_limit"
+        return 0
+    fi
+
+    if [[ $fps_limiter == mangohud && $injection != 0 ]]; then
+        # Mangoapp owns all HUD interaction; this layer only enforces the cap.
+        game_env MANGOHUD 1
+        game_env MANGOHUD_CONFIG "no_display,fps_limit=$hud_limit,toggle_hud=,toggle_preset=,toggle_fps_limit=,toggle_logging=,reload_cfg="
+    else
+        game_env MANGOHUD 0
+        game_env MANGOHUD_CONFIG "read_cfg,${appearance:+$appearance,}fps_limit=0"
+    fi
+    configure_mangoapp
+
+    LC_NUMERIC=C printf -v gamescope_refresh '%.0f' "$refresh"
+    gamescope_limit_args=""
+    if [[ $fps_limiter == gamescope && $fps_cap != 0 ]]; then
+        # Matching virtual refresh avoids fixed-refresh divisor rounding.
+        gamescope_refresh=$fps_cap
+        gamescope_limit_args=" --framerate-limit $fps_cap"
+    fi
 }
 
 load_game_config() {
@@ -34,7 +141,7 @@ load_game_config() {
     # Read IDs without executing other games' settings; load the first match once.
     for game_config in "$SCB_CONFIGDIR"/games/*.conf; do
         [[ -f $game_config ]] || continue
-        if rg -qFx -- "APP_ID=$SCB_APPID" "$game_config"; then
+        if grep -qFx -- "APP_ID=$SCB_APPID" "$game_config"; then
             source "$game_config" || exit 1
             break
         fi
@@ -106,8 +213,8 @@ get_display_height() { printf '%s\n' "$_scb_display_height"; }
 # Advertised refresh, not measured rendering or encoding throughput.
 get_display_fps() { printf '%s\n' "$_scb_display_fps"; }
 get_display_fps_cap() {
-    [[ -n $_scb_display_fps ]] || return 0
-    awk -v hz="$_scb_display_fps" -v margin="${1:-0}" 'BEGIN {
+    [[ -n $refresh ]] || return 0
+    awk -v hz="$refresh" -v margin="${1:-0}" 'BEGIN {
         cap = int(hz + 0.5) - margin; print (cap > 0 ? cap : 1)
     }'
 }

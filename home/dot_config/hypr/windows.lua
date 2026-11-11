@@ -48,6 +48,3 @@ app("de.feschber.LanMouse", 10)
 
 -- battlenet
 o.window({ class = "^steam_app_battlenet$", title = "^Battle\\.net$" }, { tile = true })
-
--- Hide the empty GameGuard dialog without terminating its process.
-o.window({ class = "^steam_app_553850$", initial_title = "^$" }, { no_focus = true, no_initial_focus = true, workspace = "special:hidden silent" })

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Add the outer HUD while retaining Punktfunk's patched capture implementation.
+set -euo pipefail
+# Bypass this PATH override when launching the packaged binary.
+backend=/usr/bin/punktfunk-gamescope
+
+has_mangoapp=0
+for arg in "$@"; do
+    case $arg in
+        --) break ;;
+        --help|--version) exec "$backend" "$@" ;;
+        --mangoapp) has_mangoapp=1 ;;
+    esac
+done
+
+source "${XDG_CONFIG_HOME:-$HOME/.config}/scopebuddy/common.sh"
+configure_mangoapp
+if (( ! has_mangoapp )); then
+    set -- --mangoapp "$@"
+fi
+exec "$backend" "$@"
