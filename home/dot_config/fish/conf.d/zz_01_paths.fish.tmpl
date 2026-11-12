@@ -28,6 +28,7 @@ test "$OMARCHY_PATH" != /usr/share/omarchy; and fish_add_path --path $OMARCHY_PA
 # Custom bins (before mise activation, so a mise installed to ~/.local/bin,
 # as on devpod-slim, is found)
 fish_add_path -a --path ~/.local/bin
+fish_add_path -a --path ~/.lmstudio/bin
 
 # Mise - polyglot runtime version manager (Java, Python, Node, etc.)
 # PATH activation (not --shims): a fish_prompt hook runs `mise hook-env`, which
