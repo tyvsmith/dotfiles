@@ -7,7 +7,7 @@ set -euo pipefail
 export OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
 
 # Keep existing checkouts; updates remain with `omarchy plugin update`.
-# Chezmoi supplies the Lua loaders and seeds before the installers run.
+# Chezmoi supplies the Lua loaders and settings before the installers run.
 while read -r id url; do
     directory="$HOME/.config/omarchy/plugins/$id"
     if [[ ! -d "$directory" ]]; then
