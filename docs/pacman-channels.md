@@ -11,11 +11,12 @@ Policy lives in `~/.config/pacman/`:
 - `options.conf`: explicit local pacman option overrides
 
 The pre-refresh hook inserts that policy into the selected channel template.
-`core`, `extra` and `multilib` include the same managed `arch-mirrorlist`, so replacing
+`core`, `extra` and `multilib` include `/etc/pacman.d/arch-mirrorlist`, so replacing
 `/etc/pacman.d/mirrorlist` no longer changes their source. CachyOS keeps its
-own system mirrorlists. Mirror ranking changes belong in `arch-mirrorlist`;
-capture them with chezmoi afterward. The include points to the absolute user
-configuration path; keep that file readable and present. Use
+own system mirrorlists. The hook validates a snapshot of the managed Arch
+list and installs it as root-owned data before updating pacman.conf. Mirror
+ranking changes belong in `~/.config/pacman/arch-mirrorlist`; apply them through
+the hook after review. User-file edits cannot change the active root copy. Use
 `mirror.omarchy.org` with rolling Arch mirrors, never the RC or stable snapshot
 mirrors. The `[omarchy]` package channel remains independent. Remove obsolete package holds from
 `options.conf` explicitly.
@@ -33,3 +34,7 @@ downgrades, including packages from custom repositories.
 RC receives final releases: Omarchy builds final release packages into RC,
 then promotes them to stable. Public RC tags are not required for patch
 releases. See [upstream release process](https://github.com/omacom/omarchy-pkgs/blob/master/docs/releases.md).
+
+For inspection, `10-custom-repos.sh --render INPUT OUTPUT` writes a config
+and an adjacent `OUTPUT.mirrors` snapshot, without sudo. The rendered config
+includes that snapshot; normal application includes the root-owned system file.

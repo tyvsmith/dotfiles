@@ -24,7 +24,7 @@ else
     [[ $status == 2 ]] || exit "$status"
 fi
 
-# Applying system policy requires the caller to authorize this sudo command.
+# Applying system policy requires the caller to authorize the hook's sudo commands.
 "$HOOK"
 {{ else -}}
 # Profile '{{ .profile }}' is not omarchy — nothing to do.

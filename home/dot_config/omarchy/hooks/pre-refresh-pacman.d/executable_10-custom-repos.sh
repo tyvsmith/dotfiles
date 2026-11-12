@@ -19,10 +19,12 @@ check=0
 output=""
 
 CONF=/etc/pacman.conf
+SYSTEM_MIRRORS=/etc/pacman.d/arch-mirrorlist
 case ${1:-} in
   --check) check=1 ;;
   --render)
-    [[ $# == 3 && $2 != "$3" ]] || exit 1
+    [[ $# == 3 ]] || exit 1
+    [[ $2 != "$3" && ! $2 -ef $3 && ! $2 -ef $3.mirrors ]] || exit 1
     CONF=$2
     output=$3
     ;;
@@ -39,9 +41,18 @@ MIRRORS=$HOME/.config/pacman/arch-mirrorlist
 [[ -r $OPTIONS ]] || OPTIONS=
 [[ -r $MIRRORS ]] || MIRRORS=
 
-tmp=$(mktemp)
-trap 'rm -f "$tmp"' EXIT
-awk -v head="$HEAD" -v tail="$TAIL" -v options="$OPTIONS" -v mirrors="$MIRRORS" '
+scratch=$(mktemp -d)
+trap 'rm -rf "$scratch"' EXIT
+tmp=$scratch/pacman.conf
+mirror_target=$SYSTEM_MIRRORS
+if [[ -n $output ]]; then mirror_target=$(realpath -m -- "$output.mirrors"); fi
+# Validate and install the same snapshot, never re-read the user source as root.
+if [[ -n $MIRRORS ]]; then
+  cp -- "$MIRRORS" "$scratch/mirror-source"
+  MIRRORS=$scratch/mirror-source
+fi
+awk -v head="$HEAD" -v tail="$TAIL" -v options="$OPTIONS" -v mirrors="$MIRRORS" \
+    -v mirror_target="$mirror_target" -v mirror_output="$scratch/mirrors" '
   function managed_sections(file, line) {
     while (file && (getline line < file) > 0) {
       if (line ~ /^[[:space:]]*\[/) {
@@ -65,6 +76,7 @@ awk -v head="$HEAD" -v tail="$TAIL" -v options="$OPTIONS" -v mirrors="$MIRRORS" 
     while (mirrors && (getline line < mirrors) > 0) {
       if (line ~ /^[[:space:]]*(#|$)/) continue
       if (line !~ /^Server[[:space:]]*=[[:space:]]*https:\/\//) exit 1
+      print line > mirror_output
       mirror_count++
     }
     if (mirrors) close(mirrors)
@@ -112,7 +124,7 @@ awk -v head="$HEAD" -v tail="$TAIL" -v options="$OPTIONS" -v mirrors="$MIRRORS" 
     out[++n] = $0
     if (section == "[options]" && options) emit(options)
     if (mirror_count && section ~ /^\[(core|extra|multilib)\]$/)
-      out[++n] = "Include = " mirrors
+      out[++n] = "Include = " mirror_target
     next
   }
   section == "[options]" {
@@ -125,16 +137,28 @@ awk -v head="$HEAD" -v tail="$TAIL" -v options="$OPTIONS" -v mirrors="$MIRRORS" 
     if (failed) exit 1
     if (skip) reject()
     while (n && out[n] == "") n--          # trim trailing blanks so tail block never drifts
+    if (head && !done) { out[++n] = ""; emit(head) }
     for (i = 1; i <= n; i++) print out[i]
     if (tail) { n0 = n; out[++n] = ""; emit(tail); for (i = n0 + 1; i <= n; i++) print out[i] }
   }
 ' "$CONF" > "$tmp"
 
 if [[ -n $output ]]; then
+  [[ ! -s $scratch/mirrors ]] || install -m 644 "$scratch/mirrors" "$mirror_target"
   install -m 644 "$tmp" "$output"
   exit 0
 fi
-cmp -s "$tmp" "$CONF" && exit 0
+mirrors_current=1
+if [[ -s $scratch/mirrors ]]; then
+  if ! cmp -s "$scratch/mirrors" "$SYSTEM_MIRRORS" ||
+    [[ $(stat -c '%u:%g:%a' "$SYSTEM_MIRRORS" 2>/dev/null) != 0:0:644 ]]; then
+    mirrors_current=0
+  fi
+fi
+if cmp -s "$tmp" "$CONF" && (( mirrors_current )); then exit 0; fi
 (( check )) && exit 2
 echo "pre-refresh-pacman: splicing${HEAD:+ $HEAD before all repositories}${TAIL:+ $TAIL at end}"
-sudo install -m 644 "$tmp" "$CONF"
+if [[ -s $scratch/mirrors ]]; then
+  sudo install -o root -g root -m 644 "$scratch/mirrors" "$SYSTEM_MIRRORS"
+fi
+sudo install -o root -g root -m 644 "$tmp" "$CONF"
