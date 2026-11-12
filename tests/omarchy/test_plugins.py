@@ -131,3 +131,18 @@ if args == ['list']:
         self.assertEqual(result.returncode, 0, result.stderr)
         calls = [json.loads(line) for line in self.calls.read_text().splitlines()]
         self.assertFalse(any(c[0] in ('add', 'remove', 'disable', 'enable') for c in calls))
+
+    def test_native_state_write_failures_remain_retryable(self):
+        self.tool('hyprpm', '''import os, sys
+args = sys.argv[1:]
+if args == ['list']:
+    print('Repository hyprland-plugins (by hyprwm):')
+    print('Plugin hyprfocus\\n enabled: false')
+if args[0] == os.environ['FAIL_STEP']:
+    sys.exit('Failed to write plugin state')
+''')
+        for step in ('update', 'enable'):
+            with self.subTest(step=step):
+                result = self.run_script('run_onchange_50-configure-hyprpm.sh.tmpl', FAIL_STEP=step)
+                self.assertNotEqual(result.returncode, 0,
+                                    'failed setup must not be recorded as completed by chezmoi')

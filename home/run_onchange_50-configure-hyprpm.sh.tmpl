@@ -35,26 +35,11 @@ HYPRPM_ENABLE=(hyprfocus)
 # `hyprpm list` includes ANSI color codes — strip for clean grepping.
 state() { hyprpm list 2>/dev/null | sed -E $'s/\x1b\\[[0-9;]*m//g'; }
 
-# Initialize header state before adding repositories: hyprpm add checks it first.
-# Update may fail without a live session; add still fails if headers remain unusable.
-# NB: never run hyprpm under sudo. Doing so builds plugins into
-# /var/cache/hyprpm/$USER as root, after which the user session can't load
-# them ("Invalid dispatcher: ...") and a later user-run `hyprpm update` can't
-# overwrite the root-owned state ("Failed to write plugin state").
-hyprpm update 2>/dev/null || echo "warn: hyprpm update failed (hyprland headers missing?)"
-
-# hyprpm stages new plugin state at $XDG_RUNTIME_DIR/hyprpm/.temp-state, then
-# renames it onto its cache dir (/var/cache/hyprpm/$USER). When those live on
-# different filesystems — XDG_RUNTIME_DIR is tmpfs, /var/cache is often btrfs —
-# the rename fails with EXDEV and hyprpm reports "Failed to write plugin state",
-# leaving freshly built plugins uncommitted. Finish the commit with a copy so
-# the next `hyprpm reload -n` (hypr autostart) loads the rebuilt plugins.
-hyprpm_staged="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hyprpm/.temp-state"
-hyprpm_state="/var/cache/hyprpm/$(id -un)/state.toml"
-if [[ -f "$hyprpm_staged" && -w "$(dirname "$hyprpm_state")" ]] && ! cmp -s "$hyprpm_staged" "$hyprpm_state"; then
-    echo "hyprpm: committing staged plugin state (cross-filesystem rename workaround)"
-    cp -f "$hyprpm_staged" "$hyprpm_state"
-fi
+# hyprpm 0.57 installs global and per-repository state at different destinations.
+# Let it own those writes; copying its shared staging file can corrupt global state.
+# Initialize headers before add, which checks the recorded ABI before building.
+# Failures stay nonzero so chezmoi retries this setup on the next apply.
+hyprpm update
 
 current=$(state)
 for name in "${!HYPRPM_REPOS[@]}"; do
@@ -74,7 +59,7 @@ current=$(state)
 for plugin in "${HYPRPM_ENABLE[@]}"; do
     if ! grep -A1 -F "Plugin $plugin" <<<"$current" | grep -q "enabled: true"; then
         echo "hyprpm enable $plugin"
-        hyprpm enable "$plugin" || echo "warn: failed to enable $plugin"
+        hyprpm enable "$plugin"
     fi
 done
 
