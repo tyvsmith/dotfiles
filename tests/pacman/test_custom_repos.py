@@ -1,5 +1,6 @@
 """Run the repository hook against disposable pacman configurations."""
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -91,13 +92,27 @@ class CustomReposTest(unittest.TestCase):
                 rendered = self.conf.read_text()
                 self.assertIn(f'https://pkgs.example/{channel}/$arch', rendered)
                 self.assertEqual(rendered.count(f'Include = {policy / "arch-mirrorlist"}'), 3)
-                resolved = subprocess.check_output(['pacman-conf', '--config', str(self.conf), '--repo', 'core', 'Server'], text=True)
-                self.assertEqual(resolved.strip(), 'https://live.example/core/os/x86_64')
+                if shutil.which('pacman-conf'):
+                    resolved = subprocess.check_output(['pacman-conf', '--config', str(self.conf), '--repo', 'core', 'Server'], text=True)
+                    self.assertEqual(resolved.strip(), 'https://live.example/core/os/x86_64')
                 self.assertNotIn('Include = /etc/pacman.d/mirrorlist', rendered)
                 self.assertNotIn('obsolete', rendered)
                 self.assertNotIn('old.example', rendered)
                 self.assertEqual(rendered.count('IgnorePkg = held-package'), 1)
                 self.assertEqual(self.run_hook('--check').returncode, 0)
+
+    def test_deleted_option_removes_previous_hold(self):
+        options = self.head.parent / 'options.conf'
+        options.write_text('IgnorePkg = held-package\n')
+        self.conf.write_text('[options]\nColor\n[core]\nServer = arch\n')
+        self.assertEqual(self.run_hook().returncode, 0)
+        self.assertIn('IgnorePkg = held-package', self.conf.read_text())
+        options.write_text('# no local overrides\n')
+        self.assertEqual(self.run_hook('--check').returncode, 2)
+        self.assertEqual(self.run_hook().returncode, 0)
+        self.assertNotIn('IgnorePkg', self.conf.read_text())
+        self.assertIn('Color', self.conf.read_text())
+        self.assertEqual(self.run_hook('--check').returncode, 0)
 
     def test_render_does_not_write_input_or_use_sudo(self):
         self.conf.write_text('[options]\nColor\n[omarchy]\nServer = distro\n')

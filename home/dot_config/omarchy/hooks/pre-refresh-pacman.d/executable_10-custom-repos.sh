@@ -59,7 +59,7 @@ awk -v head="$HEAD" -v tail="$TAIL" -v options="$OPTIONS" -v mirrors="$MIRRORS" 
       if (line ~ /^[[:space:]]*(#|$)/) continue
       if (line !~ /^[A-Za-z]+[[:space:]]*=/) exit 1
       key = line; sub(/[[:space:]]*=.*/, "", key)
-      overrides[key] = 1; option_lines[++option_count] = line
+      overrides[key] = 1
     }
     if (options) close(options)
     while (mirrors && (getline line < mirrors) > 0) {
@@ -110,8 +110,7 @@ awk -v head="$HEAD" -v tail="$TAIL" -v options="$OPTIONS" -v mirrors="$MIRRORS" 
   /^[[:space:]]*\[/ {
     section = $0; gsub(/[[:space:]]/, "", section)
     out[++n] = $0
-    if (section == "[options]")
-      for (i = 1; i <= option_count; i++) out[++n] = option_lines[i]
+    if (section == "[options]" && options) emit(options)
     if (mirror_count && section ~ /^\[(core|extra|multilib)\]$/)
       out[++n] = "Include = " mirrors
     next
