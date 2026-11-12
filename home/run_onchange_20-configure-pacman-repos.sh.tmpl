@@ -7,6 +7,8 @@
 # Reruns when a snippet or the hook changes (hashes below).
 #   head: {{ include "dot_config/pacman/custom-repos-head.conf" | sha256sum }}
 #   tail: {{ include "dot_config/pacman/custom-repos-tail.conf" | sha256sum }}
+#   options: {{ include "dot_config/pacman/options.conf" | sha256sum }}
+#   mirrors: {{ include "dot_config/pacman/arch-mirrorlist" | sha256sum }}
 #   hook: {{ include "dot_config/omarchy/hooks/pre-refresh-pacman.d/executable_10-custom-repos.sh" | sha256sum }}
 set -euo pipefail
 
@@ -22,18 +24,8 @@ else
     [[ $status == 2 ]] || exit "$status"
 fi
 
-# The hook needs one sudo (install over /etc/pacman.conf). Escalate when
-# passwordless sudo works or we have a tty to prompt on; otherwise print the
-# command rather than hang a non-interactive apply.
-if sudo -n true 2>/dev/null || [[ -t 0 ]]; then
-    if ! "$HOOK"; then
-        echo "WARN: could not update /etc/pacman.conf (sudo declined/failed). Run later:"
-        echo "  $HOOK"
-    fi
-else
-    echo "NOTE: /etc/pacman.conf needs re-splicing. No passwordless sudo and no tty — run once:"
-    echo "  $HOOK"
-fi
+# Applying system policy requires the caller to authorize this sudo command.
+"$HOOK"
 {{ else -}}
 # Profile '{{ .profile }}' is not omarchy — nothing to do.
 exit 0

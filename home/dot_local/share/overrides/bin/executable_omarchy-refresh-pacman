@@ -1,0 +1,73 @@
+#!/bin/bash
+# Preflight the hybrid repository policy before a channel switch writes /etc.
+# omarchy-channel-set invokes this command through PATH, including from the menu.
+set -euo pipefail
+
+preview=0
+if [[ ${1:-} == --preview ]]; then preview=1; shift; fi
+channel=${1:-}
+[[ $# -le 1 ]] || exit 2
+export OMARCHY_PATH=${OMARCHY_PATH:-/usr/share/omarchy}
+if [[ -z $channel ]]; then
+  if [[ $OMARCHY_PATH != /usr/share/omarchy ]]; then
+    channel=edge
+  else
+    channel=$(pacman-conf --repo omarchy Server | sed -nE 's@^https://pkgs\.omarchy\.org/(stable|rc|edge)/.*@\1@p' | head -n1)
+  fi
+fi
+[[ $channel != dev ]] || channel=edge
+case $channel in stable|rc|edge) ;; *) echo "Unknown package channel: $channel" >&2; exit 2 ;; esac
+
+hooks=$HOME/.config/omarchy/hooks/pre-refresh-pacman
+policy=$hooks.d/10-custom-repos.sh
+for file in custom-repos-head.conf custom-repos-tail.conf options.conf arch-mirrorlist; do
+  [[ -r $HOME/.config/pacman/$file ]] || { echo "Missing package policy: $file" >&2; exit 1; }
+done
+[[ -x $policy ]] || { echo "Missing package policy: $policy" >&2; exit 1; }
+# Unknown hooks cannot safely run against a staged configuration. Refuse instead
+# of silently dropping their edits or invoking them against the live system.
+for hook in "$hooks" "$hooks.d"/*; do
+  [[ -f $hook && $hook != *.sample && $hook != "$policy" ]] || continue
+  echo "Cannot preflight additional pacman hook: $hook" >&2
+  exit 1
+done
+
+scratch=$(mktemp -d)
+trap 'rm -rf "$scratch"' EXIT
+"$OMARCHY_PATH/bin/omarchy-apply-pacman" --render "$channel" "$scratch"
+"$policy" --render "$scratch/pacman.conf" "$scratch/policy.conf"
+# Match checkupdates: sync signed repository databases under fakeroot, keeping
+# the real installed-package database read-only during the print transaction.
+# fakeroot has no real privilege to switch to pacman’s DownloadUser. Keep the
+# unprivileged preview downloader as the current user; preserve the live option.
+sed '/^[[:space:]]*DownloadUser[[:space:]]*=/d' "$scratch/policy.conf" > "$scratch/preview.conf"
+mkdir "$scratch/db"
+ln -s "$(pacman-conf DBPath)/local" "$scratch/db/local"
+echo "Checking $channel with the custom repository policy..."
+fakeroot -- pacman --config "$scratch/preview.conf" --dbpath "$scratch/db" \
+  --logfile /dev/null -Sy --disable-sandbox-filesystem
+ignore=()
+if [[ $channel == stable || $channel == rc ]]; then
+  ignore=(--ignore "omarchy-dev,omarchy-settings-dev")
+fi
+# --print skips conflicts and --ask bypasses final confirmation. This helper
+# answers only known release/dev swaps, then explicitly declines installation.
+prepare() {
+  /usr/bin/python3 "$HOME/.local/lib/pacman-preflight.py" fakeroot -- pacman \
+    --config "$scratch/preview.conf" --dbpath "$scratch/db" --logfile /dev/null \
+    -Suu "$@" --confirm
+}
+prepare "${ignore[@]}"
+# The stock switch swaps these after the refresh; validate that transaction too.
+packages=(omarchy omarchy-settings)
+[[ $channel != edge ]] || packages=(omarchy-dev omarchy-settings-dev)
+prepare "${ignore[@]}" "${packages[@]}"
+(( preview )) && exit 0
+
+# Same files and backup locations as upstream; only the policy-composed config
+# is installed. Package execution stays in Omarchy’s protected update helper.
+sudo cp -f /etc/pacman.conf /etc/pacman.conf.bak
+sudo cp -f /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+sudo install -m 644 "$scratch/policy.conf" /etc/pacman.conf
+sudo install -m 644 "$scratch/mirrorlist" /etc/pacman.d/mirrorlist
+omarchy-update-pacman -Syyuu --noconfirm "${ignore[@]}"

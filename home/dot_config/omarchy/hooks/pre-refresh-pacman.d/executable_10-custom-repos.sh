@@ -13,21 +13,63 @@
 #
 # `omarchy refresh pacman` overwrites /etc/pacman.conf from the channel
 # template, runs this hook, then `pacman -Syyuu`.
-set -e
+set -euo pipefail
 
-check=0; [[ ${1:-} == --check ]] && check=1
+check=0
+output=""
 
 CONF=/etc/pacman.conf
+case ${1:-} in
+  --check) check=1 ;;
+  --render)
+    [[ $# == 3 && $2 != "$3" ]] || exit 1
+    CONF=$2
+    output=$3
+    ;;
+  "") ;;
+  *) echo "Usage: $0 [--check | --render INPUT OUTPUT]" >&2; exit 1 ;;
+esac
 HEAD=$HOME/.config/pacman/custom-repos-head.conf
 TAIL=$HOME/.config/pacman/custom-repos-tail.conf
+OPTIONS=$HOME/.config/pacman/options.conf
+MIRRORS=$HOME/.config/pacman/arch-mirrorlist
 
 [[ -r $HEAD ]] || HEAD=
 [[ -r $TAIL ]] || TAIL=
-[[ -n $HEAD || -n $TAIL ]] || exit 0
+[[ -r $OPTIONS ]] || OPTIONS=
+[[ -r $MIRRORS ]] || MIRRORS=
 
 tmp=$(mktemp)
 trap 'rm -f "$tmp"' EXIT
-awk -v head="$HEAD" -v tail="$TAIL" '
+awk -v head="$HEAD" -v tail="$TAIL" -v options="$OPTIONS" -v mirrors="$MIRRORS" '
+  function managed_sections(file, line) {
+    while (file && (getline line < file) > 0) {
+      if (line ~ /^[[:space:]]*\[/) {
+        gsub(/[[:space:]]/, "", line)
+        if (line ~ /^\[(options|omarchy|core|extra|multilib)\]$/) exit 1
+        managed[line] = 1
+      }
+    }
+    if (file) close(file)
+  }
+  BEGIN {
+    managed_sections(head)
+    managed_sections(tail)
+    while (options && (getline line < options) > 0) {
+      if (line ~ /^[[:space:]]*(#|$)/) continue
+      if (line !~ /^[A-Za-z]+[[:space:]]*=/) exit 1
+      key = line; sub(/[[:space:]]*=.*/, "", key)
+      overrides[key] = 1; option_lines[++option_count] = line
+    }
+    if (options) close(options)
+    while (mirrors && (getline line < mirrors) > 0) {
+      if (line ~ /^[[:space:]]*(#|$)/) continue
+      if (line !~ /^Server[[:space:]]*=[[:space:]]*https:\/\//) exit 1
+      mirror_count++
+    }
+    if (mirrors) close(mirrors)
+    if (mirrors && !mirror_count) exit 1
+  }
   function reject() {
     print "pre-refresh-pacman: malformed repo blocks; repair pacman.conf before retrying" > "/dev/stderr"
     failed = 1
@@ -57,9 +99,28 @@ awk -v head="$HEAD" -v tail="$TAIL" '
   skip { next }
   eat_blank && /^$/ { eat_blank = 0; next }
   { eat_blank = 0 }
+  /^[[:space:]]*\[/ {
+    original_section = $0; gsub(/[[:space:]]/, "", original_section)
+    managed_original = original_section in managed
+  }
+  managed_original { next }
   head && /^[[:space:]]*\[[^]]+\]/ && !/^[[:space:]]*\[options\]/ && !done {
     emit(head); out[++n] = ""; done = 1
   }
+  /^[[:space:]]*\[/ {
+    section = $0; gsub(/[[:space:]]/, "", section)
+    out[++n] = $0
+    if (section == "[options]")
+      for (i = 1; i <= option_count; i++) out[++n] = option_lines[i]
+    if (mirror_count && section ~ /^\[(core|extra|multilib)\]$/)
+      out[++n] = "Include = " mirrors
+    next
+  }
+  section == "[options]" {
+    key = $0; sub(/^[[:space:]]*/, "", key); sub(/[[:space:]]*=.*/, "", key)
+    if (key in overrides) next
+  }
+  mirror_count && section ~ /^\[(core|extra|multilib)\]$/ && /^[[:space:]]*(Server|Include)[[:space:]]*=/ { next }
   { out[++n] = $0 }
   END {
     if (failed) exit 1
@@ -70,6 +131,10 @@ awk -v head="$HEAD" -v tail="$TAIL" '
   }
 ' "$CONF" > "$tmp"
 
+if [[ -n $output ]]; then
+  install -m 644 "$tmp" "$output"
+  exit 0
+fi
 cmp -s "$tmp" "$CONF" && exit 0
 (( check )) && exit 2
 echo "pre-refresh-pacman: splicing${HEAD:+ $HEAD before all repositories}${TAIL:+ $TAIL at end}"

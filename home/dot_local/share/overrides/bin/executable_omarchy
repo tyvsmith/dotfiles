@@ -1,0 +1,12 @@
+#!/bin/bash
+# Keep the CLI refresh route on the same guarded path as the channel menu.
+set -euo pipefail
+for arg in "$@"; do
+  case $arg in -h|--help) exec /usr/bin/omarchy "$@" ;; esac
+done
+export PATH="$HOME/.local/share/overrides/bin:$PATH"
+if [[ ${1:-} == refresh && ${2:-} == pacman ]]; then
+  shift 2
+  exec "$HOME/.local/share/overrides/bin/omarchy-refresh-pacman" "$@"
+fi
+exec /usr/bin/omarchy "$@"
