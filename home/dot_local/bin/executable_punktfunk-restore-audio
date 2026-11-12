@@ -4,11 +4,29 @@ set -euo pipefail
 
 log() { printf '%s %s\n' "$(date --iso-8601=ns)" "$*"; }
 
+previous_microphone() {
+    # Host-owned pre-claim configured preference; automatic selection may have no record.
+    local saved_file modified age name
+    saved_file=${XDG_STATE_HOME:-$HOME/.local/state}/punktfunk/default-audio-source.json
+    modified=$(stat -c %y "$saved_file" 2>/dev/null) || return 1
+    modified=$(date -d "$modified" +%s%3N) || return 1
+    age=$((PF_EVENT_TS_MS - modified))
+    ((age >= 0 && age <= 5000)) || return 1
+    name=$(jq -er '.name | select(type == "string" and length > 0) |
+        select(startswith("punktfunk-") | not)' "$saved_file") || return 1
+    pactl -f json list sources | jq -e --arg name "$name" 'any(.[]; .name == $name)' >/dev/null || return 1
+    printf '%s\n' "$name"
+}
+
 # The connection hook is asynchronous; the mic may already have switched.
 capture_defaults() {
-    local sink source temporary
+    local sink source previous temporary
     sink=$(pactl get-default-sink)
     source=$(pactl get-default-source)
+    if [[ $source == punktfunk-* ]] && previous=$(previous_microphone); then
+        source=$previous
+        log "recovered source from Punktfunk's recent pre-claim record: $source"
+    fi
     temporary=$(mktemp "$snapshot.XXXXXX")
     jq -n --arg fingerprint "$fingerprint" --argjson event_ms "$PF_EVENT_TS_MS" \
         --arg sink "$sink" --arg source "$source" \

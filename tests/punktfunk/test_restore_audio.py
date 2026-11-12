@@ -85,6 +85,32 @@ else:
         self.assertEqual(self.run_hook(), {'sink': 'desktop-speakers', 'source': 'punktfunk-mic'})
         self.assertIn('takeover preceded capture', (self.state / 'audio-hook.log').read_text())
 
+    def capture_after_mic_claim(self, saved_source, modified=1):
+        previous = self.state / 'default-audio-source.json'
+        previous.write_text(json.dumps({'name': saved_source}))
+        os.utime(previous, (modified, modified))
+        env = dict(self.env, PF_EVENT_KIND='client.connected',
+                   PF_EVENT_CLIENT_FINGERPRINT='tablet', PF_EVENT_TS_MS='2000')
+        result = subprocess.run(['bash', str(SCRIPT)], env=env, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.env['PF_EVENT_TS_MS'] = '2001'
+
+    def test_late_capture_recovers_available_preclaim_mic(self):
+        self.capture_after_mic_claim('desktop-mic')
+        self.assertEqual(self.run_hook()['source'], 'desktop-mic')
+
+    def test_late_capture_rejects_unavailable_preclaim_mic(self):
+        self.capture_after_mic_claim('unplugged-mic')
+        self.assertEqual(self.run_hook()['source'], 'punktfunk-mic')
+
+    def test_late_capture_rejects_stale_preclaim_mic(self):
+        self.capture_after_mic_claim('desktop-mic', modified=-10)
+        self.assertEqual(self.run_hook()['source'], 'punktfunk-mic')
+
+    def test_late_capture_rejects_record_from_after_connection(self):
+        self.capture_after_mic_claim('desktop-mic', modified=2.5)
+        self.assertEqual(self.run_hook()['source'], 'punktfunk-mic')
+
     def test_stale_capture_is_not_used(self):
         self.env['PF_EVENT_TS_MS'] = '20000'
         self.assertEqual(self.run_hook()['sink'], 'punktfunk-speaker-1')
