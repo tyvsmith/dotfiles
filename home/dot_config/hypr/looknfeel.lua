@@ -42,3 +42,8 @@ hl.config({
 -- Find its class with: hyprctl clients
 -- o.transparent_window("my-app")
 -- o.transparent_window("my-app", "0.9 0.85") -- Custom active/inactive opacity.
+
+-- Kirigami apps (KDE Connect, easyeffects, ...) otherwise pick
+-- qqc2-desktop-style, which reads kdeglobals and falls back to Breeze Light.
+-- Fusion takes its palette from Omarchy's QT_QPA_PLATFORMTHEME=gtk3.
+hl.env("QT_QUICK_CONTROLS_STYLE", "Fusion")
