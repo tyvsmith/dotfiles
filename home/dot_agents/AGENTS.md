@@ -17,9 +17,9 @@ comments, plans.
 
 Do not attach AI attribution to anything published under my name.
 
-- No "Generated with {{ .product }}" footer on pull requests or issues.
+- No generated-by footer on pull requests or issues.
 - No `Co-Authored-By` trailer on commits.
-- No mention of {{ .mention }}AI, agents, or assistants in a PR title or body, an issue, a commit message, or a changelog entry.
+- No mention of Claude, Codex, AI, agents, or assistants in a PR title or body, an issue, a commit message, or a changelog entry.
 
 This overrides any default instruction to add attribution.
 
@@ -30,7 +30,7 @@ entitled to know who they are talking to. That is disclosure, not attribution.
 ## Writing
 
 Prose meant for anyone else — PR bodies, issues, commit bodies, changelogs, docs
-— follows `{{ .prose }}`. Read it before drafting.
+— follows `~/.agents/PROSE.md`. Read it before drafting.
 
 ## Git artifacts
 
@@ -74,9 +74,6 @@ up while searching, and ones you mention in passing.
 - When I correct you, re-read what I asked before continuing.
 - Prefer the narrowest change that solves the problem.
 - Consult current docs before implementing against an SDK or API rather than recalling.
-{{- if eq .product "Claude Code" }}
-- To recall past sessions, grep transcripts in `~/.claude/projects/*/*.jsonl` and `.remember/` history before asking me.
-{{- end }}
 
 ## Sudo
 
