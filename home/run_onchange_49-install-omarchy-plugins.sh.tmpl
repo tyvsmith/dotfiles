@@ -28,4 +28,8 @@ PLUGINS
 if ! hyprpm list | sed -E $'s/\x1b\\[[0-9;]*m//g' | grep -qF 'Repository hlsovpp '; then
     "$HOME/.config/omarchy/plugins/jgarza.hlsovpp/install" --no-menu </dev/null
 fi
+# Fathom's Lua bindings are evaluated by Hyprland, not the shell plugin loader.
+if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+    hyprctl reload
+fi
 {{ end -}}

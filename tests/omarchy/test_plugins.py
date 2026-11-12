@@ -48,6 +48,10 @@ from pathlib import Path
 if sys.argv[1:] == ['list'] and (Path.home() / 'native-installed').exists():
     print('Repository hlsovpp (by plugins):')
 ''')
+        self.tool('hyprctl', '''import json, os, sys
+with open(os.environ['CALLS'], 'a') as f:
+    f.write(json.dumps(['hyprctl', *sys.argv[1:]]) + '\\n')
+''')
 
     def tool(self, name, body):
         path = self.bin / name
@@ -89,6 +93,30 @@ if sys.argv[1:] == ['list'] and (Path.home() / 'native-installed').exists():
         result = subprocess.run(['bash'], input=script, text=True, env=self.env)
         self.assertEqual(result.returncode, 0)
         self.assertFalse(self.calls.exists())
+
+    def test_fathom_bindings_reload_when_native_provider_already_exists(self):
+        (self.root / 'native-installed').touch()
+        result = self.run_script('run_onchange_49-install-omarchy-plugins.sh.tmpl',
+                                 HYPRLAND_INSTANCE_SIGNATURE='test')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [json.loads(line) for line in self.calls.read_text().splitlines()]
+        self.assertEqual(calls[-1], ['hyprctl', 'reload'])
+        self.assertNotIn(['native-install'], calls)
+
+    def test_headers_are_initialized_before_adding_native_repositories(self):
+        self.tool('hyprpm', '''import json, os, sys
+from pathlib import Path
+args = sys.argv[1:]
+with open(os.environ['CALLS'], 'a') as f: f.write(json.dumps(args) + '\\n')
+headers = Path.home() / 'headers'
+if args == ['update']: headers.touch()
+elif args[0] == 'add' and not headers.exists():
+    sys.exit('Headers outdated, please run hyprpm update.')
+''')
+        result = self.run_script('run_onchange_50-configure-hyprpm.sh.tmpl')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = [json.loads(line) for line in self.calls.read_text().splitlines()]
+        self.assertTrue(any(c[0] == 'add' for c in calls))
 
     def test_hyprpm_leaves_overview_provider_alone(self):
         self.tool('hyprpm', '''import json, os, sys
