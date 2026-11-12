@@ -1,0 +1,35 @@
+# Bind the virtual surround chain to the Maxwell's device lifetime.
+#
+# This is the core of the design. software-dsp.lua instantiates the filter
+# chain on the "node-added" event for a matched node, and its free-dsp-node
+# hook destroys it on "node-removed". So the HRTF sink exists if and only if
+# the Maxwell exists - and the Klipsch becomes structurally unreachable by the
+# HRTF path, rather than merely unreached by convention.
+#
+# node.software-dsp is not named in any profile in the shipped
+# /usr/share/wireplumber/wireplumber.conf, so it needs explicit enabling.
+wireplumber.profiles = {
+  main = {
+    node.software-dsp = required
+  }
+}
+
+node.software-dsp.rules = [
+  {
+    matches = [
+      { node.name = "alsa_output.usb-Audeze_LLC_Audeze_Maxwell_XBOX_Dongle_0000000000000000-00.pro-output-1" }
+    ]
+    actions = {
+      create-filter = {
+        filter-path = "{{ .chezmoi.homeDir }}/.config/pipewire/virtual-surround/graph.spa.json"
+        # MUST stay false. hide-parent hides the parent sink from non-daemon
+        # clients, and omarchy-audio-output-sink is one: it maps the filter's
+        # downstream sink id back to a name via `pactl list sinks short`. Hide
+        # pro-output-1 and that lookup fails, the resolver falls back to the
+        # filter itself, and the volume keys silently start controlling the
+        # chain's INPUT gain instead of the DAC. Verified 2026-08-17.
+        hide-parent = false
+      }
+    }
+  }
+]
