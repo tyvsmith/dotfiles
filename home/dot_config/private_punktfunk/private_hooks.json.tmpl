@@ -29,6 +29,24 @@
       "run": "/usr/share/punktfunk/omarchy/hooks/idle-guard off",
       "timeout_s": 30,
       "debounce_ms": 0
+    },
+    {
+      "on": "client.connected",
+      "filter": {
+        "client": "Ty's Tab S8+"
+      },
+      "run": "{{ .chezmoi.homeDir }}/.local/bin/punktfunk-restore-audio",
+      "timeout_s": 10,
+      "debounce_ms": 0
+    },
+    {
+      "on": "stream.started",
+      "filter": {
+        "client": "Ty's Tab S8+"
+      },
+      "run": "{{ .chezmoi.homeDir }}/.local/bin/punktfunk-restore-audio",
+      "timeout_s": 15,
+      "debounce_ms": 0
     }
   ]
 }
