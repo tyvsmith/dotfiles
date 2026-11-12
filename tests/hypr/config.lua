@@ -71,6 +71,6 @@ for i = 2, #commands do
   local unit = commands[i]:match('%-u (app%-hypr%-autostart%-%d+%.scope)')
   assert(unit and not units[unit], 'each startup app needs a distinct marked scope')
   units[unit] = true
-  assert(commands[i]:find('env HYPR_AUTOSTART=1 wait-for-sni ', 1, true))
+  assert(commands[i]:find([[env HYPR_AUTOSTART=1 sh -c 'wait-for-sni "$@"; exit $?' sh ]], 1, true))
 end
 print('config: rules, startup isolation, and reload checks passed')

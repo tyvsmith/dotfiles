@@ -6,10 +6,9 @@ end
 local startup_id = 0
 local function tray_app_on_start(command)
   startup_id = startup_id + 1
-  -- Scope identity survives applications rewriting their process environment.
-  -- Keep the marker inside this launch, never in the session environment.
+  -- Retain a marked parent when Electron rewrites environ and changes scopes.
   exec_on_start("uwsm app -s b -t scope -u app-hypr-autostart-" .. startup_id
-    .. ".scope -- env HYPR_AUTOSTART=1 wait-for-sni " .. command)
+    .. ".scope -- env HYPR_AUTOSTART=1 sh -c 'wait-for-sni \"$@\"; exit $?' sh " .. command)
 end
 
 exec_on_start("hyprpm reload -n")
