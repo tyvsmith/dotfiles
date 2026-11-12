@@ -22,6 +22,12 @@ require("hypr.bindings")
 require("hypr.looknfeel")
 require("hypr.autostart")
 
+-- Load settings written by OmaControl (omacontrol:managed).
+-- It belongs above the toggles below: those turn the laptop
+-- display off with a monitor rule, and a rule of ours read
+-- afterwards would replace it and put the display back on.
+require("hypr.omacontrol")
+
 -- Toggle config flags dynamically.
 require("default.hypr.toggles")
 

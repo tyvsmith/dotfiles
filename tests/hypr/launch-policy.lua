@@ -24,7 +24,7 @@ assert(next(starts) == nil and next(events) == nil, "declarations must not start
 local policy = require("hypr.launch_policy")
 -- Exercise the real config entrypoint, stubbing only unrelated desktop setup.
 for _, name in ipairs({ "default.hypr.omarchy", "default.hypr.toggles",
-  "hypr.input", "hypr.bindings", "hypr.looknfeel", "hypr.autostart" }) do
+  "hypr.input", "hypr.bindings", "hypr.looknfeel", "hypr.autostart", "hypr.omacontrol" }) do
   package.loaded[name] = true
 end
 local load_file = dofile
