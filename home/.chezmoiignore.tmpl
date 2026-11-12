@@ -76,9 +76,6 @@
 .local/bin/wait-for-sni
 .config/omarchy/
 .config/pacman/
-.config/punktfunk/
-.local/share/overrides/bin/punktfunk-gamescope
-.config/systemd/user/punktfunk-host.service.d/
 .config/voxtype/
 .config/systemd/user/voxtype.service.d/
 .local/bin/voxtype-detect-category
@@ -122,6 +119,12 @@
 {{ end }}
 
 {{ if or (ne (get $p "de") "hyprland-omarchy") (not (has "gaming" $tags)) }}
+# Punktfunk host integration needs an Omarchy gaming desktop.
+.config/punktfunk/
+.config/systemd/user/punktfunk-host.service.d/
+.local/share/overrides/bin/punktfunk-gamescope
+.local/bin/punktfunk-restore-audio
+
 # HELLDIVERS 2 stratagem scanner capture helper. Needs both halves: omasnap is
 # omarchy's screenshot tool, and the game it captures only exists where Steam is.
 .local/bin/hd2-screenshot
