@@ -1,5 +1,6 @@
 """Exercise the hook with isolated audio devices and host state."""
 import json
+import fcntl
 import os
 from pathlib import Path
 import subprocess
@@ -66,6 +67,29 @@ else:
 
     def test_restores_saved_devices(self):
         self.assertEqual(self.run_hook(), {'sink': 'desktop-speakers', 'source': 'desktop-mic'})
+
+    def run_queued_hook(self, sessions='1'):
+        with (self.state / 'audio-restore.lock').open('w') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            process = subprocess.Popen(['bash', str(SCRIPT)],
+                                       env=self.env | {'SESSIONS': sessions})
+            try:
+                with self.assertRaises(subprocess.TimeoutExpired):
+                    process.wait(timeout=0.3)
+                fcntl.flock(lock, fcntl.LOCK_UN)
+                self.assertEqual(process.wait(timeout=12), 0)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait()
+        return json.loads(self.devices.read_text())
+
+    def test_new_restore_waits_for_previous_hook(self):
+        self.assertEqual(self.run_queued_hook(), {'sink': 'desktop-speakers', 'source': 'desktop-mic'})
+
+    def test_queued_restore_rechecks_session_after_lock(self):
+        self.assertEqual(self.run_queued_hook(sessions='2'),
+                         {'sink': 'punktfunk-speaker-1', 'source': 'punktfunk-mic'})
 
     def test_capture_then_restore(self):
         self.snapshot.unlink()

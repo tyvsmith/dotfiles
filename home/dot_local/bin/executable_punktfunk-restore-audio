@@ -44,6 +44,7 @@ matching_session() {
 
 read_snapshot() {
     # Hooks run asynchronously. Only accept this device's recent connection.
+    # Native connection and stream-start events are emitted in the same setup sequence.
     jq -ce --arg fp "$fingerprint" --argjson ts "$PF_EVENT_TS_MS" \
         'select(.fingerprint == $fp and .event_ms <= $ts and .event_ms >= ($ts - 5000))' \
         "$snapshot" 2>/dev/null
@@ -51,7 +52,8 @@ read_snapshot() {
 
 restore_defaults() {
     exec 9>"$state/audio-restore.lock"
-    flock -n 9 || return 0
+    # A quick reconnect must wait for the previous restore to notice its session ended.
+    flock -w 5 9 || { log 'skipped: previous restore still holds lock'; return 0; }
     log "restore started event_ms=$PF_EVENT_TS_MS client=${fingerprint:0:12}"
     local session_id='' session capture current saved kind attempt
     local -a pending=(sink source) remaining
