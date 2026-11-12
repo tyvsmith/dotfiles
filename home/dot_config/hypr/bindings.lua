@@ -65,7 +65,7 @@ hl.unbind("SUPER + SHIFT + ALT + A")  -- Grok
 hl.unbind("SUPER + SHIFT + A")        -- ChatGPT
 o.bind("SUPER + SHIFT + A", "ChatGPT", { launch = "chatgpt", focus = "^Chatgpt$" })
 -- hl.unbind("SUPER + SHIFT + Y")         -- YouTube
-hl.unbind("SUPER + SHIFT + P")        -- Google Photos
+hl.unbind("SUPER + SHIFT + P") -- Google Photos
 -- hl.unbind("SUPER + SHIFT + X")         -- X
 -- hl.unbind("SUPER + SHIFT + W")         -- Omawrite
 
@@ -73,7 +73,8 @@ hl.unbind("SUPER + SHIFT + P")        -- Google Photos
 o.bind("SUPER + SHIFT + C", "Beeper", { launch = "beeper", focus = "^Beeper$" })
 o.bind("SUPER + SHIFT + G", "Steam", { launch = "steam", focus = "^steam$" })
 o.bind("SUPER + SHIFT + ALT + G", "Github", { webapp = "https://github.com", focus = true })
-o.bind("SUPER + SHIFT + E", "Fastmail", { launch = "flatpak run com.fastmail.Fastmail", focus = "^com\\.fastmail\\.Fastmail$" })
+o.bind("SUPER + SHIFT + E", "Fastmail",
+  { launch = "flatpak run com.fastmail.Fastmail", focus = "^com\\.fastmail\\.Fastmail$" })
 o.bind("SUPER + SHIFT + P", "Shelly", { launch = "shelly-ui", focus = "^com\\.shellyorg\\.shelly$" })
 
 -- Dictation toggle (F16 = evdev keycode 186 -> xkb keycode 194)
@@ -118,7 +119,7 @@ o.bind("SUPER + SHIFT + bracketleft", "Move column left", hl.dsp.layout("swapcol
 o.bind("SUPER + SHIFT + bracketright", "Move column right", hl.dsp.layout("swapcol r"))
 
 -- Fit / zoom (SUPER+CTRL+I is Omarchy's idle-lock toggle)
-hl.unbind("SUPER + I") -- Stock input-language selector
+hl.unbind("SUPER + I")         -- Stock input-language selector
 hl.unbind("SUPER + SHIFT + I") -- Stock input-language selector (reverse)
 o.bind("SUPER + I", "Fit active column", hl.dsp.layout("fit active"))
 o.bind("SUPER + ALT + I", "Fit visible columns", hl.dsp.layout("fit visible"))
@@ -175,3 +176,14 @@ o.bind("CTRL + XF86AudioRaiseVolume", "Chat volume up", chat_vol .. " raise " ..
 o.bind("CTRL + XF86AudioLowerVolume", "Chat volume down", chat_vol .. " lower " .. chat_sink,
   { locked = true, repeating = true })
 o.bind("CTRL + XF86AudioMute", "Chat mute", chat_vol .. " mute-toggle " .. chat_sink, { locked = true })
+
+-- fathom: begin
+do
+  local fathom = os.getenv("HOME") .. "/.config/omarchy/plugins/io.github.mtolhuys.fathom/hypr/fathom.lua"
+  local file = io.open(fathom, "r")
+  if file then
+    file:close()
+    pcall(dofile, fathom)
+  end
+end
+-- fathom: end

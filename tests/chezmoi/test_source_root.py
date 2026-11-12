@@ -97,9 +97,15 @@ class SourceRootTest(unittest.TestCase):
                     self.assertEqual(entry['type'], 'symlink')
                     self.assertEqual(entry['linkname'], 'scb.conf')
                 for name in ('.local/bin/hypr-monitor-scale',
+                             '.config/hypr/hlsovpp.lua',
+                             '.config/hypr/omacontrol.lua',
+                             '.local/bin/punktfunk-restore-audio',
                              '.config/punktfunk/hooks.json',
                              '.config/systemd/user/punktfunk-host.service.d/steam-controller.conf'):
                     self.assertEqual(name in targets, profile == 'arch-desktop')
+                installer = targets['49-install-omarchy-plugins.sh']['contents']
+                if profile != 'arch-desktop':
+                    self.assertEqual(installer.strip(), '#!/usr/bin/env bash\nexit 0')
                 self.assertFalse({'scripts', 'tests', 'README.md', 'home'} & targets.keys())
                 for entry in targets.values():
                     if entry['type'] != 'script':
@@ -117,6 +123,21 @@ class SourceRootTest(unittest.TestCase):
                     subprocess.run(['bash', '-eu', '-c', fetch + '\ntest -f "$FETCH"'],
                                    check=True, env=os.environ | {
                                        'CHEZMOI_SOURCE_DIR': str(self.source / 'home')})
+
+
+    def test_punktfunk_requires_gaming_even_on_omarchy(self):
+        self.chezmoi('init', profile='arch-desktop')
+        overrides = {'profiles': {'arch-desktop': {
+            'tags': ['core', 'ui'], 'decrypt': False, 'backup': False}}}
+        targets = json.loads(self.chezmoi('dump', '--exclude', 'externals',
+                                        '--format', 'json', overrides=overrides))
+        self.assertIn('.config/hypr/hlsovpp.lua', targets)
+        self.assertIn('.config/hypr/omacontrol.lua', targets)
+        for name in ('.local/bin/punktfunk-restore-audio',
+                     '.config/punktfunk/hooks.json',
+                     '.local/share/overrides/bin/punktfunk-gamescope',
+                     '.config/systemd/user/punktfunk-host.service.d/steam-controller.conf'):
+            self.assertFalse(name in targets, name)
 
 
 if __name__ == '__main__':

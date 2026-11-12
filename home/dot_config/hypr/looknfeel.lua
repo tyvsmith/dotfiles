@@ -35,19 +35,6 @@ hl.config({
       mouse_focus_animation = "slide",
       slide_height = 10, -- default 20
     },
-    scrolloverview = {
-      gesture_distance = 300,          -- how far is the "max" for the gesture
-      scale = 0.5,                     -- preferred overview scale
-      workspace_gap = 100,
-      layout = "vertical",             -- vertical or horizontal
-      wallpaper = 2,                   -- 0: global only, 1: per-workspace only, 2: both
-      blur = true,                     -- blur only the main overview wallpaper
-
-      shadow = {
-        enabled = true,
-        range = 50,
-      },
-    },
   },
 })
 

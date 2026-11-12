@@ -1,0 +1,35 @@
+{{- $p := index .profiles .profile -}}
+#!/usr/bin/env bash
+{{ if ne (get $p "de") "hyprland-omarchy" -}}
+exit 0
+{{ else -}}
+set -euo pipefail
+export OMARCHY_PATH="${OMARCHY_PATH:-/usr/share/omarchy}"
+
+# Keep existing checkouts; updates remain with `omarchy plugin update`.
+# Chezmoi supplies the Lua loaders and settings before the installers run.
+while read -r id url; do
+    directory="$HOME/.config/omarchy/plugins/$id"
+    if [[ ! -d "$directory" ]]; then
+        # The add command waits for shell discovery before enabling a new plugin.
+        omarchy plugin add "$url" --yes --enable </dev/null
+    else
+        jq -e --arg id "$id" '.id == $id' "$directory/manifest.json" >/dev/null
+        omarchy plugin enable "$id" </dev/null
+    fi
+done <<'PLUGINS'
+jgarza.hlsovpp https://github.com/jgarza9788/hlsovpp
+io.github.twiking.omacontrol https://github.com/twiking/omacontrol
+io.github.mtolhuys.fathom https://github.com/mtolhuys/fathom
+PLUGINS
+
+# The shell checkout includes a native plugin with its own setup procedure.
+# Leave an already configured provider alone, including its update policy.
+if ! hyprpm list | sed -E $'s/\x1b\\[[0-9;]*m//g' | grep -qF 'Repository hlsovpp '; then
+    "$HOME/.config/omarchy/plugins/jgarza.hlsovpp/install" --no-menu </dev/null
+fi
+# Fathom's Lua bindings are evaluated by Hyprland, not the shell plugin loader.
+if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+    hyprctl reload
+fi
+{{ end -}}
