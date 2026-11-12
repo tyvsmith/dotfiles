@@ -38,9 +38,6 @@ hl.config({
   },
 })
 
--- ScrollOverview fork settings, also editable through its Omarchy panel.
-require("hypr.hlsovpp")
-
 -- Opt another application in to Omarchy's standard transparency.
 -- Find its class with: hyprctl clients
 -- o.transparent_window("my-app")

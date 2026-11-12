@@ -37,6 +37,16 @@ if args[:2] == ['plugin', 'add']:
     dest = Path.home() / '.config/omarchy/plugins' / ident
     dest.mkdir(parents=True)
     (dest / 'manifest.json').write_text(json.dumps({'id': ident}))
+    if ident == 'jgarza.hlsovpp':
+        installer = dest / 'install'
+        installer.write_text('#!/bin/sh\\nprintf \\'["native-install"]\\\\n\\' >> "$CALLS"\\ntouch "$HOME/native-installed"\\n')
+        installer.chmod(0o755)
+''')
+
+        self.tool('hyprpm', '''import os, sys
+from pathlib import Path
+if sys.argv[1:] == ['list'] and (Path.home() / 'native-installed').exists():
+    print('Repository hlsovpp (by plugins):')
 ''')
 
     def tool(self, name, body):
@@ -64,6 +74,7 @@ if args[:2] == ['plugin', 'add']:
         self.assertCountEqual([c[2] for c in adds], PLUGINS.values())
         for call in adds:
             self.assertIn('--enable', call, 'add must wait for shell discovery before enabling')
+        self.assertEqual(calls.count(['native-install']), 1)
         for ident in PLUGINS:
             self.assertIn(['plugin', 'enable', ident], calls)
 
@@ -79,22 +90,16 @@ if args[:2] == ['plugin', 'add']:
         self.assertEqual(result.returncode, 0)
         self.assertFalse(self.calls.exists())
 
-    def test_native_provider_migrates_before_enabling(self):
+    def test_hyprpm_leaves_overview_provider_alone(self):
         self.tool('hyprpm', '''import json, os, sys
-from pathlib import Path
 args = sys.argv[1:]
 with open(os.environ['CALLS'], 'a') as f: f.write(json.dumps(args) + '\\n')
 if args == ['list']:
     print('Repository hyprland-plugins (by hyprwm):')
     print('Plugin hyprfocus\\n enabled: true')
-    if not (Path.home() / 'removed').exists(): print('Repository hyprland-scroll-overview (by yayuuu):')
-elif args == ['remove', 'hyprland-scroll-overview']: (Path.home() / 'removed').touch()
+    print('Repository hyprland-scroll-overview (by yayuuu):')
 ''')
         result = self.run_script('run_onchange_50-configure-hyprpm.sh.tmpl')
         self.assertEqual(result.returncode, 0, result.stderr)
         calls = [json.loads(line) for line in self.calls.read_text().splitlines()]
-        remove = calls.index(['remove', 'hyprland-scroll-overview'])
-        add = calls.index(['add', PLUGINS['jgarza.hlsovpp']])
-        enable = calls.index(['enable', 'scrolloverview'])
-        self.assertLess(remove, add)
-        self.assertLess(add, enable)
+        self.assertFalse(any(c[0] in ('add', 'remove', 'disable', 'enable') for c in calls))

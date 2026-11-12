@@ -22,6 +22,9 @@ require("hypr.bindings")
 require("hypr.looknfeel")
 require("hypr.autostart")
 
+-- ScrollOverview settings, also editable through its Omarchy panel.
+require("hypr.hlsovpp")
+
 -- Load settings written by OmaControl (omacontrol:managed).
 -- It belongs above the toggles below: those turn the laptop
 -- display off with a monitor rule, and a rule of ours read

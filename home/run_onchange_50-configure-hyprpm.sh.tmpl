@@ -18,7 +18,8 @@ command -v hyprpm >/dev/null 2>&1 || { echo "hyprpm not installed, skipping"; ex
 # the display name isn't (hyprpm quirk).
 declare -A HYPRPM_REPOS=(
     ["hyprland-plugins"]="https://github.com/hyprwm/hyprland-plugins"
-    ["hlsovpp"]="https://github.com/jgarza9788/hlsovpp"
+    # Optional original provider; remove the fork through its installer before switching back.
+    # ["hyprland-scroll-overview"]="https://github.com/yayuuu/hyprland-scroll-overview"
 )
 
 # Optional git rev pins per repo. Used when upstream main doesn't yet support
@@ -28,18 +29,13 @@ declare -A HYPRPM_REVS=()
 
 # Plugins to enable — limited to the ones I actually run. Each must be exposed
 # by one of the repos above.
-HYPRPM_ENABLE=(hyprfocus scrolloverview)
+HYPRPM_ENABLE=(hyprfocus)
+# HYPRPM_ENABLE+=(scrolloverview) # Enable with the original provider above.
 
 # `hyprpm list` includes ANSI color codes — strip for clean grepping.
 state() { hyprpm list 2>/dev/null | sed -E $'s/\x1b\\[[0-9;]*m//g'; }
 
 current=$(state)
-# Both repositories provide scrolloverview; replace the original provider.
-if grep -qF 'Repository hyprland-scroll-overview ' <<<"$current"; then
-    hyprpm disable scrolloverview
-    hyprpm remove hyprland-scroll-overview
-    current=$(state)
-fi
 for name in "${!HYPRPM_REPOS[@]}"; do
     if grep -qF "Repository $name " <<<"$current"; then
         continue
