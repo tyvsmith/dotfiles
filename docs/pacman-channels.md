@@ -21,30 +21,14 @@ mirrors. The `[omarchy]` package channel remains independent. Remove obsolete pa
 `options.conf` explicitly.
 
 Use the normal channel menu or `omarchy channel set stable|rc|edge`.
-The PATH override for `omarchy-refresh-pacman` stages the configuration,
-syncs signed databases in a temporary directory, and prepares both the
-upgrade and release/dev package swap. It declines installation during these
-checks. Dependency failures, unknown package choices and additional custom
-pre-refresh hooks stop the switch before it writes `/etc`.
+Omarchy writes the selected channel defaults, runs `pre-refresh-pacman` to
+restore this policy, then updates packages through its standard commands.
+No CLI overrides or custom transaction preflight are needed.
 
-Preview without sudo or system changes:
-
-```bash
-omarchy-refresh-pacman --preview stable
-```
-
-The CLI override also guards `omarchy refresh pacman`. Calling the packaged
-`/usr/bin/omarchy-refresh-pacman` directly bypasses preflight, although the
-policy hook still runs. These overrides must be ahead of `/usr/bin` in PATH.
-Development-checkout switching is outside this guard: upstream links the
-checkout before refreshing repositories.
-
-Preflight is not a guarantee that installation succeeds. Repositories may
-change afterward; archive/file conflicts and package scripts are checked
-only during installation. After a successful check, upstream-style backups
-and the normal Omarchy package update run. A later failure can leave the
-new repository configuration installed. No package hold is added for
-Hyprland titlebars; an incompatible downgrade must be resolved explicitly.
+Package compatibility remains separate from configuration preservation.
+A failed package transaction can leave the selected channel configuration
+installed; resolve the conflict before retrying. Channel switching permits
+downgrades, including packages from custom repositories.
 
 RC receives final releases: Omarchy builds final release packages into RC,
 then promotes them to stable. Public RC tags are not required for patch
