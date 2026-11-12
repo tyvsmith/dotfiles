@@ -1,5 +1,6 @@
 """Run the repository hook against disposable pacman configurations."""
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -21,7 +22,12 @@ class CustomReposTest(unittest.TestCase):
         self.tail.write_text('[warpdotdev]\nServer = warp\n')
         self.conf = self.root / 'pacman.conf'
         self.script = self.root / 'hook'
-        self.script.write_text(HOOK.read_text().replace('CONF=/etc/pacman.conf', f'CONF={self.conf}'))
+        self.system_mirrors = self.root / 'system-mirrors'
+        self.script.write_text(HOOK.read_text()
+            .replace('CONF=/etc/pacman.conf', f'CONF={self.conf}')
+            .replace('SYSTEM_MIRRORS=/etc/pacman.d/arch-mirrorlist', f'SYSTEM_MIRRORS={self.system_mirrors}')
+            .replace('-o root -g root ', '')
+            .replace('!= 0:0:644', f'!= {os.getuid()}:{os.getgid()}:644'))
         # Keep real install writes inside the fixture, without privilege elevation.
         sudo = self.root / 'sudo'
         sudo.write_text('#!/bin/bash\nexec "$@"\n')
@@ -74,6 +80,95 @@ class CustomReposTest(unittest.TestCase):
                     result = self.run_hook(*args)
                     self.assertEqual(result.returncode, 1, result.stderr)
                     self.assertEqual(self.conf.read_text(), content)
+
+    def test_policy_survives_all_channel_templates(self):
+        policy = self.head.parent
+        (policy / 'options.conf').write_text('IgnorePkg = held-package\n')
+        (policy / 'arch-mirrorlist').write_text('Server = https://live.example/$repo/os/$arch\n')
+        for channel in ('stable', 'rc', 'edge'):
+            with self.subTest(channel=channel):
+                self.conf.write_text('[options]\nArchitecture = x86_64\nColor\nIgnorePkg = obsolete\n'
+                                     f'[omarchy]\nServer = https://pkgs.example/{channel}/$arch\n'
+                                     '[core]\nInclude = /etc/pacman.d/mirrorlist\n'
+                                     '[extra]\nServer = https://old.example/$repo/os/$arch\n'
+                                     '[multilib]\nInclude = /etc/pacman.d/mirrorlist\n')
+                result = self.run_hook()
+                self.assertEqual(result.returncode, 0, result.stderr)
+                rendered = self.conf.read_text()
+                self.assertIn(f'https://pkgs.example/{channel}/$arch', rendered)
+                self.assertEqual(rendered.count(f'Include = {self.system_mirrors}'), 3)
+                if shutil.which('pacman-conf'):
+                    resolved = subprocess.check_output(['pacman-conf', '--config', str(self.conf), '--repo', 'core', 'Server'], text=True)
+                    self.assertEqual(resolved.strip(), 'https://live.example/core/os/x86_64')
+                self.assertNotIn('Include = /etc/pacman.d/mirrorlist', rendered)
+                self.assertNotIn('obsolete', rendered)
+                self.assertNotIn('old.example', rendered)
+                self.assertEqual(rendered.count('IgnorePkg = held-package'), 1)
+                self.assertEqual(self.run_hook('--check').returncode, 0)
+
+    def test_deleted_option_removes_previous_hold(self):
+        options = self.head.parent / 'options.conf'
+        options.write_text('IgnorePkg = held-package\n')
+        self.conf.write_text('[options]\nColor\n[core]\nServer = arch\n')
+        self.assertEqual(self.run_hook().returncode, 0)
+        self.assertIn('IgnorePkg = held-package', self.conf.read_text())
+        options.write_text('# no local overrides\n')
+        self.assertEqual(self.run_hook('--check').returncode, 2)
+        self.assertEqual(self.run_hook().returncode, 0)
+        self.assertNotIn('IgnorePkg', self.conf.read_text())
+        self.assertIn('Color', self.conf.read_text())
+        self.assertEqual(self.run_hook('--check').returncode, 0)
+
+    def test_render_does_not_write_input_or_use_sudo(self):
+        self.conf.write_text('[options]\nColor\n[omarchy]\nServer = distro\n')
+        before = self.conf.read_text()
+        output = self.root / 'rendered.conf'
+        result = self.run_hook('--render', str(self.conf), str(output))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.conf.read_text(), before)
+        self.assertIn('[cachyos]', output.read_text())
+
+    def test_managed_only_repositories_keep_head(self):
+        self.conf.write_text('[options]\nColor\n[cachyos]\nServer = old\n[warpdotdev]\nServer = old\n')
+        self.assertEqual(self.run_hook().returncode, 0)
+        self.assertEqual([s for s in self.conf.read_text().splitlines() if s.startswith('[')],
+                         ['[options]', '[cachyos]', '[warpdotdev]'])
+        self.assertEqual(self.run_hook('--check').returncode, 0)
+
+    def test_render_rejects_aliases_without_writing(self):
+        self.conf.write_text('[options]\nColor\n[core]\nServer = arch\n')
+        before = self.conf.read_bytes()
+        symlink = self.root / 'symlink'
+        symlink.symlink_to(self.conf)
+        hardlink = self.root / 'hardlink'
+        os.link(self.conf, hardlink)
+        for output in (str(self.conf), str(self.root) + '/./pacman.conf', str(symlink), str(hardlink)):
+            self.assertNotEqual(self.run_hook('--render', str(self.conf), output).returncode, 0)
+            self.assertEqual(self.conf.read_bytes(), before)
+
+    def test_mirrors_are_snapshotted_and_changes_require_apply(self):
+        mirrors = self.head.parent / 'arch-mirrorlist'
+        mirrors.write_text('Server = https://one.example/$repo/os/$arch\n')
+        self.conf.write_text('[options]\n[core]\nServer = old\n')
+        self.assertEqual(self.run_hook().returncode, 0)
+        before = self.system_mirrors.read_bytes()
+        mirrors.write_text('Server = https://two.example/$repo/os/$arch\n')
+        self.assertEqual(self.run_hook('--check').returncode, 2)
+        self.assertEqual(self.system_mirrors.read_bytes(), before)
+        output = self.root / 'rendered.conf'
+        self.assertEqual(self.run_hook('--render', str(self.conf), str(output)).returncode, 0)
+        self.assertIn(str(output) + '.mirrors', output.read_text())
+        self.assertIn('two.example', Path(str(output) + '.mirrors').read_text())
+        mirrors.write_text('SigLevel = Never\n')
+        self.assertNotEqual(self.run_hook().returncode, 0)
+        self.assertEqual(self.system_mirrors.read_bytes(), before)
+
+    def test_adopts_existing_unmarked_repository(self):
+        self.conf.write_text('[options]\nColor\n[omarchy]\nServer = distro\n'
+                             '[warpdotdev]\nServer = warp\n')
+        self.assertEqual(self.run_hook().returncode, 0)
+        self.assertEqual(self.conf.read_text().count('[warpdotdev]'), 1)
+        self.assertEqual(self.run_hook('--check').returncode, 0)
 
 
 if __name__ == '__main__':

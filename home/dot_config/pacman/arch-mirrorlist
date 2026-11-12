@@ -1,0 +1,7 @@
+# Ranked 2026-11-11 with rate-mirrors; rolling Arch only.
+# Four fastest candidates plus Omarchy, in measured order.
+Server = https://mirrors.logal.dev/archlinux/$repo/os/$arch
+Server = https://mirror.osbeck.com/archlinux/$repo/os/$arch
+Server = https://arch.s-levi.com/archlinux/$repo/os/$arch
+Server = https://mirrors.xtom.com/archlinux/$repo/os/$arch
+Server = https://mirror.omarchy.org/$repo/os/$arch
