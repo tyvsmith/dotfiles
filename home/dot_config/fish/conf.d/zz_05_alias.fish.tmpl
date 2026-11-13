@@ -12,33 +12,8 @@ if status is-interactive
     alias lt 'eza --tree --level=2 --long --icons --git'
     alias lta 'eza --tree --level=2 --long --icons --git -a'
 
-    function t --wraps tmux --description 'Attach to tmux; create Work when no arguments are given'
-        if set -q argv[1]
-            tmux attach $argv
-        else
-            tmux attach; or tmux new -s Work
-        end
-    end
-
     {{ if has "ai" $tags -}}
-    function cx --wraps claude --description 'Clear the terminal and launch Claude'
-        clear-all; and claude --permission-mode auto $argv
-    end
-    {{ end -}}
-
-    {{ if has "dev-extra" $tags -}}
-    # Upstream integration: broot --print-shell-function fish
-    # https://dystroy.org/broot/launch/
-    function br --wraps broot
-        set -l cmd_file (mktemp)
-        if broot --outcmd $cmd_file $argv
-            source $cmd_file
-            rm -f $cmd_file
-        else
-            set -l code $status
-            rm -f $cmd_file
-            return $code
-        end
-    end
+    alias cx 'clear-all; and claude --permission-mode auto'
+    complete --command cx --wraps claude
     {{ end -}}
 end

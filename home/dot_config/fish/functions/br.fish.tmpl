@@ -1,0 +1,18 @@
+{{- $p := index .profiles .profile -}}
+{{ if has "dev-extra" $p.tags -}}
+status is-interactive; or return
+
+# Upstream integration: broot --print-shell-function fish
+# https://dystroy.org/broot/launch/
+function br --wraps broot
+    set -l cmd_file (mktemp)
+    if broot --outcmd $cmd_file $argv
+        source $cmd_file
+        rm -f $cmd_file
+    else
+        set -l code $status
+        rm -f $cmd_file
+        return $code
+    end
+end
+{{ end -}}
