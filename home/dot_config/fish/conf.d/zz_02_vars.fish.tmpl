@@ -48,12 +48,6 @@ set -gx MANPAGER "sh -c 'col -bx | bat -l man -p'"
 # with caching and interactive guards (see zz_03_interactive.fish)
 set -gx MISE_FISH_AUTO_ACTIVATE 0
 
-# Podman — point Docker-compatible tools (lazydocker, etc.) at podman socket
-{{ if ne .chezmoi.os "darwin" -}}
-set -gx DOCKER_HOST "unix:///run/user/"(id -u)"/podman/podman.sock"
-{{ end -}}
-
-
 # SSH agent — always the stable symlink. The resolver repoints it when the
 # target is dead or when this shell inherited a newer live agent (fresh SSH
 # login with forwarding). Every process using the symlink follows the
