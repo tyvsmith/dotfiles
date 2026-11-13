@@ -10,8 +10,8 @@ function M.read_proc(pid, name)
   return content
 end
 
--- Chromium can rewrite environ. Its startup scope remains identifiable.
--- Flatpak can change scopes; check surviving launcher ancestors as well.
+-- Apps can rewrite environ and change scopes; startup keeps a marked parent.
+-- Check surviving launcher ancestors as well as the window process.
 function M.is_startup(pid)
   local readable = false
   for depth = 1, 32 do
