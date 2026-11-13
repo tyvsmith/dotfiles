@@ -33,8 +33,9 @@ class AutostartIdentity(unittest.TestCase):
                 script = path / name
                 script.write_text(content)
                 script.chmod(0o755)
-            (path / "wait-for-sni").symlink_to(
-                ROOT / "home/dot_local/bin/executable_wait-for-sni")
+            helper = path / "wait-for-sni"
+            helper.write_bytes((ROOT / "home/dot_local/bin/executable_wait-for-sni").read_bytes())
+            helper.chmod(0o755)
             probe = path / "probe.py"
             probe.write_text('''import ctypes, os, sys
 libc = ctypes.CDLL(None)
@@ -46,7 +47,7 @@ print(os.getpid(), flush=True)
 sys.stdin.readline()
 sys.exit(23)
 ''')
-            env = dict(os.environ, PATH=f"{path}:{os.environ['PATH']}", PROBE=str(probe))
+            env = dict(os.environ, PATH=f"{path}:{os.defpath}", PROBE=str(probe))
             env.pop("HYPR_AUTOSTART", None)
             for launch, expected in [(command, "true"), ("wait-for-sni beeper", "false")]:
                 with self.subTest(startup=expected):
