@@ -12,16 +12,6 @@ if status is-interactive
     functions --erase __deferred_abbr_init 
         # --- Core: Compatible syntax (flags mostly work the same) ---
 
-        # Eza for ls (flags match omarchy's bash aliases)
-        abbr --add ls 'eza -lh --group-directories-first --icons=auto'
-        abbr --add lsa 'eza -lha --group-directories-first --icons=auto'
-        abbr --add ll 'eza -l --icons=auto --group-directories-first'
-        abbr --add l. 'eza -d .*'
-        abbr --add l1 'eza -1'
-        abbr --add la 'eza -la --icons=auto --group-directories-first'
-        abbr --add lt 'eza --tree --level=2 --long --icons --git'
-        abbr --add lta 'eza --tree --level=2 --long --icons --git -a'
-
         # Bat for cat
         abbr --add cat 'bat -p'
 
@@ -57,9 +47,6 @@ if status is-interactive
         # Lazygit
         abbr --add lg lazygit
 
-        # tmux
-        abbr --add t 'tmux attach || tmux new -s Work'
-
         # Rails
         abbr --add r rails
 
@@ -77,13 +64,6 @@ if status is-interactive
         abbr --add gcm 'git commit -m'
         abbr --add gcam 'git commit -a -m'
         abbr --add gcad 'git commit -a --amend'
-        abbr -a --position anywhere --command git st status
-        abbr -a --position anywhere --command git co checkout
-        abbr -a --position anywhere --command git cm commit
-        abbr -a --position anywhere --command git br branch
-        abbr -a --position anywhere --command git aa add --all
-        abbr -a --position anywhere --command git ap add --patch
-        abbr -a --position anywhere --command git pf push --force-with-lease
 
         {{ if has "dev" $tags -}}
             # --- Dev tools ---
@@ -98,8 +78,6 @@ if status is-interactive
             # Gping for ping (graph visualization)
             abbr --add ping gping
 
-            # Broot
-            abbr --add br broot
         {{ end -}}
 
         {{ if has "container" $tags -}}
@@ -117,7 +95,6 @@ if status is-interactive
         {{ if has "ai" $tags -}}
             # --- AI tools (match omarchy's bash aliases) ---
             abbr --add c 'opencode --auto'
-            abbr --add cx 'clear-all; and claude --permission-mode auto'
             abbr --add cy 'codex --approve-for-me'
             abbr --add h herdr
             abbr --add ic  'tdl c'
