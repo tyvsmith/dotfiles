@@ -173,6 +173,25 @@ Changed `run_onchange` scripts may run again because their shared-library paths
 now point to `../scripts/lib/` from `home/`.
 
 
+## Shared instructions
+
+- edit repository guidance in `AGENTS.md`; keep the `CLAUDE.md` symlink for
+  review tools that still discover that filename
+- edit global guidance and writing rules in `home/dot_agents/AGENTS.md` and
+  `home/dot_agents/PROSE.md`; the other managed paths link to these files
+- keep the global Claude entry point as an import wrapper with its session-history
+  rule; native project `AGENTS.md` support does not discover `~/.agents/AGENTS.md`
+- edit `add-package` only in `.agents/skills/add-package/`; its Claude discovery
+  path links to the same directory
+
+Native project `AGENTS.md` loading requires Claude Code 2.1.277 or later
+(2.1.281 for broader provider support), with its built-in support enabled.
+The retained compatibility entry points avoid relying on that feature.
+See [instruction discovery](https://code.claude.com/docs/en/memory#agentsmd).
+
+Preview the managed file-to-symlink replacements with `chezmoi diff` before
+applying. Existing `~/.claude/PROSE.md` and `~/.codex/PROSE.md` references keep working.
+
 ## Updating
 
 ```bash

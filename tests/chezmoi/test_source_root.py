@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check source isolation without applying files, running hooks, or fetching secrets."""
+"""Check source isolation and temporary-home migrations without hooks or secrets."""
 import json
 import os
 from pathlib import Path
@@ -10,6 +10,11 @@ import unittest
 
 REPO = Path(__file__).resolve().parents[2]
 PROFILES = ('arch-desktop', 'debian-server', 'devpod', 'devpod-slim', 'macos-work', 'silverblue')
+INSTRUCTION_LINKS = {
+    '.codex/AGENTS.md': '../.agents/AGENTS.md',
+    '.codex/PROSE.md': '../.agents/PROSE.md',
+    '.claude/PROSE.md': '../.agents/PROSE.md',
+}
 
 
 class SourceRootTest(unittest.TestCase):
@@ -89,9 +94,15 @@ class SourceRootTest(unittest.TestCase):
                 targets = json.loads(self.chezmoi('dump', '--exclude', 'externals',
                                                 '--format', 'json', overrides=overrides))
                 self.assertIn('.config/fish/config.fish', targets)
-                self.assertIn('.agents/AGENTS.md', targets)
-                self.assertIn('.claude/CLAUDE.md', targets)
-                self.assertIn('.codex/AGENTS.md', targets)
+                for name in ('.agents/AGENTS.md', '.agents/PROSE.md', '.claude/CLAUDE.md'):
+                    self.assertEqual(targets[name]['type'], 'file')
+                self.assertIn('~/.agents/PROSE.md', targets['.agents/AGENTS.md']['contents'])
+                wrapper = targets['.claude/CLAUDE.md']['contents']
+                self.assertTrue(wrapper.startswith('@../.agents/AGENTS.md\n'))
+                self.assertIn('~/.claude/projects/*/*.jsonl', wrapper)
+                for name, target in INSTRUCTION_LINKS.items():
+                    self.assertEqual(targets[name]['type'], 'symlink')
+                    self.assertEqual(targets[name]['linkname'], target)
                 if profile == 'arch-desktop':
                     entry = targets['.config/scopebuddy/gamemode.conf']
                     self.assertEqual(entry['type'], 'symlink')
@@ -124,6 +135,42 @@ class SourceRootTest(unittest.TestCase):
                                    check=True, env=os.environ | {
                                        'CHEZMOI_SOURCE_DIR': str(self.source / 'home')})
 
+    def test_instruction_migration(self):
+        self.chezmoi('init')
+        names = ('.agents/AGENTS.md', '.agents/PROSE.md', '.claude/CLAUDE.md',
+                 *INSTRUCTION_LINKS)
+        paths = [str(self.dest / name) for name in names]
+        for existing in (False, True):
+            with self.subTest(existing=existing):
+                for name in names:
+                    path = self.dest / name
+                    path.unlink(missing_ok=True)
+                    if existing:
+                        path.parent.mkdir(parents=True, exist_ok=True)
+                        path.write_text('previous managed instructions\n')
+                for directory in ('.claude', '.codex'):
+                    sentinel = self.dest / directory / 'unmanaged'
+                    sentinel.parent.mkdir(parents=True, exist_ok=True)
+                    sentinel.write_text('preserve me\n')
+                self.chezmoi('apply', '--parent-dirs', '--force',
+                             '--exclude', 'scripts,externals', *paths)
+                for name, target in INSTRUCTION_LINKS.items():
+                    path = self.dest / name
+                    self.assertTrue(path.is_symlink())
+                    self.assertEqual(os.readlink(path), target)
+                    self.assertEqual(path.read_text(), (path.parent / target).read_text())
+                for directory in ('.claude', '.codex'):
+                    self.assertEqual((self.dest / directory / 'unmanaged').read_text(),
+                                     'preserve me\n')
+                self.chezmoi('apply', '--exclude', 'scripts,externals', *paths)
+                self.assertEqual(self.chezmoi('diff', '--exclude', 'scripts,externals',
+                                             *paths), '')
+
+    def test_repository_skill_shares_canonical_directory(self):
+        skill = REPO / '.claude/skills/add-package'
+        self.assertTrue(skill.is_symlink())
+        self.assertEqual(skill.resolve(), REPO / '.agents/skills/add-package')
+        self.assertTrue(os.access(skill / 'pkg-lookup', os.X_OK))
 
     def test_punktfunk_requires_gaming_even_on_omarchy(self):
         self.chezmoi('init', profile='arch-desktop')
