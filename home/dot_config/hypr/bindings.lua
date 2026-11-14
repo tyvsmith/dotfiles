@@ -187,3 +187,10 @@ do
   end
 end
 -- fathom: end
+-- strata-installer: file-manager start
+hl.unbind("SUPER + SHIFT + F")
+hl.unbind("SUPER + ALT + SHIFT + F")
+o.bind("SUPER + SHIFT + F", "File manager", { launch = "/usr/bin/strata" })
+o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)",
+  "uwsm-app -- /usr/bin/strata \"$(omarchy-cmd-terminal-cwd)\"")
+-- strata-installer: file-manager end
