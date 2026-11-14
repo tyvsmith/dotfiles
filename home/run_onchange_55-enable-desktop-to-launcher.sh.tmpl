@@ -1,0 +1,22 @@
+{{- $p := index .profiles .profile -}}
+{{ if and (eq .chezmoi.os "linux") (eq (get $p "de") "hyprland-omarchy") -}}
+#!/usr/bin/env bash
+# Enable the watcher that moves ~/Desktop/*.desktop into the app menu.
+# Reruns when the units change:
+#   path:    {{ include "dot_config/systemd/user/desktop-to-launcher.path" | sha256sum }}
+#   service: {{ include "dot_config/systemd/user/desktop-to-launcher.service" | sha256sum }}
+set -euo pipefail
+
+mkdir -p "$HOME/Desktop"
+
+if ! systemctl --user show-environment >/dev/null 2>&1; then
+    echo "WARN: no systemd user session; run later: systemctl --user enable --now desktop-to-launcher.path"
+    exit 0
+fi
+
+systemctl --user daemon-reload
+systemctl --user enable --now desktop-to-launcher.path
+{{ else -}}
+#!/bin/sh
+exit 0
+{{ end -}}

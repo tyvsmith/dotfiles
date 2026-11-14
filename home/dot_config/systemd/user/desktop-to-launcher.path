@@ -1,0 +1,9 @@
+[Unit]
+Description=Move launcher entries dropped on ~/Desktop into the app menu
+
+[Path]
+# Fires while a match exists; the service moves it away, so it cannot loop.
+PathExistsGlob=%h/Desktop/*.desktop
+
+[Install]
+WantedBy=default.target
