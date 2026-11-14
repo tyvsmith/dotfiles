@@ -22,8 +22,9 @@ steam_grid_icon() {
     local entry="$1" gameid short icon
     gameid="$(sed -nE 's|^Exec=.*steam://rungameid/([0-9]+).*|\1|p' "$entry" | head -n1)"
     [[ -n "$gameid" ]] || return 1
-    short="$(echo "$gameid / 4294967296" | bc)"
-    [[ "$short" != 0 ]] || return 1 # a Steam app id: Steam's own icon is already right
+    # Ids above 2^63 wrap negative in bash; the mask still recovers the top 32 bits.
+    short=$(((gameid >> 32) & 0xFFFFFFFF))
+    ((short != 0)) || return 1 # a Steam app id: Steam's own icon is already right
     for icon in "$steam_userdata"/*/config/grid/"${short}"_icon.{png,jpg,ico}; do
         printf '%s\n' "$icon"
         return 0
