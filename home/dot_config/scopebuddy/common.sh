@@ -57,8 +57,30 @@ apply_desktop_defaults() {
         export HYPR_DND=${HYPR_DND-1}
     fi
     # SCB warns on ordinary pre-hook failures; failed HDR preparation must abort.
-    SCB_PRE_COMMAND=${SCB_PRE_COMMAND-"scb_display_start || exit 1"}
-    SCB_POST_COMMAND=${SCB_POST_COMMAND-scb_display_stop}
+    SCB_PRE_COMMAND=${SCB_PRE_COMMAND-"scb_display_start || exit 1; scb_input_start"}
+    SCB_POST_COMMAND=${SCB_POST_COMMAND-"scb_input_stop; scb_display_stop"}
+}
+
+# Steam learns focus only through X11, so Wayland windows (native SDL, Wine-Wayland)
+# leave the Desktop Layout active and controller buttons also fire desktop actions.
+# Pin this launch's Steam Input binding until it exits; steam_input_focus=0 opts out.
+scb_input_start() {
+    (( ${steam_input_focus-1} )) || return 0
+    [[ $command =~ AppId=([0-9]+) ]] || return 0
+    _scb_steam "steam://forceinputappid/${BASH_REMATCH[1]}" && _scb_input_pinned=1
+}
+
+# SCB runs exit hooks under errexit; a failed reset must not skip later cleanup.
+scb_input_stop() {
+    if (( _scb_input_pinned )); then _scb_steam steam://forceinputappid/0 || :; fi
+}
+
+# Hand a URL to the running client; never start Steam from an exit hook.
+_scb_steam() {
+    pgrep -u "$UID" -x steam >/dev/null || return 1
+    timeout 5 steam "$1" >/dev/null 2>&1 && return 0
+    printf 'ScopeBuddy: Steam did not accept %s\n' "$1" >&2
+    return 1
 }
 
 apply_mode() {
@@ -154,7 +176,7 @@ load_game_config() {
 
 display_init() {
     local status monitors mode relay
-    _scb_local_hdr_enabled=0
+    _scb_local_hdr_enabled=0 _scb_input_pinned=0
     _scb_local_hyprland=${HYPRLAND_INSTANCE_SIGNATURE:+1}
     scb_punktfunk_stream=0
     _scb_display_width= _scb_display_height= _scb_display_fps=
