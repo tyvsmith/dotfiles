@@ -471,12 +471,6 @@ packages:
     os: linux
     de: hyprland-omarchy
 
-  xdg-desktop-portal-gnome:
-    tags: [ui]
-    desc: "GNOME backend for xdg-desktop-portal (screencast, file picker)"
-    os: linux
-    de: hyprland-omarchy
-
   adw-gtk-theme:
     tags: [ui]
     desc: "GTK3 port of the libadwaita theme"
