@@ -1,0 +1,6 @@
+[Unit]
+Description=Move ~/Desktop/*.desktop into ~/.local/share/applications
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/desktop-to-launcher

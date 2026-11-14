@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Move launcher entries dropped on the desktop into the app menu.
+#
+# Hyprland draws no desktop, so Steam's "Add desktop shortcut" (its only way to add a
+# non-Steam game after the fact) would otherwise land somewhere no launcher reads.
+# Started by desktop-to-launcher.path whenever a *.desktop file appears there.
+set -euo pipefail
+shopt -s nullglob
+
+desktop="$(xdg-user-dir DESKTOP 2>/dev/null || true)"
+desktop="${desktop:-$HOME/Desktop}"
+apps="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+steam_userdata="$HOME/.local/share/Steam/userdata"
+
+# The path unit fires on creation; give the writer a moment to finish the file.
+sleep 1
+
+# A non-Steam shortcut launches steam://rungameid/<64-bit id>; the custom art Steam keeps
+# for it is named by the top 32 bits. Point Icon= at that art when it exists, since Steam
+# writes the shortcut's own icon field instead.
+steam_grid_icon() {
+    local entry="$1" gameid short icon
+    gameid="$(sed -nE 's|^Exec=.*steam://rungameid/([0-9]+).*|\1|p' "$entry" | head -n1)"
+    [[ -n "$gameid" ]] || return 1
+    short="$(echo "$gameid / 4294967296" | bc)"
+    [[ "$short" != 0 ]] || return 1 # a Steam app id: Steam's own icon is already right
+    for icon in "$steam_userdata"/*/config/grid/"${short}"_icon.{png,jpg,ico}; do
+        printf '%s\n' "$icon"
+        return 0
+    done
+    return 1
+}
+
+mkdir -p "$apps"
+moved=0
+for entry in "$desktop"/*.desktop; do
+    if icon="$(steam_grid_icon "$entry")"; then
+        sed -i -E "s|^Icon=.*|Icon=${icon}|" "$entry"
+    fi
+    chmod 0755 "$entry"
+    mv -f "$entry" "$apps/"
+    echo "moved $(basename "$entry") to $apps"
+    moved=1
+done
+
+if ((moved)) && command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$apps" || true
+fi

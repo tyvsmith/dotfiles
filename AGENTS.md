@@ -166,6 +166,7 @@ Scripts use category-based numeric prefixes with gaps for future expansion:
 | `run_onchange_31-install-packages-appimage.sh.tmpl` | AppImage downloads (Linux, last resort) |
 | `run_onchange_40-install-thpm.sh.tmpl` | Installs THPM (Theme Hook Plugin Manager) from a pinned source commit and enables the listed integrations; omarchy-only |
 | `run_onchange_50-configure-hyprpm.sh.tmpl` | Adds hyprpm repos and enables declared plugins; omarchy-only |
+| `run_onchange_55-enable-desktop-to-launcher.sh.tmpl` | Enables `desktop-to-launcher.path`, which moves `~/Desktop/*.desktop` (e.g. Steam's "Add desktop shortcut") into the app menu and points non-Steam shortcuts at their Steam custom-art icon; omarchy-only |
 | `run_onchange_59-configure-fish-shell.sh.tmpl` | Registers fish in `/etc/shells` and sets it as the login shell once package managers have installed it (`configure_fish_login_shell` in `scripts/lib/common.sh`) |
 | `run_onchange_60-install-fisher.sh.tmpl` | Installs Fisher and Fish plugins |
 | `run_onchange_70-configure-restic.sh.tmpl` | Registers resticprofile systemd timers (user `default` + root `system`/etc); `backup` profiles only |
