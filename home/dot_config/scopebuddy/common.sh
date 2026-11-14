@@ -70,8 +70,9 @@ scb_input_start() {
     _scb_steam "steam://forceinputappid/${BASH_REMATCH[1]}" && _scb_input_pinned=1
 }
 
+# SCB runs exit hooks under errexit; a failed reset must not skip later cleanup.
 scb_input_stop() {
-    if (( _scb_input_pinned )); then _scb_steam steam://forceinputappid/0; fi
+    if (( _scb_input_pinned )); then _scb_steam steam://forceinputappid/0 || :; fi
 }
 
 # Hand a URL to the running client; never start Steam from an exit hook.
