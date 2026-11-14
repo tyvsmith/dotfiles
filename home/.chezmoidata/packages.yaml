@@ -471,6 +471,12 @@ packages:
     os: linux
     de: hyprland-omarchy
 
+  strata:
+    tags: [ui]
+    desc: "File manager serving the FileChooser portal with Sushi-style previews (omarchy repo)"
+    os: linux
+    de: hyprland-omarchy
+
   adw-gtk-theme:
     tags: [ui]
     desc: "GTK3 port of the libadwaita theme"
