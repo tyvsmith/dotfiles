@@ -1,3 +1,6 @@
+-- Keep the shared explorer even when local LazyExtras state enables Snacks.
+vim.g.lazyvim_explorer = "neo-tree"
+
 -- Remote clipboard provider from omarchy migration 1781587663 (omarchy-nvim).
 -- Tracked rather than left to the migration: .config/nvim also deploys to macOS
 -- and servers, where omarchy-nvim is absent and this degrades to pure OSC 52.
